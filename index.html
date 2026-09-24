@@ -1652,7 +1652,9 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
             <div style="font-family:var(--font-display);font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
             <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">Pending: —</div>
             <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Stripe…</div>
+            <a href="https://dashboard.stripe.com/settings/payouts" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Manage payout bank account</a>
           </div>
+          <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details are entered and stored on Stripe's own secure page — never here. This button only shows for the owner account, and Stripe requires its own account login regardless.</p>
         </div>
       </div>
     </div>
@@ -2581,6 +2583,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
       ownerDashboard.style.display = "block";
       document.getElementById("ownerRolesSection").style.display = myRole === "owner" ? "block" : (myRole === "administrator" ? "block" : "none");
       document.getElementById("ownerAddRoleRow").style.display = myRole === "owner" ? "flex" : "none";
+      document.getElementById("managePayoutBtn").style.display = myRole === "owner" ? "block" : "none";
       renderRoles(data.roles);
       loadOverview();
       loadLogs();
