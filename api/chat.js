@@ -73,7 +73,7 @@ export default async function handler(req, res) {
 
   const endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
   const apiKey = process.env.LLM_API_KEY;
-  const model = process.env.LLM_MODEL || "llama-3.3-70b-versatile";
+  const model = process.env.LLM_MODEL || "openai/gpt-oss-120b";
 
   if (!apiKey) {
     console.error("LLM_API_KEY is not set.");

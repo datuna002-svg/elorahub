@@ -25,7 +25,7 @@ tier — fast responses, no credit card required to start.
    (env var changes don't apply retroactively — a redeploy picks them up).
 
 That's it. No other variables are required — the code already defaults to
-Groq's endpoint and a solid free model (`llama-3.3-70b-versatile`).
+Groq's endpoint and a free-tier, coding-capable model (`openai/gpt-oss-120b`).
 
 ## 3. Confirm it's working
 
