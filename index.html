@@ -354,6 +354,14 @@ p{ margin:0; }
   color:var(--text-1);
 }
 .hero-meta span{ color:var(--text-3); font-size:0.86rem; }
+.model-credit{
+  margin-top:22px;
+  font-size:0.78rem;
+  font-weight:500;
+  color:var(--text-3);
+  letter-spacing:0.01em;
+  max-width:440px;
+}
 
 .hero-visual{ position:relative; max-width:400px; margin-left:auto; }
 .chat-mock{
@@ -589,11 +597,11 @@ p{ margin:0; }
   border:1px solid rgba(255,36,64,0.35);
   padding:5px 11px; border-radius:var(--radius-pill);
 }
-.plan-name{ font-family:var(--font-display); font-size:1.5rem; color:var(--text-1); }
+.plan-name{ font-family:var(--font-body); font-weight:800; letter-spacing:-0.01em; font-size:1.4rem; color:var(--text-1); }
 .plan-tagline{ color:var(--text-3); font-size:0.9rem; margin-top:6px; min-height:36px; }
-.plan-price{ margin-top:22px; display:flex; align-items:baseline; gap:6px; }
-.plan-price .amount{ font-family:var(--font-display); font-size:2.6rem; color:var(--text-1); }
-.plan-price .cycle{ color:var(--text-3); font-size:0.9rem; }
+.plan-price{ margin-top:22px; display:flex; align-items:baseline; gap:6px; transition:opacity .15s var(--ease); }
+.plan-price .amount{ font-family:var(--font-body); font-weight:800; letter-spacing:-0.02em; font-size:3.1rem; color:var(--text-1); }
+.plan-price .cycle{ color:var(--text-3); font-size:0.95rem; font-weight:600; }
 .billed-note{ margin-top:8px; font-size:0.8rem; color:var(--text-3); font-weight:600; }
 .plan-cta{ margin-top:24px; }
 .plan-list{ margin-top:28px; display:flex; flex-direction:column; gap:14px; flex:1; }
@@ -1151,6 +1159,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div><strong>3-pass</strong><span>Internal reasoning check</span></div>
           <div><strong>Text · Image · File</strong><span>Every plan can upload</span></div>
         </div>
+        <div class="model-credit">Orchestrated on Groq-accelerated open-weight models and Google Gemini, tuned and fused together as elora.</div>
       </div>
 
       <div class="hero-visual reveal">
@@ -1376,8 +1385,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <span class="plan-badge">MOST FLEXIBLE</span>
           <div class="plan-name">Private</div>
           <div class="plan-tagline">Noticeably more room, and a private, unshared workspace.</div>
-          <div class="plan-price"><span class="amount price-value" data-monthly="15" data-yearly="12">$15</span><span class="cycle">/ month</span></div>
-          <div class="billed-note" data-monthly-note="Billed $15 every month" data-yearly-note="Billed $144 / year — save $36">Billed $15 every month</div>
+          <div class="plan-price"><span class="amount price-value" data-monthly="15" data-yearly-total="144" data-monthly-cycle="/ month" data-yearly-cycle="/ year">$15</span><span class="cycle">/ month</span></div>
+          <div class="billed-note" data-monthly-note="Billed $15 every month" data-yearly-note="Just $12 / month, billed annually — save $36">Billed $15 every month</div>
           <div class="plan-cta"><button class="btn btn-primary btn-block checkout-btn" data-plan="private">Get Private</button></div>
           <ul class="plan-list">
             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Way more messages than Free</li>
@@ -1393,8 +1402,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <span class="plan-badge">UNLIMITED</span>
           <div class="plan-name">Premium</div>
           <div class="plan-tagline">No caps. Use elora as much as your work actually needs.</div>
-          <div class="plan-price"><span class="amount price-value" data-monthly="25" data-yearly="20">$25</span><span class="cycle">/ month</span></div>
-          <div class="billed-note" data-monthly-note="Billed $25 every month" data-yearly-note="Billed $240 / year — save $60">Billed $25 every month</div>
+          <div class="plan-price"><span class="amount price-value" data-monthly="25" data-yearly-total="240" data-monthly-cycle="/ month" data-yearly-cycle="/ year">$25</span><span class="cycle">/ month</span></div>
+          <div class="billed-note" data-monthly-note="Billed $25 every month" data-yearly-note="Just $20 / month, billed annually — save $60">Billed $25 every month</div>
           <div class="plan-cta"><button class="btn btn-primary btn-block checkout-btn" data-plan="premium">Get Premium</button></div>
           <ul class="plan-list">
             <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Unlimited text conversations with elora</li>
@@ -1406,7 +1415,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         </div>
       </div>
 
-      <p class="pricing-note">Yearly billing is shown as an equivalent monthly rate and is billed once per year. You can change or cancel your plan at any time — details in the <button style="background:none;border:none;color:var(--red-300);font-weight:700;padding:0;font-size:inherit;" data-nav="terms">Terms of Service</button>.</p>
+      <p class="pricing-note">Yearly billing shows the full yearly total, charged once a year; the monthly equivalent is listed underneath. You can change or cancel your plan at any time — details in the <button style="background:none;border:none;color:var(--red-300);font-weight:700;padding:0;font-size:inherit;" data-nav="terms">Terms of Service</button>.</p>
 
       <div class="compare-table reveal">
         <table>
@@ -1912,9 +1921,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       var cycle = btn.getAttribute("data-cycle");
       currentBillingCycle = cycle;
       document.querySelectorAll(".price-value").forEach(function(el){
-        var val = cycle === "yearly" ? el.getAttribute("data-yearly") : el.getAttribute("data-monthly");
+        var val = cycle === "yearly" ? el.getAttribute("data-yearly-total") : el.getAttribute("data-monthly");
         el.textContent = "$" + val;
-        el.parentElement.querySelector(".cycle").textContent = "/ month";
+        var cycleLabel = cycle === "yearly" ? el.getAttribute("data-yearly-cycle") : el.getAttribute("data-monthly-cycle");
+        el.parentElement.querySelector(".cycle").textContent = cycleLabel || "/ month";
       });
       document.querySelectorAll(".billed-note[data-monthly-note]").forEach(function(el){
         el.textContent = cycle === "yearly" ? el.getAttribute("data-yearly-note") : el.getAttribute("data-monthly-note");
