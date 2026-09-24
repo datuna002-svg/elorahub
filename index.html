@@ -223,14 +223,14 @@ p{ margin:0; }
 .btn:hover{ transform:translateY(-1px); border-color:rgba(255,255,255,0.25); }
 .btn:active{ transform:translateY(0); }
 .btn-primary{
-  border:1px solid rgba(255,255,255,0.35);
+  border:1px solid rgba(255,70,80,0.5);
   color:#fff;
   background:var(--accent-grad);
   background-size:220% 220%;
   animation:shine-drift 7s ease infinite;
-  box-shadow:0 8px 22px rgba(255,36,64,0.35), inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
+  box-shadow:0 8px 24px rgba(255,36,64,0.4), inset 0 0 0 1px rgba(255,130,120,0.4), inset 0 1px 0 rgba(255,180,150,0.35);
 }
-.btn-primary:hover{ box-shadow:0 10px 30px rgba(255,36,64,0.45), inset 0 0 0 1px rgba(255,255,255,0.28), inset 0 1px 0 rgba(255,255,255,0.3); filter:brightness(1.06); }
+.btn-primary:hover{ box-shadow:0 10px 32px rgba(255,36,64,0.55), inset 0 0 0 1px rgba(255,150,140,0.5), inset 0 1px 0 rgba(255,190,160,0.45); filter:brightness(1.06); }
 @keyframes shine-drift{ 0%,100%{ background-position:0% 40%; } 50%{ background-position:100% 60%; } }
 .btn-ghost{ background:transparent; border-color:transparent; color:var(--text-2); }
 .btn-ghost:hover{ color:var(--text-1); }
@@ -416,8 +416,8 @@ p{ margin:0; }
   border-bottom-right-radius:4px;
 }
 .bubble.ai{
-  background:linear-gradient(135deg, rgba(88,88,95,0.35), rgba(34,34,38,0.5));
-  border:1px solid rgba(198,196,202,0.2);
+  background:linear-gradient(150deg, rgba(24,22,26,0.95), rgba(0,0,0,0.9));
+  border:1px solid rgba(198,196,202,0.14);
   border-bottom-left-radius:4px;
   color:var(--grey-100);
 }
@@ -429,9 +429,22 @@ p{ margin:0; }
 .bubble code{
   font-family:'SF Mono', Consolas, monospace;
   font-size:0.85em;
-  background:rgba(255,255,255,0.1);
-  padding:1px 6px;
-  border-radius:5px;
+  padding:2px 7px;
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:
+    linear-gradient(100deg, #ffc9b8 0%, #ff5a4d 22%, #fff3e6 45%, #ff2440 68%, #ffc9b8 100%) text,
+    linear-gradient(160deg, #0c0c0e, #000) padding-box;
+  background-size:260% 100%, 100% 100%;
+  -webkit-background-clip:text, padding-box;
+  background-clip:text, padding-box;
+  color:transparent;
+  -webkit-text-fill-color:transparent;
+  animation:code-shine 4s linear infinite;
+}
+@keyframes code-shine{
+  0%{ background-position:200% 0, 0 0; }
+  100%{ background-position:-200% 0, 0 0; }
 }
 .type-caret{
   display:inline-block;
@@ -721,8 +734,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   background-size:220% 220%;
   animation:shine-drift 7s ease infinite;
   color:#fff; font-weight:700; font-size:0.9rem;
-  border:1px solid rgba(255,255,255,0.35);
-  box-shadow:0 8px 22px rgba(255,36,64,0.3), inset 0 0 0 1px rgba(255,255,255,0.16);
+  border:1px solid rgba(255,70,80,0.5);
+  box-shadow:0 8px 22px rgba(255,36,64,0.35), inset 0 0 0 1px rgba(255,130,120,0.38);
 }
 .chat-new:hover{ filter:brightness(1.08); }
 .chat-history{ margin-top:22px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; flex:1; }
@@ -931,12 +944,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 #chatInput::placeholder{ color:var(--text-3); }
 .send-btn{
   flex:none; width:38px; height:38px; border-radius:12px;
-  border:1px solid rgba(255,255,255,0.35);
+  border:1px solid rgba(255,70,80,0.5);
   background:var(--accent-grad);
   background-size:220% 220%;
   animation:shine-drift 7s ease infinite;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 6px 16px rgba(255,36,64,0.4), inset 0 0 0 1px rgba(255,255,255,0.16);
+  box-shadow:0 6px 16px rgba(255,36,64,0.45), inset 0 0 0 1px rgba(255,130,120,0.38);
   transition:transform .18s var(--ease), box-shadow .2s var(--ease);
 }
 .send-btn:hover:not(:disabled){ transform:scale(1.06); box-shadow:0 8px 22px rgba(255,36,64,0.55); }
@@ -1159,7 +1172,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div><strong>3-pass</strong><span>Internal reasoning check</span></div>
           <div><strong>Text · Image · File</strong><span>Every plan can upload</span></div>
         </div>
-        <div class="model-credit">Orchestrated on Groq-accelerated open-weight models and Google Gemini, tuned and fused together as elora.</div>
+        <div class="model-credit">elora isn't one single model — it's leading open-weight &amp; Gemini models, fine-tuned and fused together under one voice.</div>
       </div>
 
       <div class="hero-visual reveal">
@@ -1168,12 +1181,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             <span class="dots-group"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
             <span class="label">elora — live preview</span>
           </div>
-          <div class="bubble user">This Python function is throwing a KeyError sometimes — can you see why?</div>
+          <div class="bubble user">My fetch works locally but hangs forever in prod — any idea why?</div>
           <div class="bubble ai">
             <span class="tag"><span class="think-dot"></span> thought for 4.1s</span>
             <span id="heroTypedReply"></span><span class="type-caret"></span>
           </div>
-          <div class="bubble user hero-followup" style="opacity:0;">That was it. Can you clean up the rest of the function too?</div>
+          <div class="bubble user hero-followup" style="opacity:0;">Clean catch. Can you add a retry with backoff too?</div>
         </div>
         <div class="float-card f1">Reads files &amp; images</div>
         <div class="float-card f2">Reasons before replying</div>
@@ -2259,13 +2272,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   (function(){
     var target = document.getElementById("heroTypedReply");
     if(!target) return;
+    var bubble = target.closest(".bubble.ai");
     var followup = document.querySelector(".hero-followup");
     var segments = [
       { text: "Found it: ", code: false },
-      { text: "config[\"timeout\"]", code: true },
-      { text: " assumes that key always exists, but it's optional in your schema. Use ", code: false },
-      { text: "config.get(\"timeout\", 30)", code: true },
-      { text: " instead — that fixes it and gives you a sane default.", code: false }
+      { text: "await fetch(url, { signal })", code: true },
+      { text: " has no timeout, so prod's extra latency just hangs it forever. Wrap it with ", code: false },
+      { text: "AbortSignal.timeout(8000)", code: true },
+      { text: " so it fails fast instead of clogging your request queue.", code: false }
     ];
     var fullLength = segments.reduce(function(sum, s){ return sum + s.text.length; }, 0);
 
@@ -2284,6 +2298,18 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       target.innerHTML = html;
     }
 
+    // Renders the full reply once to measure its final height, then locks
+    // the bubble at that height so it never grows/reflows while typing —
+    // only the text inside fills in.
+    function lockBubbleHeight(){
+      if(!bubble) return;
+      bubble.style.minHeight = "0px";
+      render(fullLength);
+      var h = bubble.getBoundingClientRect().height;
+      bubble.style.minHeight = h + "px";
+      render(0);
+    }
+
     function playOnce(){
       var revealed = 0;
       if(followup) followup.style.opacity = "0";
@@ -2299,6 +2325,13 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         }
       }, 18);
     }
+
+    lockBubbleHeight();
+    var resizeTimer;
+    window.addEventListener("resize", function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(lockBubbleHeight, 200);
+    });
 
     var started = false;
     var io = new IntersectionObserver(function(entries){
