@@ -9,6 +9,8 @@
 // (your own self-hosted vLLM/Ollama server, RunPod, OpenRouter, etc.) by
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
+import { logEvent } from "./_lib/supabaseAdmin.js";
+
 // ---------------------------------------------------------------------------
 // TEMPORARY in-memory rate limiting — same caveat as before: resets on
 // restart, doesn't work across multiple server instances, and is keyed by
@@ -99,6 +101,7 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const errBody = await response.text().catch(() => "");
       console.error("Self-hosted model error:", response.status, errBody);
+      await logEvent("error", "chat", `Model endpoint returned ${response.status}: ${errBody.slice(0, 300)}`);
       return res.status(502).json({
         error: "model_error",
         message: "Elora couldn't reach the model just now. Try again in a moment.",
@@ -122,6 +125,7 @@ export default async function handler(req, res) {
     });
   } catch (err) {
     console.error("Self-hosted model request failed:", err);
+    await logEvent("error", "chat", `Model request threw: ${err.message}`);
     return res.status(502).json({
       error: "model_error",
       message: "Elora couldn't reach the model just now. Try again in a moment.",

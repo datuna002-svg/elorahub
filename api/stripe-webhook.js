@@ -12,6 +12,7 @@
 // exist, the TODO comments below show exactly where to write the update.
 
 import Stripe from "stripe";
+import { logEvent } from "./_lib/supabaseAdmin.js";
 
 // Constructed lazily inside the handler — see note in
 // create-checkout-session.js for why this isn't built at module load time.
@@ -55,6 +56,7 @@ export default async function handler(req, res) {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
+    await logEvent("error", "stripe-webhook", `Signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -63,24 +65,23 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const { plan, cycle } = session.metadata || {};
       console.log(`Checkout completed: ${session.customer_email || session.customer} → ${plan} (${cycle})`);
-      // TODO once a database exists:
-      //   UPDATE users SET plan = plan WHERE stripe_customer_id = session.customer
-      // and store session.subscription as the user's stripe_subscription_id.
+      await logEvent("info", "stripe-webhook", `New ${plan} (${cycle}) subscription: ${session.customer_email || session.customer}`);
       break;
     }
 
     case "customer.subscription.updated": {
       const subscription = event.data.object;
       console.log(`Subscription updated: ${subscription.id}, status: ${subscription.status}`);
-      // TODO: sync the user's plan/status if they upgraded, downgraded,
-      // or their payment failed and Stripe put them in "past_due".
+      if (subscription.status === "past_due" || subscription.status === "unpaid") {
+        await logEvent("warning", "stripe-webhook", `Subscription ${subscription.id} is now ${subscription.status} — a payment likely failed.`);
+      }
       break;
     }
 
     case "customer.subscription.deleted": {
       const subscription = event.data.object;
       console.log(`Subscription cancelled: ${subscription.id}`);
-      // TODO: UPDATE users SET plan = 'free' WHERE stripe_subscription_id = subscription.id
+      await logEvent("info", "stripe-webhook", `Subscription cancelled: ${subscription.id}`);
       break;
     }
 

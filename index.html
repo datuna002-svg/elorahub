@@ -1027,6 +1027,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   .stat-row{ grid-template-columns:1fr; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1562,46 +1563,47 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
         <p class="updated">Restricted area — not linked from the main menu.</p>
       </div>
 
-      <div class="callout" style="max-width:100%;margin-bottom:34px;">
-        This console is a <strong>front-end preview</strong>. Everything below — role assignments, logs, flagged items, and the payout card — lives only in this browser tab's memory and resets on reload. Nothing here is actually secure yet: anyone who opens the page source can read the client-side code. A real version needs server-side login, a database for roles, and a real payments backend before you rely on it. Treat this as the working spec for that build, not the build itself.
+      <div class="callout" style="max-width:100%;margin-bottom:34px;" id="ownerConsoleNotice">
+        Checking your access…
       </div>
 
-      <!-- GATE -->
-      <div id="ownerGate" style="max-width:420px;">
-        <div class="field">
-          <label for="ownerEmailInput">Owner email</label>
-          <input type="email" id="ownerEmailInput" placeholder="you@email.com">
-        </div>
-        <button class="btn btn-primary btn-block" id="ownerUnlockBtn">Unlock console</button>
-        <p id="ownerGateError" style="color:var(--red-400);font-size:0.84rem;margin-top:10px;display:none;">This area is restricted to the elorahub owner.</p>
+      <!-- NOT SIGNED IN -->
+      <div id="ownerNotSignedIn" style="max-width:420px;display:none;">
+        <p style="color:var(--text-2);margin-bottom:16px;">Sign in with the owner (or an administrator/moderator) account to open this console.</p>
+        <button class="btn btn-primary btn-block" id="ownerSignInBtn">Sign in</button>
       </div>
 
-      <!-- DASHBOARD (hidden until unlocked) -->
+      <!-- SIGNED IN, NOT AUTHORIZED -->
+      <div id="ownerRestricted" style="max-width:460px;display:none;">
+        <p style="color:var(--text-2);">You're signed in as <strong id="ownerRestrictedEmail"></strong>, but that account doesn't have access to this console.</p>
+      </div>
+
+      <!-- DASHBOARD (hidden until a real server check confirms access) -->
       <div id="ownerDashboard" style="display:none;">
 
         <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-top:0;">
-          <div class="stat-box"><strong id="statSignups">128</strong><span>Total sign-ups</span></div>
-          <div class="stat-box"><strong id="statPrivate">34</strong><span>Active Private subs</span></div>
-          <div class="stat-box"><strong id="statPremium">19</strong><span>Active Premium subs</span></div>
-          <div class="stat-box"><strong id="statMRR">$985</strong><span>Estimated MRR</span></div>
+          <div class="stat-box"><strong id="statSignups">—</strong><span>Total sign-ups</span></div>
+          <div class="stat-box"><strong id="statPrivate">—</strong><span>Active Private subs</span></div>
+          <div class="stat-box"><strong id="statPremium">—</strong><span>Active Premium subs</span></div>
+          <div class="stat-box"><strong id="statMRR">—</strong><span>Estimated MRR</span></div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 18px;border-radius:12px;background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);">
+        <div id="ownerHealthBanner" style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 18px;border-radius:12px;background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);">
           <span style="width:9px;height:9px;border-radius:50%;background:#4caf6e;box-shadow:0 0 10px #4caf6e;"></span>
           <strong style="font-size:0.9rem;">All systems operational</strong>
-          <span style="color:var(--text-3);font-size:0.82rem;">Uptime relies on your real hosting/backend once this goes live — this indicator is illustrative.</span>
+          <span style="color:var(--text-3);font-size:0.82rem;">No errors logged recently.</span>
         </div>
 
         <!-- ROLES -->
-        <div class="doc-body" style="margin-top:50px;">
+        <div class="doc-body" style="margin-top:50px;" id="ownerRolesSection">
           <h2 style="margin-top:0;">Roles &amp; access</h2>
           <p>Give trusted people Administrator or Moderator access. Only the owner account can add or remove roles.</p>
 
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
+          <div id="ownerAddRoleRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
             <input type="email" id="roleEmailInput" placeholder="teammate@email.com" style="flex:1;min-width:220px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
             <select id="roleSelect" style="padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
-              <option value="Administrator">Administrator</option>
-              <option value="Moderator">Moderator</option>
+              <option value="administrator">Administrator</option>
+              <option value="moderator">Moderator</option>
             </select>
             <button class="btn btn-primary" id="addRoleBtn">Add</button>
           </div>
@@ -1617,14 +1619,14 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
         <!-- ADMIN TOOLS -->
         <div class="doc-body" style="margin-top:52px;">
           <h2>Administrator tools</h2>
-          <p>System-level visibility for catching problems early — hook this up to your real error tracking and hosting logs later.</p>
+          <p>Real events logged by the site itself — empty until something actually happens.</p>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin:18px 0;">
             <button class="btn" data-log-filter="all">All</button>
             <button class="btn" data-log-filter="info">Info</button>
             <button class="btn" data-log-filter="warning">Warnings</button>
             <button class="btn" data-log-filter="error">Errors</button>
-            <button class="btn btn-primary" id="refreshLogsBtn" style="margin-left:auto;">Simulate new event</button>
+            <button class="btn btn-primary" id="refreshLogsBtn" style="margin-left:auto;">Send test event</button>
           </div>
 
           <div id="logList" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;"></div>
@@ -1634,24 +1636,24 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
         <div class="doc-body" style="margin-top:52px;">
           <h2>Moderator tools</h2>
           <p>Review conversations flagged by users or by automatic filters.</p>
-          <div id="flagQueue" style="display:flex;flex-direction:column;gap:12px;margin-top:18px;"></div>
+          <div id="flagQueue" style="display:flex;flex-direction:column;gap:12px;margin-top:18px;">
+            <div style="padding:18px;border:1px solid var(--line);border-radius:14px;color:var(--text-3);font-size:0.88rem;">
+              Nothing to review yet — chat messages aren't stored server-side, so there's no flagged content until that's added.
+            </div>
+          </div>
         </div>
 
         <!-- PAYOUTS -->
         <div class="doc-body" style="margin-top:52px;">
           <h2>Payouts</h2>
-          <p>One correction worth making early: customers <em>pay</em> with a card, but you <em>receive</em> money into a connected bank account through a payment processor — not a credit card on your end. Stripe or PayPal are the usual choices, and both require their own account and identity verification (KYC) outside of elorahub.</p>
-          <div class="callout" style="max-width:640px;">
-            <strong>Owner-only.</strong> This card is only reachable from this console and only after the owner email unlocks it above — but again, that check happens in the browser, so it isn't real security. Real payouts need this button wired to a Stripe Connect (or PayPal) flow on a real backend.
-          </div>
+          <p>What Stripe currently shows for this account — the money that's actually yours to withdraw to your connected bank account.</p>
           <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
-            <div style="font-weight:700;margin-bottom:6px;">Payout account</div>
-            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:16px;">Not connected</div>
-            <button class="btn btn-primary btn-block" id="connectPayoutBtn">Connect payout account</button>
+            <div style="font-weight:700;margin-bottom:10px;">Available now</div>
+            <div style="font-family:var(--font-display);font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
+            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">Pending: —</div>
+            <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Stripe…</div>
           </div>
         </div>
-
-        <button class="btn" id="ownerLockBtn" style="margin-top:50px;">Lock console</button>
       </div>
     </div>
   </section>
@@ -1710,10 +1712,6 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
       <button class="social-btn" data-provider="Google">
         <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.2s2.7-6.2 6-6.2c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3 14.7 2 12 2 6.9 2 2.7 6.1 2.7 11.2S6.9 20.4 12 20.4c6.9 0 9.3-4.8 9.3-7.3 0-.5 0-.9-.1-1.3H12z"/><path fill="none" d="M0 0h24v24H0z"/></svg>
         Continue with Google
-      </button>
-      <button class="social-btn" data-provider="Apple">
-        <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.4 1.2c.1 1.1-.3 2.2-1 3-.7.8-1.9 1.5-3 1.4-.1-1.1.4-2.2 1-3 .8-.8 2-1.4 3-1.4zM20.6 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.2-4 3.2-1.5 0-1.9-1-3.9-1-2 0-2.5 1-4 1-1.7 0-2.9-1.6-3.9-3-2.7-3.9-3-8.5-1.3-11 1.2-1.8 3-2.8 4.8-2.8 1.8 0 2.9 1 4.4 1 1.4 0 2.3-1 4.4-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.5 8.5z"/></svg>
-        Continue with Apple
       </button>
       <button class="social-btn" data-provider="GitHub">
         <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.5 2 2 6.6 2 12.2c0 4.5 2.9 8.3 6.8 9.6.5.1.7-.2.7-.5v-1.9c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.4.1-2.8 0 0 .8-.3 2.8 1 .8-.2 1.7-.3 2.5-.3.9 0 1.7.1 2.5.3 2-1.4 2.8-1 2.8-1 .5 1.4.2 2.5.1 2.8.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.8v2.7c0 .3.2.6.7.5 4-1.4 6.8-5.1 6.8-9.6C22 6.6 17.5 2 12 2z"/></svg>
@@ -1933,31 +1931,40 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   modal.addEventListener("click", function(e){ if(e.target === modal){ closeModal(); } });
   document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ closeModal(); } });
 
-  document.querySelectorAll(".social-btn").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      showToast(btn.getAttribute("data-provider") + " sign-in needs a real OAuth app on your live domain — not something a preview can fake. Email sign-in below works for real, right now.");
-    });
-  });
+  /* ---------------- Real accounts (Supabase) ----------------
+     Google, GitHub, and email/password all go through Supabase Auth —
+     a real backend, not a browser trick. Until SUPABASE_URL/ANON_KEY
+     below are filled in (see SUPABASE-SETUP.md), this quietly falls
+     back to a localStorage-only demo so the site still works, but
+     that fallback is per-browser only and invisible to you as the
+     owner — get the real keys in as soon as you can. */
+  var SUPABASE_URL = "YOUR_SUPABASE_URL";
+  var SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  var supabaseClient = null;
+  var supabaseReady = SUPABASE_URL.indexOf("YOUR_") === -1 && SUPABASE_ANON_KEY.indexOf("YOUR_") === -1 && window.supabase;
+  if(supabaseReady){
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
 
-  /* ---------------- Real (local) account system ----------------
-     This genuinely works — accounts and sessions are stored in this
-     browser's localStorage, so signing up, signing out, and reloading
-     the page all behave like a real logged-in site. What it is NOT:
-     a real multi-device backend. Accounts here don't sync across
-     devices, aren't visible to you as the owner anywhere, and anyone
-     could reset them by clearing browser storage. The BACKEND-ROADMAP
-     doc covers what turns this into real accounts server-side. */
-  function loadUsers(){
+  var currentUser = null; // { email, name } | null
+  var currentSession = null; // real Supabase session (has access_token) | null
+
+  function getAccessToken(){
+    return currentSession ? currentSession.access_token : null;
+  }
+
+  // ---- Local fallback (only used if Supabase isn't configured yet) ----
+  function loadLocalUsers(){
     try { return JSON.parse(localStorage.getItem("elorahub_users") || "{}"); }
     catch(e){ return {}; }
   }
-  function saveUsers(users){
+  function saveLocalUsers(users){
     try { localStorage.setItem("elorahub_users", JSON.stringify(users)); } catch(e){}
   }
-  function getSession(){
+  function getLocalSession(){
     try { return localStorage.getItem("elorahub_session"); } catch(e){ return null; }
   }
-  function setSession(email){
+  function setLocalSession(email){
     try {
       if(email){ localStorage.setItem("elorahub_session", email); }
       else { localStorage.removeItem("elorahub_session"); }
@@ -1965,28 +1972,26 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   }
 
   function renderAuthState(){
-    var session = getSession();
     var signInBtn = document.getElementById("openSignIn");
     var signUpBtn = document.getElementById("openSignUp");
     var existingChip = document.getElementById("userChip");
     if(existingChip){ existingChip.remove(); }
 
-    if(session){
-      var users = loadUsers();
-      var user = users[session] || { name: session.split("@")[0] };
+    if(currentUser){
       signInBtn.style.display = "none";
       signUpBtn.style.display = "none";
       var chip = document.createElement("div");
       chip.id = "userChip";
       chip.style.cssText = "display:flex;align-items:center;gap:10px;";
       chip.innerHTML = '<span style="font-weight:700;font-size:0.88rem;color:var(--text-1);">' +
-        escapeHtml(user.name || session) + '</span>' +
+        escapeHtml(currentUser.name || currentUser.email) + '</span>' +
         '<button class="btn btn-ghost" id="signOutBtn" style="font-size:0.82rem;">Sign out</button>';
       signInBtn.parentElement.insertBefore(chip, signInBtn);
-      document.getElementById("signOutBtn").addEventListener("click", function(){
-        setSession(null);
-        renderAuthState();
+      document.getElementById("signOutBtn").addEventListener("click", async function(){
+        if(supabaseReady){ await supabaseClient.auth.signOut(); }
+        else { setLocalSession(null); currentUser = null; currentSession = null; renderAuthState(); }
         showToast("Signed out.");
+        refreshOwnerConsole();
       });
     } else {
       signInBtn.style.display = "";
@@ -2003,7 +2008,22 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     authErrorEl.style.display = "none";
   }
 
-  document.getElementById("authForm").addEventListener("submit", function(e){
+  document.querySelectorAll(".social-btn").forEach(function(btn){
+    btn.addEventListener("click", async function(){
+      var provider = btn.getAttribute("data-provider").toLowerCase();
+      if(!supabaseReady){
+        showToast(btn.getAttribute("data-provider") + " sign-in needs Supabase configured first — see SUPABASE-SETUP.md. Email sign-in below works right now.");
+        return;
+      }
+      var { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: provider,
+        options: { redirectTo: window.location.origin }
+      });
+      if(error){ showToast("Couldn't start " + btn.getAttribute("data-provider") + " sign-in: " + error.message); }
+    });
+  });
+
+  document.getElementById("authForm").addEventListener("submit", async function(e){
     e.preventDefault();
     clearAuthError();
     var email = document.getElementById("authEmail").value.trim().toLowerCase();
@@ -2013,26 +2033,77 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     if(!email || email.indexOf("@") === -1){ showAuthError("Enter a valid email address."); return; }
     if(password.length < 6){ showAuthError("Password needs to be at least 6 characters."); return; }
 
-    var users = loadUsers();
+    authSubmit.disabled = true;
+    var originalLabel = authSubmit.textContent;
+    authSubmit.textContent = mode === "signup" ? "Creating account…" : "Signing in…";
 
+    if(supabaseReady){
+      if(mode === "signup"){
+        var { data, error } = await supabaseClient.auth.signUp({
+          email: email, password: password, options: { data: { name: name || email.split("@")[0] } }
+        });
+        authSubmit.disabled = false; authSubmit.textContent = originalLabel;
+        if(error){ showAuthError(error.message); return; }
+        if(data.session){
+          showToast("Account created — you're signed in.");
+          closeModal();
+        } else {
+          showToast("Check your email to confirm your account, then sign in.");
+          setMode("signin");
+        }
+      } else {
+        var res = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+        authSubmit.disabled = false; authSubmit.textContent = originalLabel;
+        if(res.error){ showAuthError(res.error.message); return; }
+        showToast("Signed in.");
+        closeModal();
+      }
+      return;
+    }
+
+    // ---- Local fallback path (Supabase not configured yet) ----
+    authSubmit.disabled = false; authSubmit.textContent = originalLabel;
+    var users = loadLocalUsers();
     if(mode === "signup"){
       if(users[email]){ showAuthError("An account already exists for that email — try signing in instead."); return; }
       users[email] = { name: name || email.split("@")[0], password: password, plan: "free" };
-      saveUsers(users);
-      setSession(email);
-      showToast("Account created — you're signed in.");
+      saveLocalUsers(users);
+      setLocalSession(email);
+      currentUser = { email: email, name: users[email].name };
+      showToast("Account created — you're signed in. (Local preview — see SUPABASE-SETUP.md for real accounts.)");
     } else {
       var existing = users[email];
       if(!existing){ showAuthError("No account found for that email. Sign up instead?"); return; }
       if(existing.password !== password){ showAuthError("Incorrect password."); return; }
-      setSession(email);
-      showToast("Signed in.");
+      setLocalSession(email);
+      currentUser = { email: email, name: existing.name };
+      showToast("Signed in. (Local preview — see SUPABASE-SETUP.md for real accounts.)");
     }
     closeModal();
     renderAuthState();
   });
 
-  renderAuthState();
+  if(supabaseReady){
+    supabaseClient.auth.onAuthStateChange(function(_event, session){
+      currentSession = session;
+      currentUser = session ? { email: session.user.email, name: session.user.user_metadata?.name } : null;
+      renderAuthState();
+      refreshOwnerConsole();
+    });
+    supabaseClient.auth.getSession().then(function(res){
+      currentSession = res.data.session;
+      currentUser = currentSession ? { email: currentSession.user.email, name: currentSession.user.user_metadata?.name } : null;
+      renderAuthState();
+      refreshOwnerConsole();
+    });
+  } else {
+    var localEmail = getLocalSession();
+    if(localEmail){
+      var localUsers = loadLocalUsers();
+      currentUser = { email: localEmail, name: (localUsers[localEmail] || {}).name };
+    }
+    renderAuthState();
+  }
 
   /* ---------------- Hero mock: typewriter code reply ---------------- */
   (function(){
@@ -2387,144 +2458,189 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     b.addEventListener("click", function(){ sidebar.classList.remove("is-open"); });
   });
 
-  /* ---------------- Owner console ----------------
-     Front-end preview only. This gate lives entirely in this browser
-     tab's JS state — it is NOT real authentication. Anyone can read
-     OWNER_EMAIL in page source or open dev tools and reveal the
-     dashboard. Ship real access control server-side before relying
-     on this for anything. */
-  var OWNER_EMAIL = "datuna002@gmail.com";
-  var roles = [{ email: OWNER_EMAIL, role: "Owner" }];
-
-  var ownerGate = document.getElementById("ownerGate");
+  /* ---------------- Owner console (real, server-verified) ----------------
+     Every screen below is decided by the server, not the browser: the
+     page asks /api/admin/* for data using the signed-in user's real
+     Supabase access token, and those endpoints check the `roles` table
+     themselves before returning anything. A person who isn't signed in,
+     or is signed in but not in that table, simply gets a 403 with no
+     data in the response — there's nothing to "unlock" client-side. */
+  var ownerNotice = document.getElementById("ownerConsoleNotice");
+  var ownerNotSignedIn = document.getElementById("ownerNotSignedIn");
+  var ownerRestricted = document.getElementById("ownerRestricted");
   var ownerDashboard = document.getElementById("ownerDashboard");
-  var ownerGateError = document.getElementById("ownerGateError");
+  var myRole = null;
 
-  document.getElementById("ownerUnlockBtn").addEventListener("click", function(){
-    var val = document.getElementById("ownerEmailInput").value.trim().toLowerCase();
-    if(val === OWNER_EMAIL){
-      ownerGate.style.display = "none";
-      ownerDashboard.style.display = "block";
-      ownerGateError.style.display = "none";
-      renderRoles();
-      renderLogs("all");
-      renderFlagQueue();
-    } else {
-      ownerGateError.style.display = "block";
-    }
-  });
-  document.getElementById("ownerLockBtn").addEventListener("click", function(){
+  function adminFetch(path, options){
+    options = options || {};
+    var token = getAccessToken();
+    options.headers = Object.assign({ "Content-Type": "application/json" }, options.headers || {});
+    if(token){ options.headers.Authorization = "Bearer " + token; }
+    return fetch(path, options);
+  }
+
+  async function refreshOwnerConsole(){
+    ownerNotSignedIn.style.display = "none";
+    ownerRestricted.style.display = "none";
     ownerDashboard.style.display = "none";
-    ownerGate.style.display = "block";
-    document.getElementById("ownerEmailInput").value = "";
-  });
+    ownerNotice.style.display = "block";
 
-  function renderRoles(){
+    if(!currentUser || !getAccessToken()){
+      ownerNotice.style.display = "none";
+      ownerNotSignedIn.style.display = "block";
+      return;
+    }
+
+    if(!supabaseReady){
+      ownerNotice.textContent = "Owner console needs Supabase configured first — see SUPABASE-SETUP.md. Nothing here is reachable until then, by design.";
+      return;
+    }
+
+    ownerNotice.textContent = "Checking your access…";
+
+    try {
+      var res = await adminFetch("/api/admin/roles");
+      var data = await res.json();
+      if(!res.ok){
+        ownerNotice.style.display = "none";
+        ownerRestricted.style.display = "block";
+        document.getElementById("ownerRestrictedEmail").textContent = currentUser.email;
+        return;
+      }
+      myRole = data.yourRole;
+      ownerNotice.style.display = "none";
+      ownerDashboard.style.display = "block";
+      document.getElementById("ownerRolesSection").style.display = myRole === "owner" ? "block" : (myRole === "administrator" ? "block" : "none");
+      document.getElementById("ownerAddRoleRow").style.display = myRole === "owner" ? "flex" : "none";
+      renderRoles(data.roles);
+      loadOverview();
+      loadLogs();
+    } catch(err){
+      ownerNotice.style.display = "none";
+      ownerNotice.textContent = "";
+      ownerRestricted.style.display = "block";
+      document.getElementById("ownerRestrictedEmail").textContent = currentUser.email;
+    }
+  }
+
+  document.getElementById("ownerSignInBtn").addEventListener("click", function(){ openModal("signin"); });
+
+  function accessLabel(role){
+    if(role === "owner") return "Full, unrestricted";
+    if(role === "administrator") return "Logs, roles view, payouts";
+    return "Moderation queue";
+  }
+
+  function renderRoles(roles){
     var body = document.getElementById("rolesTableBody");
-    body.innerHTML = roles.map(function(r, i){
-      var isOwner = r.role === "Owner";
+    body.innerHTML = roles.map(function(r){
+      var isOwner = r.role === "owner";
       return '<tr>' +
         '<td>' + escapeHtml(r.email) + '</td>' +
-        '<td>' + escapeHtml(r.role) + '</td>' +
-        '<td>' + (isOwner ? "Full, unrestricted" : (r.role === "Administrator" ? "Logs, roles view, system tools" : "Content queue, moderation")) + '</td>' +
-        '<td>' + (isOwner ? '' : '<button data-remove-role="' + i + '" style="background:none;border:none;color:var(--red-400);font-weight:700;font-size:0.82rem;">Remove</button>') + '</td>' +
+        '<td>' + escapeHtml(r.role.charAt(0).toUpperCase() + r.role.slice(1)) + '</td>' +
+        '<td>' + accessLabel(r.role) + '</td>' +
+        '<td>' + (isOwner || myRole !== "owner" ? '' : '<button data-remove-role="' + escapeHtml(r.email) + '" style="background:none;border:none;color:var(--red-400);font-weight:700;font-size:0.82rem;">Remove</button>') + '</td>' +
       '</tr>';
     }).join("");
     body.querySelectorAll("[data-remove-role]").forEach(function(btn){
-      btn.addEventListener("click", function(){
-        roles.splice(parseInt(btn.getAttribute("data-remove-role"), 10), 1);
-        renderRoles();
-        showToast("Role removed for this session.");
+      btn.addEventListener("click", async function(){
+        var email = btn.getAttribute("data-remove-role");
+        var res = await adminFetch("/api/admin/roles", { method:"DELETE", body: JSON.stringify({ email: email }) });
+        var data = await res.json();
+        if(!res.ok){ showToast(data.message || "Couldn't remove that role."); return; }
+        showToast("Role removed for " + email + ".");
+        refreshOwnerConsole();
       });
     });
   }
-  document.getElementById("addRoleBtn").addEventListener("click", function(){
+
+  document.getElementById("addRoleBtn").addEventListener("click", async function(){
     var email = document.getElementById("roleEmailInput").value.trim();
     var role = document.getElementById("roleSelect").value;
     if(!email || email.indexOf("@") === -1){ showToast("Enter a valid email first."); return; }
-    if(email.toLowerCase() === OWNER_EMAIL){ showToast("That email is already the Owner."); return; }
-    roles.push({ email: email, role: role });
+    var res = await adminFetch("/api/admin/roles", { method:"POST", body: JSON.stringify({ email: email, role: role }) });
+    var data = await res.json();
+    if(!res.ok){ showToast(data.message || "Couldn't add that role."); return; }
     document.getElementById("roleEmailInput").value = "";
-    renderRoles();
-    showToast(role + " access added for " + email + " (this session only).");
+    showToast(role.charAt(0).toUpperCase() + role.slice(1) + " access added for " + email + ".");
+    refreshOwnerConsole();
   });
 
-  var logSeed = [
-    { level:"info", msg:"Chat service started normally." },
-    { level:"info", msg:"Nightly usage report generated." },
-    { level:"warning", msg:"Free-plan upload limit reached by a user." },
-    { level:"error", msg:"A file upload failed to process — retried successfully." },
-    { level:"info", msg:"New Private subscription activated." }
-  ];
-  var logEntries = logSeed.map(function(l, i){ return { level:l.level, msg:l.msg, time: new Date(Date.now() - (logSeed.length-i)*600000) }; });
-  var currentLogFilter = "all";
-
-  function timeAgo(d){
-    var mins = Math.round((Date.now() - d.getTime())/60000);
+  function timeAgo(iso){
+    var mins = Math.round((Date.now() - new Date(iso).getTime())/60000);
     if(mins < 1) return "just now";
     if(mins < 60) return mins + "m ago";
     return Math.round(mins/60) + "h ago";
   }
-  function renderLogs(filter){
-    currentLogFilter = filter;
+  var currentLogFilter = "all";
+  var lastLogs = [];
+  function renderLogs(){
     var list = document.getElementById("logList");
-    var rows = logEntries.filter(function(l){ return filter === "all" || l.level === filter; }).slice().reverse();
+    var rows = lastLogs.filter(function(l){ return currentLogFilter === "all" || l.level === currentLogFilter; });
     var colors = { info:"#4f9de2", warning:"#f5c344", error:"#ef5350" };
     list.innerHTML = rows.map(function(l){
       return '<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line-soft);font-size:0.86rem;">' +
         '<span style="width:8px;height:8px;border-radius:50%;background:' + colors[l.level] + ';flex:none;"></span>' +
         '<span style="text-transform:uppercase;font-size:0.7rem;font-weight:800;color:' + colors[l.level] + ';width:64px;flex:none;">' + l.level + '</span>' +
-        '<span style="color:var(--text-2);flex:1;">' + escapeHtml(l.msg) + '</span>' +
-        '<span style="color:var(--text-3);font-size:0.78rem;flex:none;">' + timeAgo(l.time) + '</span>' +
+        '<span style="color:var(--text-2);flex:1;">' + escapeHtml(l.message) + ' <span style="color:var(--text-3);">(' + escapeHtml(l.source || "site") + ')</span></span>' +
+        '<span style="color:var(--text-3);font-size:0.78rem;flex:none;">' + timeAgo(l.created_at) + '</span>' +
       '</div>';
     }).join("") || '<div style="padding:20px;color:var(--text-3);font-size:0.85rem;">No events at this level yet.</div>';
+
+    var banner = document.getElementById("ownerHealthBanner");
+    var hasRecentError = lastLogs.some(function(l){ return l.level === "error"; });
+    if(banner){
+      banner.style.background = hasRecentError ? "rgba(239,83,80,0.08)" : "rgba(76,175,110,0.08)";
+      banner.style.borderColor = hasRecentError ? "rgba(239,83,80,0.3)" : "rgba(76,175,110,0.25)";
+      banner.querySelector("span:nth-child(1)").style.background = hasRecentError ? "#ef5350" : "#4caf6e";
+      banner.querySelector("strong").textContent = hasRecentError ? "Recent errors logged" : "All systems operational";
+    }
+  }
+  async function loadLogs(){
+    if(myRole !== "owner" && myRole !== "administrator") return;
+    var res = await adminFetch("/api/admin/logs");
+    if(!res.ok) return;
+    var data = await res.json();
+    lastLogs = data.logs || [];
+    renderLogs();
   }
   document.querySelectorAll("[data-log-filter]").forEach(function(btn){
-    btn.addEventListener("click", function(){ renderLogs(btn.getAttribute("data-log-filter")); });
+    btn.addEventListener("click", function(){ currentLogFilter = btn.getAttribute("data-log-filter"); renderLogs(); });
   });
-  document.getElementById("refreshLogsBtn").addEventListener("click", function(){
-    var samples = [
-      { level:"info", msg:"Health check passed across all regions." },
-      { level:"warning", msg:"Response time briefly exceeded 5s for one request." },
-      { level:"error", msg:"A sign-in attempt failed validation." },
-      { level:"info", msg:"New Premium subscription activated." }
-    ];
-    var s = samples[Math.floor(Math.random()*samples.length)];
-    logEntries.push({ level:s.level, msg:s.msg, time:new Date() });
-    renderLogs(currentLogFilter);
-    showToast("New event logged.");
+  document.getElementById("refreshLogsBtn").addEventListener("click", async function(){
+    await adminFetch("/api/admin/logs", { method:"POST" });
+    showToast("Test event sent.");
+    loadLogs();
   });
 
-  var flagSeed = [
-    "Conversation flagged by auto-filter for review — likely a false positive.",
-    "User-reported response — flagged as possibly inaccurate.",
-    "Conversation flagged for repeated off-topic prompts."
-  ];
-  function renderFlagQueue(){
-    var q = document.getElementById("flagQueue");
-    q.innerHTML = flagSeed.map(function(text, i){
-      return '<div data-flag="' + i + '" style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);transition:opacity .3s ease;">' +
-        '<span style="flex:1;font-size:0.88rem;color:var(--text-2);">' + escapeHtml(text) + '</span>' +
-        '<button class="btn" data-approve="' + i + '" style="font-size:0.8rem;">Approve</button>' +
-        '<button class="btn btn-primary" data-remove-flag="' + i + '" style="font-size:0.8rem;">Remove content</button>' +
-      '</div>';
-    }).join("") || '<p style="color:var(--text-3);font-size:0.88rem;">Queue is empty.</p>';
-    q.querySelectorAll("[data-approve]").forEach(function(btn){
-      btn.addEventListener("click", function(){ resolveFlag(btn.closest("[data-flag]"), "Approved — kept as-is."); });
-    });
-    q.querySelectorAll("[data-remove-flag]").forEach(function(btn){
-      btn.addEventListener("click", function(){ resolveFlag(btn.closest("[data-flag]"), "Content removed."); });
-    });
+  function formatMoney(cents, currency){
+    if(cents == null) return "—";
+    return "$" + (cents/100).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 }) + " " + (currency||"usd").toUpperCase();
   }
-  function resolveFlag(row, message){
-    row.style.opacity = "0";
-    setTimeout(function(){ row.remove(); }, 280);
-    showToast(message);
+  async function loadOverview(){
+    var res = await adminFetch("/api/admin/overview");
+    if(!res.ok) return;
+    var data = await res.json();
+    document.getElementById("statSignups").textContent = data.signups != null ? data.signups : "—";
+    document.getElementById("statPrivate").textContent = data.activePrivate != null ? data.activePrivate : "—";
+    document.getElementById("statPremium").textContent = data.activePremium != null ? data.activePremium : "—";
+    document.getElementById("statMRR").textContent = data.mrrCents != null ? formatMoney(data.mrrCents, data.currency) : "—";
+
+    var payoutAvailable = document.getElementById("payoutAvailable");
+    var payoutPending = document.getElementById("payoutPending");
+    var payoutNote = document.getElementById("payoutStatusNote");
+    if(!data.stripeConnected){
+      payoutAvailable.textContent = "—";
+      payoutPending.textContent = "Pending: —";
+      payoutNote.textContent = "Stripe isn't connected yet — see STRIPE-SETUP.md.";
+    } else {
+      payoutAvailable.textContent = formatMoney(data.payoutsAvailableCents, data.currency);
+      payoutPending.textContent = "Pending: " + formatMoney(data.payoutsPendingCents, data.currency);
+      payoutNote.textContent = "Live from your Stripe account. Payouts to your bank follow Stripe's own schedule.";
+    }
   }
 
-  document.getElementById("connectPayoutBtn").addEventListener("click", function(){
-    showToast("Preview build — connect a real Stripe/PayPal account once the backend exists.");
-  });
+  refreshOwnerConsole();
 
 })();
 </script>

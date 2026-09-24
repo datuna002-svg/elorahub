@@ -9,6 +9,7 @@
 // See STRIPE-SETUP.md in this folder for the one-time setup steps.
 
 import Stripe from "stripe";
+import { logEvent } from "./_lib/supabaseAdmin.js";
 
 // Constructed lazily inside the handler (not at module load) so a missing
 // key doesn't crash the whole function before the friendlier check below
@@ -71,6 +72,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ url: session.url });
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err.message);
+    await logEvent("error", "checkout", `Checkout session creation failed: ${err.message}`);
     return res.status(502).json({ error: "stripe_error", message: "Couldn't start checkout. Try again in a moment." });
   }
 }
