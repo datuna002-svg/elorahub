@@ -93,8 +93,8 @@ Redeploy after adding these (Deployments tab → redeploy latest).
    sign-in — all three should work for real now.
 2. Go to the owner console (footer link → "Owner console"). Signed in as
    the email you set as owner in step 2, you should see the real
-   dashboard: sign-up count, subscriptions (0 until Stripe is live),
-   payout balance ($0 until Stripe is live), and an empty log (until
+   dashboard: sign-up count, subscriptions (0 until Paddle is live),
+   MRR ($0 until Paddle is live), and an empty log (until
    something real happens — or click the "test event" button to confirm
    logging works end to end).
 3. Try adding another email as Administrator or Moderator from the Roles

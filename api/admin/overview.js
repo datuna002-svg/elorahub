@@ -1,24 +1,37 @@
 // GET -> the owner-console dashboard numbers: real sign-up count (from
-// Supabase auth), real active-subscription counts + MRR (from Stripe
-// subscriptions), and the real Stripe balance (what you'd actually get
-// paid out). Every number here is live — nothing is hardcoded/fake.
-// Owner + administrators only.
+// Supabase auth) and real active-subscription counts + MRR (from Paddle).
+// Owner + administrators only. Every number here is live — nothing is
+// hardcoded/fake; anything Paddle doesn't expose through a simple API
+// call (like exact payout timing) is left null and the UI says to check
+// the Paddle Dashboard directly instead of guessing.
+
 import { verifyRequester, getSupabaseClient } from "../_lib/supabaseAdmin.js";
 
-const PRICE_IDS = {
-  [process.env.STRIPE_PRICE_PRIVATE_MONTHLY]: { plan: "private", cents: null },
-  [process.env.STRIPE_PRICE_PRIVATE_YEARLY]: { plan: "private", cents: null },
-  [process.env.STRIPE_PRICE_PREMIUM_MONTHLY]: { plan: "premium", cents: null },
-  [process.env.STRIPE_PRICE_PREMIUM_YEARLY]: { plan: "premium", cents: null },
+const PRICE_PLAN = {
+  [process.env.PADDLE_PRICE_PRIVATE_MONTHLY]: "private",
+  [process.env.PADDLE_PRICE_PRIVATE_YEARLY]: "private",
+  [process.env.PADDLE_PRICE_PREMIUM_MONTHLY]: "premium",
+  [process.env.PADDLE_PRICE_PREMIUM_YEARLY]: "premium",
 };
-const MONTHLY_PRICE_IDS = new Set([
-  process.env.STRIPE_PRICE_PRIVATE_MONTHLY,
-  process.env.STRIPE_PRICE_PREMIUM_MONTHLY,
-]);
-const YEARLY_PRICE_IDS = new Set([
-  process.env.STRIPE_PRICE_PRIVATE_YEARLY,
-  process.env.STRIPE_PRICE_PREMIUM_YEARLY,
-]);
+
+async function listActiveSubscriptions(apiKey) {
+  const results = [];
+  let url = "https://api.paddle.com/subscriptions?status=active&per_page=100";
+
+  // Paddle paginates via a full "next" URL in the response — follow it
+  // until there isn't one, capped so a runaway loop can't hang the request.
+  for (let page = 0; page < 20 && url; page++) {
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!res.ok) throw new Error(`Paddle API returned ${res.status}`);
+    const body = await res.json();
+    results.push(...(body.data || []));
+    url = body.meta?.pagination?.has_more ? body.meta.pagination.next : null;
+  }
+
+  return results;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "method_not_allowed" });
@@ -34,10 +47,8 @@ export default async function handler(req, res) {
     activePremium: null,
     mrrCents: null,
     currency: "usd",
-    payoutsAvailableCents: null,
-    payoutsPendingCents: null,
     supabaseConnected: false,
-    stripeConnected: Boolean(process.env.STRIPE_SECRET_KEY),
+    paddleConnected: Boolean(process.env.PADDLE_API_KEY),
   };
 
   // --- Real sign-up count, from Supabase's own user table ---
@@ -52,41 +63,38 @@ export default async function handler(req, res) {
     }
   }
 
-  // --- Real subscriptions + estimated MRR + payout balance, from Stripe ---
-  if (result.stripeConnected) {
+  // --- Real subscriptions + estimated MRR, from Paddle ---
+  if (result.paddleConnected) {
     try {
-      const { default: Stripe } = await import("stripe");
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const subs = await listActiveSubscriptions(process.env.PADDLE_API_KEY);
 
       let activePrivate = 0;
       let activePremium = 0;
       let mrrCents = 0;
-      let startingAfter;
-      do {
-        const page = await stripe.subscriptions.list({ status: "active", limit: 100, starting_after: startingAfter });
-        for (const sub of page.data) {
-          const priceId = sub.items?.data?.[0]?.price?.id;
-          const amount = sub.items?.data?.[0]?.price?.unit_amount || 0;
-          const info = PRICE_IDS[priceId];
-          if (!info) continue;
-          if (info.plan === "private") activePrivate += 1;
-          if (info.plan === "premium") activePremium += 1;
-          if (MONTHLY_PRICE_IDS.has(priceId)) mrrCents += amount;
-          else if (YEARLY_PRICE_IDS.has(priceId)) mrrCents += Math.round(amount / 12);
-        }
-        startingAfter = page.has_more ? page.data[page.data.length - 1].id : undefined;
-      } while (startingAfter);
+      let currency = "usd";
+
+      for (const sub of subs) {
+        const item = sub.items?.[0];
+        const priceId = item?.price?.id;
+        const plan = PRICE_PLAN[priceId];
+        if (!plan) continue;
+
+        if (plan === "private") activePrivate += 1;
+        if (plan === "premium") activePremium += 1;
+
+        const amountCents = Number(item.price?.unit_price?.amount || 0);
+        currency = (item.price?.unit_price?.currency_code || currency).toLowerCase();
+        const interval = item.price?.billing_cycle?.interval;
+        if (interval === "month") mrrCents += amountCents;
+        else if (interval === "year") mrrCents += Math.round(amountCents / 12);
+      }
 
       result.activePrivate = activePrivate;
       result.activePremium = activePremium;
       result.mrrCents = mrrCents;
-
-      const balance = await stripe.balance.retrieve();
-      result.payoutsAvailableCents = balance.available.reduce((s, b) => s + b.amount, 0);
-      result.payoutsPendingCents = balance.pending.reduce((s, b) => s + b.amount, 0);
-      result.currency = balance.available[0]?.currency || "usd";
+      result.currency = currency;
     } catch (err) {
-      result.stripeError = err.message;
+      result.paddleError = err.message;
     }
   }
 

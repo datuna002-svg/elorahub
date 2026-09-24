@@ -10,7 +10,7 @@ The site you have now (`index.html`) is a complete, polished front end. Four thi
 |---|---|---|
 | Chat that really analyzes questions, for unlimited users, 24/7 | A JS function that pattern-matches your message and fills in a template | A backend endpoint that calls a real Claude model, with your API key kept server-side |
 | Sign in with Google / Apple / GitHub | Buttons that show a toast | Real OAuth apps registered with each provider, plus something to handle the login (Supabase Auth is the fastest path) |
-| You get paid when people subscribe | A "Connect payout account" button that does nothing | A real Stripe (or PayPal) account, with your bank account added in *their* dashboard — not a credit card |
+| You get paid when people subscribe | A "Connect payout account" button that does nothing | A real Paddle account, with your bank account added in *their* dashboard — not a credit card. (Stripe was the original plan but doesn't support Georgia-based accounts, so Paddle is used instead — see PADDLE-SETUP.md.) |
 | Owner / Admin / Moderator roles | A client-side email check anyone can bypass via dev tools | Roles stored in a real database, checked on the server, tied to a real logged-in session |
 
 None of this can live safely in a static HTML file — anything in the browser is visible to anyone who opens dev tools, including API keys and "who's the owner" checks.
@@ -22,8 +22,8 @@ None of this can live safely in a static HTML file — anything in the browser i
 You don't need a large team or a custom server to do this properly. The fastest reliable path:
 
 - **Supabase** — handles user accounts, Google/GitHub/Apple sign-in, and your database (Postgres) in one product. Free tier is generous enough to launch on.
-- **A serverless function** (Supabase Edge Function, or a Vercel/Netlify function) — the one place your Anthropic API key and Stripe secret key live. The browser never sees them.
-- **Stripe** — subscription billing for Private and Premium, plus your own payouts (a standard Stripe account pays out to your bank automatically — you don't need Stripe Connect, that's only for platforms paying *other* people).
+- **A serverless function** (Vercel functions, as built) — the one place your LLM API key and Paddle API key live. The browser never sees them.
+- **Paddle** — subscription billing for Private and Premium, plus your own payouts (Paddle acts as merchant of record and pays out to your bank on its own schedule — used instead of Stripe because Stripe doesn't support Georgia-based accounts).
 - **Vercel or Netlify** — hosts the static front end at elorahub.online, free for this traffic level to start.
 
 This whole stack can be free or near-free until you have real paying users.
@@ -52,7 +52,7 @@ flags
   id, conversation_id, reason, status ('open' | 'approved' | 'removed')
 
 subscriptions
-  user_id, stripe_customer_id, stripe_subscription_id, plan, status, current_period_end
+  user_id, paddle_customer_id, paddle_subscription_id, plan, status, current_period_end
 ```
 
 Supabase's row-level security (RLS) can enforce a lot of this for you — for example, "a user can only read their own conversations" or "only rows in `roles` can grant admin access" — directly in the database, which is far safer than checking roles in front-end JavaScript.
@@ -86,10 +86,10 @@ This is the single biggest scope item outside of chat itself, mostly because of 
 
 ## 6. Getting paid
 
-- Create Stripe Products for Private ($15/mo, $144/yr) and Premium ($25/mo, $240/yr).
-- Use Stripe Checkout for the actual purchase — Stripe hosts the payment page, so you never handle card numbers.
-- A Stripe webhook updates the user's `plan` in your database the moment a subscription starts, renews, or cancels.
-- Add your bank account under Stripe's **Settings → Payouts** — that's the one-time step that makes money land in your account. No credit card linking on your end; that's what customers use to pay you.
+- Create Paddle Products for Private ($15/mo, $144/yr) and Premium ($25/mo, $240/yr).
+- Use Paddle's inline checkout for the actual purchase — it mounts inside your own page, so you never handle card numbers.
+- A Paddle webhook updates the user's `plan` in your database the moment a subscription starts, renews, or cancels.
+- Add your bank account under Paddle's payout settings — that's the one-time step that makes money land in your account. No credit card linking on your end; that's what customers use to pay you.
 
 ---
 
@@ -105,7 +105,7 @@ This is the single biggest scope item outside of chat itself, mostly because of 
 
 1. Supabase project + Google/GitHub sign-in (Apple can come later — it's the slowest to set up).
 2. `users` + `roles` tables, with your email seeded as `owner`.
-3. Stripe Checkout for Private/Premium + webhook to update `plan`.
+3. Paddle checkout for Private/Premium + webhook to update `plan`.
 4. The `/api/chat` function calling Claude, with usage limits enforced.
 5. Move Owner Console's role checks and data to the backend.
 6. Deploy front end to Vercel/Netlify, point elorahub.online at it.

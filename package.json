@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Serverless backend for elorahub — calls a self-hosted, code-focused open-weight model.",
   "dependencies": {
-    "stripe": "^22.6.2",
     "@supabase/supabase-js": "^2.45.4"
   }
 }

@@ -1028,7 +1028,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://js.stripe.com/v3/"></script>
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 <body>
 
@@ -1647,15 +1647,15 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
         <!-- PAYOUTS -->
         <div class="doc-body" style="margin-top:52px;">
           <h2>Payouts</h2>
-          <p>What Stripe currently shows for this account — the money that's actually yours to withdraw to your connected bank account.</p>
+          <p>Active subscriptions and revenue come from Paddle, who handle the sale and pay out to your bank account on their own schedule (Paddle is the "merchant of record" — this is what makes real payments work from Georgia, since Stripe itself isn't available there).</p>
           <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
-            <div style="font-weight:700;margin-bottom:10px;">Available now</div>
+            <div style="font-weight:700;margin-bottom:10px;">Monthly recurring revenue</div>
             <div style="font-family:var(--font-display);font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
-            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">Pending: —</div>
-            <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Stripe…</div>
-            <a href="https://dashboard.stripe.com/settings/payouts" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Manage payout bank account</a>
+            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">&nbsp;</div>
+            <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Paddle…</div>
+            <a href="https://vendors.paddle.com/" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Open Paddle Dashboard (payouts)</a>
           </div>
-          <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details are entered and stored on Stripe's own secure page — never here. This button only shows for the owner account, and Stripe requires its own account login regardless.</p>
+          <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for the owner account, and Paddle requires its own account login regardless.</p>
         </div>
       </div>
     </div>
@@ -1748,17 +1748,17 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   </div>
 </div>
 
-<!-- ============ CHECKOUT MODAL (Stripe embedded, stays on elorahub) ============ -->
+<!-- ============ CHECKOUT MODAL (Paddle inline checkout, stays on elorahub) ============ -->
 <div class="modal-overlay" id="checkoutModal">
   <div class="modal-card" style="max-width:480px;">
     <button class="modal-close" id="checkoutModalClose" aria-label="Close">&times;</button>
     <div class="modal-head">
       <img src="assets/elorahub_logo.png" alt="elorahub">
       <h3>Complete your subscription</h3>
-      <p>Card, debit, or PayPal — handled securely by Stripe, without leaving elorahub.</p>
+      <p>Card, Apple Pay, Google Pay — handled securely by Paddle, without leaving elorahub.</p>
     </div>
     <div id="checkoutLoading" style="text-align:center;padding:30px 0;color:var(--text-3);font-size:0.9rem;">Loading secure checkout…</div>
-    <div id="checkoutContainer"></div>
+    <div id="checkoutContainer" class="checkout-container"></div>
   </div>
 </div>
 
@@ -1852,15 +1852,42 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     });
   });
 
-  /* ---------------- Stripe checkout (embedded — stays on elorahub) ----------------
-     Card, debit, and PayPal all show up automatically here IF they're
-     turned on in the Stripe Dashboard (Settings → Payment methods) — see
-     STRIPE-SETUP.md. This code doesn't hardcode which methods appear. */
-  var STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY";
-  var stripeJs = (STRIPE_PUBLISHABLE_KEY.indexOf("YOUR_") === -1 && window.Stripe)
-    ? window.Stripe(STRIPE_PUBLISHABLE_KEY)
-    : null;
-  var activeEmbeddedCheckout = null;
+  /* ---------------- Paddle checkout (inline — stays on elorahub) ----------------
+     Card, Apple Pay, and Google Pay all show up automatically here based on
+     what's enabled in the Paddle Dashboard and what the buyer's device/
+     browser supports — see PADDLE-SETUP.md. This code doesn't hardcode
+     which methods appear. Paddle acts as merchant of record (it's the one
+     that handles the sale and pays out to your bank), which is what makes
+     this work for a Georgia-based account — Stripe itself isn't available
+     there. */
+  var paddleConfig = null;
+  var paddleReady = false;
+
+  async function ensurePaddleReady(){
+    if(paddleReady) return paddleConfig && paddleConfig.configured;
+    try {
+      var res = await fetch("/api/paddle-config");
+      paddleConfig = await res.json();
+    } catch(e){
+      paddleConfig = { configured: false };
+    }
+    if(paddleConfig.configured && window.Paddle){
+      window.Paddle.Environment.set(paddleConfig.environment === "sandbox" ? "sandbox" : "production");
+      window.Paddle.Initialize({
+        token: paddleConfig.clientToken,
+        checkout: {
+          settings: {
+            displayMode: "inline",
+            frameTarget: "checkout-container",
+            frameInitialHeight: "450",
+            frameStyle: "width:100%; min-width:312px; background-color:transparent; border:none;"
+          }
+        }
+      });
+    }
+    paddleReady = true;
+    return paddleConfig.configured && !!window.Paddle;
+  }
 
   var checkoutModal = document.getElementById("checkoutModal");
   var checkoutLoading = document.getElementById("checkoutLoading");
@@ -1869,10 +1896,6 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   function closeCheckoutModal(){
     checkoutModal.classList.remove("is-open");
     document.body.style.overflow = "";
-    if(activeEmbeddedCheckout){
-      try { activeEmbeddedCheckout.destroy(); } catch(e){}
-      activeEmbeddedCheckout = null;
-    }
     checkoutContainer.innerHTML = "";
     checkoutLoading.style.display = "block";
   }
@@ -1886,38 +1909,33 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
       btn.textContent = "Loading checkout…";
       btn.disabled = true;
 
-      if(!stripeJs){
-        showToast("Payments aren't connected yet — see STRIPE-SETUP.md to finish setup.");
-        btn.textContent = originalText;
-        btn.disabled = false;
+      var ok = await ensurePaddleReady();
+      btn.textContent = originalText;
+      btn.disabled = false;
+
+      if(!ok){
+        showToast("Payments aren't connected yet — see PADDLE-SETUP.md to finish setup.");
         return;
       }
 
-      try {
-        var res = await fetch("/api/create-checkout-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: plan, cycle: currentBillingCycle, customerEmail: currentUser ? currentUser.email : undefined })
-        });
-        var data = await res.json();
-        btn.textContent = originalText;
-        btn.disabled = false;
-
-        if(!res.ok || !data.clientSecret){
-          showToast(data.message || "Payments aren't connected yet — see STRIPE-SETUP.md to finish setup.");
-          return;
-        }
-
-        checkoutModal.classList.add("is-open");
-        document.body.style.overflow = "hidden";
-        activeEmbeddedCheckout = await stripeJs.initEmbeddedCheckout({ clientSecret: data.clientSecret });
-        checkoutLoading.style.display = "none";
-        activeEmbeddedCheckout.mount("#checkoutContainer");
-      } catch(err){
-        btn.textContent = originalText;
-        btn.disabled = false;
-        showToast("Couldn't reach checkout — try again in a moment.");
+      var key = plan + "-" + currentBillingCycle;
+      var priceId = paddleConfig.priceIds[key];
+      if(!priceId){
+        showToast("This plan isn't set up in Paddle yet — see PADDLE-SETUP.md.");
+        return;
       }
+
+      checkoutModal.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+      checkoutLoading.style.display = "block";
+
+      window.Paddle.Checkout.open({
+        items: [{ priceId: priceId, quantity: 1 }],
+        customer: currentUser && currentUser.email ? { email: currentUser.email } : undefined,
+        settings: { frameTarget: "checkout-container" }
+      });
+      // Paddle's inline frame replaces the loading text once it mounts.
+      setTimeout(function(){ checkoutLoading.style.display = "none"; }, 800);
     });
   });
 
@@ -2749,16 +2767,13 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     document.getElementById("statMRR").textContent = data.mrrCents != null ? formatMoney(data.mrrCents, data.currency) : "—";
 
     var payoutAvailable = document.getElementById("payoutAvailable");
-    var payoutPending = document.getElementById("payoutPending");
     var payoutNote = document.getElementById("payoutStatusNote");
-    if(!data.stripeConnected){
+    if(!data.paddleConnected){
       payoutAvailable.textContent = "—";
-      payoutPending.textContent = "Pending: —";
-      payoutNote.textContent = "Stripe isn't connected yet — see STRIPE-SETUP.md.";
+      payoutNote.textContent = "Paddle isn't connected yet — see PADDLE-SETUP.md.";
     } else {
-      payoutAvailable.textContent = formatMoney(data.payoutsAvailableCents, data.currency);
-      payoutPending.textContent = "Pending: " + formatMoney(data.payoutsPendingCents, data.currency);
-      payoutNote.textContent = "Live from your Stripe account. Payouts to your bank follow Stripe's own schedule.";
+      payoutAvailable.textContent = data.mrrCents != null ? formatMoney(data.mrrCents, data.currency) : "—";
+      payoutNote.textContent = "MRR is calculated live from active Paddle subscriptions. Exact payout amounts and dates live in the Paddle Dashboard, linked below.";
     }
   }
 
