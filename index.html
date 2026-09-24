@@ -98,7 +98,7 @@ p{ margin:0; }
   pointer-events:none;
   background:
     radial-gradient(60% 50% at 22% 10%, rgba(255,36,64,0.06), transparent 60%),
-    radial-gradient(55% 45% at 85% 18%, rgba(139,92,246,0.06), transparent 62%),
+    radial-gradient(55% 45% at 85% 18%, rgba(140,138,147,0.05), transparent 62%),
     radial-gradient(70% 60% at 50% 100%, rgba(185,28,44,0.05), transparent 65%),
     linear-gradient(180deg, #010101 0%, #000000 45%, #000000 100%);
 }
@@ -227,9 +227,12 @@ p{ margin:0; }
   border:none;
   color:#fff;
   background:var(--accent-grad);
+  background-size:220% 220%;
+  animation:shine-drift 7s ease infinite;
   box-shadow:0 8px 22px rgba(255,36,64,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
 .btn-primary:hover{ box-shadow:0 10px 30px rgba(192,38,211,0.45), inset 0 1px 0 rgba(255,255,255,0.25); filter:brightness(1.06); }
+@keyframes shine-drift{ 0%,100%{ background-position:0% 40%; } 50%{ background-position:100% 60%; } }
 .btn-ghost{ background:transparent; border-color:transparent; color:var(--text-2); }
 .btn-ghost:hover{ color:var(--text-1); }
 .btn-lg{ padding:14px 28px; font-size:0.98rem; }
@@ -572,7 +575,7 @@ p{ margin:0; }
   transition:transform .3s var(--ease), box-shadow .3s var(--ease);
 }
 .plan:hover{ transform:translateY(-6px); box-shadow:0 26px 54px -18px rgba(0,0,0,0.6); }
-.plan.private{ border-color:rgba(139,92,246,0.3); }
+.plan.private{ border-color:rgba(255,36,64,0.3); }
 .plan.premium{
   border:1px solid transparent;
   background:
@@ -688,6 +691,9 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
    CHAT — full screen app
    ============================================================ */
 #page-chat.page.is-active{ display:flex; }
+/* Full-screen app view — locks the whole page still so nothing (footer,
+   other sections) can ever scroll into view behind the chat. */
+body.chat-mode{ overflow:hidden; height:100vh; }
 .chat-app{
   display:flex;
   width:100%;
@@ -707,6 +713,8 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   padding:12px 14px;
   border-radius:12px;
   background:var(--accent-grad);
+  background-size:220% 220%;
+  animation:shine-drift 7s ease infinite;
   color:#fff; font-weight:700; font-size:0.9rem;
   border:1px solid rgba(255,36,64,0.4);
   box-shadow:0 8px 22px rgba(255,36,64,0.3);
@@ -781,7 +789,14 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   color:var(--grey-100);
 }
 .msg.from-user .msg-bubble{ background:rgba(255,255,255,0.07); border-bottom-right-radius:4px; }
-.msg.from-ai .msg-bubble{ background:var(--panel); border:1px solid var(--line-soft); border-bottom-left-radius:4px; }
+.msg.from-ai .msg-bubble{
+  background:rgba(22,21,25,0.7);
+  backdrop-filter:blur(16px) saturate(130%);
+  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  border:1px solid var(--line-soft);
+  border-bottom-left-radius:4px;
+  box-shadow:0 10px 28px -16px rgba(0,0,0,0.55);
+}
 .msg-bubble p + p{ margin-top:10px; }
 .msg-bubble ul{ margin-top:8px; padding-left:18px; list-style:disc; }
 .msg-bubble li{ margin-bottom:4px; }
@@ -792,7 +807,11 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 .typing-row{ display:flex; gap:14px; }
 .typing-bubble{
   padding:12px 18px; border-radius:16px; border-bottom-left-radius:4px;
-  background:var(--panel); border:1px solid var(--line-soft);
+  background:rgba(22,21,25,0.7);
+  backdrop-filter:blur(16px) saturate(130%);
+  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  border:1px solid var(--line-soft);
+  box-shadow:0 10px 28px -16px rgba(0,0,0,0.55);
   display:flex; align-items:center; gap:10px;
   position:relative;
   overflow:hidden;
@@ -807,11 +826,16 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 @keyframes shimmer-sweep{ 0%{ background-position:160% 0; } 100%{ background-position:-60% 0; } }
 .typing-label{ font-size:0.86rem; color:var(--text-2); font-weight:600; position:relative; z-index:1; }
 .typing-dots{ display:flex; align-items:center; gap:5px; position:relative; z-index:1; }
-.typing-dots span{ width:6px; height:6px; border-radius:50%; animation:bounce-dot 1s infinite ease-in-out; }
-.typing-dots span:nth-child(1){ background:#ef5350; }
-.typing-dots span:nth-child(2){ background:#f5c344; animation-delay:0.15s; }
-.typing-dots span:nth-child(3){ background:#4caf6e; animation-delay:0.3s; }
-@keyframes bounce-dot{ 0%,80%,100%{ transform:translateY(0); opacity:.4 } 40%{ transform:translateY(-4px); opacity:1 } }
+.typing-dots span{
+  width:6px; height:6px; border-radius:50%;
+  background:var(--accent-grad);
+  background-size:220% 220%;
+  box-shadow:0 0 7px rgba(255,36,64,0.55);
+  animation:bounce-dot 1s infinite ease-in-out, shine-drift 2.2s ease infinite;
+}
+.typing-dots span:nth-child(2){ animation-delay:0.15s, 0.15s; }
+.typing-dots span:nth-child(3){ animation-delay:0.3s, 0.3s; }
+@keyframes bounce-dot{ 0%,80%,100%{ transform:translateY(0); opacity:.55 } 40%{ transform:translateY(-4px); opacity:1 } }
 
 .chat-suggestions{
   max-width:760px; margin:0 auto 22px; padding:0 20px;
@@ -855,13 +879,20 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 .input-shell{
   max-width:760px; margin:0 auto;
   display:flex; align-items:flex-end; gap:8px;
-  background:var(--panel);
+  background:rgba(22,21,25,0.6);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
   border:1px solid var(--line);
-  border-radius:20px;
+  border-radius:22px;
   padding:10px 10px 10px 14px;
-  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+  box-shadow:0 12px 34px -14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition:border-color .25s var(--ease), box-shadow .25s var(--ease), transform .2s var(--ease);
 }
-.input-shell:focus-within{ border-color:rgba(198,196,202,0.45); box-shadow:0 0 0 4px rgba(198,196,202,0.1); }
+.input-shell:focus-within{
+  border-color:rgba(255,36,64,0.4);
+  box-shadow:0 12px 34px -14px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,36,64,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform:translateY(-1px);
+}
 .icon-btn{
   flex:none; width:36px; height:36px; border-radius:11px;
   border:1px solid var(--line);
@@ -887,11 +918,15 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   flex:none; width:38px; height:38px; border-radius:12px;
   border:none;
   background:var(--accent-grad);
+  background-size:220% 220%;
+  animation:shine-drift 7s ease infinite;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 6px 16px rgba(255,36,64,0.4);
+  transition:transform .18s var(--ease), box-shadow .2s var(--ease);
 }
+.send-btn:hover:not(:disabled){ transform:scale(1.06); box-shadow:0 8px 22px rgba(255,36,64,0.55); }
 .send-btn svg{ width:16px; height:16px; stroke:#fff; }
-.send-btn:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; }
+.send-btn:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; animation:none; }
 .input-foot{ text-align:center; margin-top:10px; font-size:0.72rem; color:var(--text-3); }
 .attach-chip{
   display:inline-flex; align-items:center; gap:6px;
@@ -1052,7 +1087,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 
 <div class="atmosphere">
   <div class="blur-orb" style="width:560px;height:560px;background:radial-gradient(circle,var(--accent-1),transparent 70%);top:-160px;left:-120px;opacity:0.11;"></div>
-  <div class="blur-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--accent-2),transparent 70%);bottom:-180px;right:-100px;opacity:0.11;"></div>
+  <div class="blur-orb" style="width:500px;height:500px;background:radial-gradient(circle,var(--grey-500),transparent 70%);bottom:-180px;right:-100px;opacity:0.13;"></div>
   <div class="blur-orb" style="width:420px;height:420px;background:radial-gradient(circle,var(--accent-3),transparent 70%);top:35%;left:45%;opacity:0.07;"></div>
 </div>
 
@@ -1275,8 +1310,8 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
         <div class="attach-row" id="attachRow" style="display:none;"></div>
 
         <div class="model-picker" id="modelPicker">
-          <button class="model-chip is-active" data-model="groq" type="button">Groq</button>
-          <button class="model-chip" data-model="gemini" type="button">Gemini</button>
+          <button class="model-chip is-active" data-model="groq" type="button">elora</button>
+          <button class="model-chip" data-model="gemini" type="button">elora Vision</button>
           <button class="model-chip" data-model="claude" type="button" disabled>Claude<span class="soon">soon</span></button>
           <button class="model-chip" data-model="gpt" type="button" disabled>GPT<span class="soon">soon</span></button>
         </div>
@@ -1802,6 +1837,9 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     document.querySelectorAll(".nav-links button, .mobile-menu button").forEach(function(b){
       b.classList.toggle("is-active", b.getAttribute("data-nav") === name);
     });
+    // Chat is a true full-screen app view — lock body scroll so nothing
+    // (footer, other sections) can ever peek in below it.
+    document.body.classList.toggle("chat-mode", name === "chat");
     window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
     try{
       if(history.replaceState){ history.replaceState(null, "", "#" + name); }
