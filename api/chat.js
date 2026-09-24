@@ -1,16 +1,13 @@
 // /api/chat.js
 //
-// This version calls YOUR OWN self-hosted model — no per-token billing to
-// Anthropic, OpenAI, or anyone else. It expects an OpenAI-compatible
-// endpoint (which is what vLLM serves), pointed at an open-weight,
-// code-focused model such as Qwen2.5-Coder-14B-Instruct running on your
-// own GPU (see RUNPOD-DEPLOY.md in this folder for how to stand that up).
+// Calls a real LLM through an OpenAI-compatible chat-completions endpoint.
+// Defaults to Groq (console.groq.com), which has a genuinely free API
+// tier — no credit card, fast inference, solid open models. Just set
+// LLM_API_KEY in Vercel's env vars (see GROQ-SETUP.md in this folder).
 //
-// Nothing about the request/response shape below is Anthropic- or
-// OpenAI-specific — this is the standard "OpenAI-compatible chat
-// completions" format that vLLM, Ollama, LM Studio, text-generation-webui,
-// and most self-hosted inference servers all speak, so this file works
-// with any of them as long as the three env vars below are set correctly.
+// You can point this at anything else that speaks the same format instead
+// (your own self-hosted vLLM/Ollama server, RunPod, OpenRouter, etc.) by
+// overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
 // ---------------------------------------------------------------------------
 // TEMPORARY in-memory rate limiting — same caveat as before: resets on
@@ -72,15 +69,15 @@ export default async function handler(req, res) {
     content: m.content,
   }));
 
-  const endpointUrl = process.env.LLM_ENDPOINT_URL;
+  const endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
   const apiKey = process.env.LLM_API_KEY;
-  const model = process.env.LLM_MODEL || "Qwen/Qwen2.5-Coder-14B-Instruct";
+  const model = process.env.LLM_MODEL || "llama-3.3-70b-versatile";
 
-  if (!endpointUrl) {
-    console.error("LLM_ENDPOINT_URL is not set.");
+  if (!apiKey) {
+    console.error("LLM_API_KEY is not set.");
     return res.status(500).json({
       error: "not_configured",
-      message: "The self-hosted model endpoint isn't configured yet.",
+      message: "The AI model isn't configured yet — LLM_API_KEY is missing.",
     });
   }
 
