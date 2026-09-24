@@ -28,10 +28,10 @@ function checkAndBumpFreeUsage(key) {
   return true;
 }
 
-// Elora's system prompt — now tilted hard toward being a genuinely strong
+// elora's system prompt — now tilted hard toward being a genuinely strong
 // coding assistant first, general-purpose assistant second. Adjust the
 // balance here if you want more or less of a code focus.
-const SYSTEM_PROMPT = `You are Elora, the AI assistant for elorahub. Your strongest skill is programming: you write correct, working code, debug precisely by reasoning through what the code actually does rather than guessing, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.
+const SYSTEM_PROMPT = `You are elora, the AI assistant for elorahub. Your strongest skill is programming: you write correct, working code, debug precisely by reasoning through what the code actually does rather than guessing, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.
 
 Match your reply length to how much the question actually needs. A greeting, a simple factual question, or small talk gets a short, natural, conversational reply — a sentence or two, no more. Save longer, structured answers for things that genuinely warrant depth (real code, real analysis, multi-part questions). Don't pad short answers with caveats, summaries, or restated context.
 
@@ -199,7 +199,7 @@ export default async function handler(req, res) {
   }
 
   // Fetch any plain http(s) links found in the newest message and fold in
-  // a short excerpt of each page's text, so Elora can actually answer
+  // a short excerpt of each page's text, so elora can actually answer
   // questions about a link instead of just seeing the bare URL.
   const linkContext = await fetchLinkContext(lastMessage.content);
 
@@ -243,7 +243,7 @@ export default async function handler(req, res) {
       await logEvent("error", "chat", `Model endpoint returned ${response.status}: ${errBody.slice(0, 300)}`);
       return res.status(502).json({
         error: "model_error",
-        message: "Elora couldn't reach the model just now. Try again in a moment.",
+        message: "elora couldn't reach the model just now. Try again in a moment.",
       });
     }
 
@@ -254,7 +254,7 @@ export default async function handler(req, res) {
       console.error("Unexpected response shape from model endpoint:", JSON.stringify(data).slice(0, 500));
       return res.status(502).json({
         error: "model_error",
-        message: "Elora's response came back empty. Try again.",
+        message: "elora's response came back empty. Try again.",
       });
     }
 
@@ -268,7 +268,7 @@ export default async function handler(req, res) {
     await logEvent("error", "chat", `Model request threw: ${err.message}`);
     return res.status(502).json({
       error: "model_error",
-      message: "Elora couldn't reach the model just now. Try again in a moment.",
+      message: "elora couldn't reach the model just now. Try again in a moment.",
     });
   }
 }

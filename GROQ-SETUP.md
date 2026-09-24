@@ -1,6 +1,6 @@
 # Getting real AI chat working — free, no credit card
 
-Elora's chat calls a real LLM through `/api/chat.js`. The in-chat model
+elora's chat calls a real LLM through `/api/chat.js`. The in-chat model
 picker offers two genuinely free options right now — [Groq](https://console.groq.com)
 and [Gemini](https://aistudio.google.com) — plus "Claude" and "GPT" shown
 as **coming soon** placeholders until you're ready to pay for those (they
@@ -51,7 +51,7 @@ use. If you ever outgrow it, either:
 
 ## Swapping models
 
-Groq hosts several open models. To change which one Elora uses, set
+Groq hosts several open models. To change which one elora uses, set
 `LLM_MODEL` in Vercel's env vars to any model name Groq currently serves
 (check console.groq.com for the current list) — no code changes needed.
 
@@ -70,7 +70,7 @@ needed.
 
 If a message contains a plain `http(s)://` link, the server fetches that
 page itself (6-second timeout, first ~3000 characters of visible text)
-and gives the model that content, so Elora can actually answer questions
+and gives the model that content, so elora can actually answer questions
 about what's on the page. This only works for public pages that don't
 require login, and only reads the first 2 links in a message.
 

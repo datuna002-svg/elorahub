@@ -1,4 +1,4 @@
-# Running your own model for Elora — no per-token fees to any AI company
+# Running your own model for elora — no per-token fees to any AI company
 
 This is the setup for a self-hosted, code-focused open-weight model,
 replacing the Claude API version. Once this is running, `api/chat.js` calls
@@ -65,7 +65,7 @@ below uses RunPod's serverless product for that reason.
 
 - No `@anthropic-ai/sdk` dependency — this calls your endpoint with plain
   `fetch`, since vLLM speaks the same request format either way.
-- The system prompt now pushes Elora to lead with coding strength — see the
+- The system prompt now pushes elora to lead with coding strength — see the
   `SYSTEM_PROMPT` constant in `chat.js` if you want to rebalance how
   code-focused versus general-purpose she feels.
 - Same usage limits and validation as before — those aren't tied to which
