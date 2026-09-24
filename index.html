@@ -1257,7 +1257,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 
         <div class="chat-inputbar">
           <div class="input-shell">
-            <input type="file" id="fileInput" multiple style="display:none;">
+            <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
             <button class="icon-btn" id="attachBtn" aria-label="Attach file or image" title="Attach file or image">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a1.5 1.5 0 01-2.12-2.12l8.49-8.48"/></svg>
             </button>
@@ -2195,20 +2195,69 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     });
   });
 
-  document.getElementById("attachBtn").addEventListener("click", function(){ fileInput.click(); });
-  fileInput.addEventListener("change", function(){
-    Array.prototype.forEach.call(fileInput.files, function(f){
-      attachedFiles.push(f.name);
+  // attachedFiles holds real content now, not just names, so Elora can
+  // actually see images (sent to a vision model) and read text files
+  // (inlined into the message). Other file types (pdf, docx, etc.) are
+  // attached by name only — their content genuinely isn't extracted yet.
+  var MAX_IMAGE_BYTES = 3 * 1024 * 1024; // keep base64 payload under Vercel's request-body limit
+  var MAX_TEXT_BYTES = 200 * 1024;
+  var TEXTY_TYPES = ["text/plain", "text/markdown", "text/csv", "application/json", "text/x-log"];
+
+  function readFileAsDataURL(file){
+    return new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
+      reader.onerror = function(){ resolve(null); };
+      reader.readAsDataURL(file);
     });
-    renderAttachments();
+  }
+  function readFileAsText(file){
+    return new Promise(function(resolve){
+      var reader = new FileReader();
+      reader.onload = function(){ resolve(reader.result); };
+      reader.onerror = function(){ resolve(null); };
+      reader.readAsText(file);
+    });
+  }
+
+  document.getElementById("attachBtn").addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", async function(){
+    var files = Array.prototype.slice.call(fileInput.files);
     fileInput.value = "";
+
+    for(var i = 0; i < files.length; i++){
+      var f = files[i];
+      var entry = { name: f.name, isImage: false, dataUrl: null, textContent: null, unsupported: false };
+
+      if(f.type.indexOf("image/") === 0){
+        if(f.size > MAX_IMAGE_BYTES){
+          showToast(f.name + " is too large (max 3MB for images) — skipped.");
+          continue;
+        }
+        entry.isImage = true;
+        entry.dataUrl = await readFileAsDataURL(f);
+      } else if(TEXTY_TYPES.indexOf(f.type) > -1 || /\.(txt|md|csv|json|log)$/i.test(f.name)){
+        if(f.size > MAX_TEXT_BYTES){
+          showToast(f.name + " is too large to read (max 200KB for text files) — skipped.");
+          continue;
+        }
+        var text = await readFileAsText(f);
+        entry.textContent = text ? text.slice(0, 6000) : null;
+      } else {
+        entry.unsupported = true; // attached by name only — content not read
+      }
+
+      attachedFiles.push(entry);
+    }
+    renderAttachments();
   });
 
   function renderAttachments(){
     if(attachedFiles.length === 0){ attachRow.style.display = "none"; attachRow.innerHTML=""; return; }
     attachRow.style.display = "flex";
-    attachRow.innerHTML = attachedFiles.map(function(name, i){
-      return '<span class="attach-chip">📎 ' + escapeHtml(name) + ' <button data-idx="' + i + '" aria-label="Remove file">&times;</button></span>';
+    attachRow.innerHTML = attachedFiles.map(function(entry, i){
+      var icon = entry.isImage ? "🖼️" : (entry.unsupported ? "📄" : "📝");
+      return '<span class="attach-chip">' + icon + ' ' + escapeHtml(entry.name) + ' <button data-idx="' + i + '" aria-label="Remove file">&times;</button></span>';
     }).join("");
     attachRow.querySelectorAll("button").forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -2365,14 +2414,29 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   }
   function preSentence(arr){ return pick(arr); }
 
-  async function getReply(text, fileNames){
+  async function getReply(text, fileEntries){
+    var fileNames = fileEntries.map(function(e){ return e.name; });
+    // Fold text-file contents into the message so the model can actually
+    // read them, and collect image data URLs separately for the vision
+    // model. PDFs/docs etc. are only named — their content isn't extracted.
+    var enrichedText = text;
+    fileEntries.forEach(function(entry){
+      if(entry.textContent){
+        enrichedText += "\n\n[Attached file: " + entry.name + "]\n" + entry.textContent;
+      } else if(entry.unsupported){
+        enrichedText += "\n\n[Attached file: " + entry.name + " — file type not readable yet, name only]";
+      }
+    });
+    var images = fileEntries.filter(function(e){ return e.isImage && e.dataUrl; }).map(function(e){ return e.dataUrl; });
+
     try {
       var res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan: "free", // TODO: swap for the logged-in user's real plan once auth exists
-          messages: conversationHistory.concat([{ role: "user", content: text }])
+          messages: conversationHistory.concat([{ role: "user", content: enrichedText }]),
+          images: images
         })
       });
 
@@ -2399,7 +2463,12 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     var userHtml = escapeHtml(text).replace(/\n/g, "<br>");
     if(attachedFiles.length){
       userHtml += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
-        attachedFiles.map(function(n){ return '<span style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:4px 9px;border-radius:8px;">📎 ' + escapeHtml(n) + '</span>'; }).join("") +
+        attachedFiles.map(function(entry){
+          if(entry.isImage && entry.dataUrl){
+            return '<img src="' + entry.dataUrl + '" alt="' + escapeHtml(entry.name) + '" style="max-width:140px;max-height:100px;border-radius:8px;display:block;">';
+          }
+          return '<span style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:4px 9px;border-radius:8px;">📎 ' + escapeHtml(entry.name) + '</span>';
+        }).join("") +
         '</div>';
     }
     addMessage("user", userHtml, "You · just now");

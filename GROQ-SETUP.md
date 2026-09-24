@@ -50,3 +50,22 @@ use. If you ever outgrow it, either:
 Groq hosts several open models. To change which one Elora uses, set
 `LLM_MODEL` in Vercel's env vars to any model name Groq currently serves
 (check console.groq.com for the current list) — no code changes needed.
+
+## Images (vision)
+
+When someone attaches an image in chat, `/api/chat.js` automatically
+switches to a vision-capable model instead of the text one — currently
+`qwen/qwen3.8-27b` by default. Groq has changed exact model IDs before
+without warning (we already hit this once with the text model), so if
+image messages start failing with a `model_not_found`-style error, check
+**console.groq.com/docs/vision** for the current vision model ID and set
+`LLM_VISION_MODEL` in Vercel's env vars to override it — no code change
+needed.
+
+## Links
+
+If a message contains a plain `http(s)://` link, the server fetches that
+page itself (6-second timeout, first ~3000 characters of visible text)
+and gives the model that content, so Elora can actually answer questions
+about what's on the page. This only works for public pages that don't
+require login, and only reads the first 2 links in a message.

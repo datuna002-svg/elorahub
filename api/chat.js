@@ -36,14 +36,69 @@ function checkAndBumpUsage(key, plan) {
 // Elora's system prompt — now tilted hard toward being a genuinely strong
 // coding assistant first, general-purpose assistant second. Adjust the
 // balance here if you want more or less of a code focus.
-const SYSTEM_PROMPT = `You are Elora, the AI assistant for elorahub. Your strongest skill is programming: you write correct, working code, debug precisely by reasoning through what the code actually does rather than guessing, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.`;
+const SYSTEM_PROMPT = `You are Elora, the AI assistant for elorahub. Your strongest skill is programming: you write correct, working code, debug precisely by reasoning through what the code actually does rather than guessing, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.
+
+Match your reply length to how much the question actually needs. A greeting, a simple factual question, or small talk gets a short, natural, conversational reply — a sentence or two, no more. Save longer, structured answers for things that genuinely warrant depth (real code, real analysis, multi-part questions). Don't pad short answers with caveats, summaries, or restated context.
+
+Keep formatting light by default: write in plain prose and only reach for markdown headings (#), bold, or bullet lists when the content is actually complex enough to need that structure (e.g. a multi-step process, a comparison, or a long technical answer). Never open a short, casual reply with a heading. Code always goes in a proper code block regardless of reply length.`;
+
+// Finds up to 2 http(s) links in a message, fetches each with a short
+// timeout, strips it down to plain text, and returns a small combined
+// excerpt block — or an empty string if nothing was fetchable. Never
+// throws: a broken/slow/blocked link is skipped rather than failing the
+// whole chat request.
+const URL_PATTERN = /https?:\/\/[^\s<>"')]+/gi;
+
+function htmlToText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchLinkContext(text) {
+  const urls = [...new Set((text.match(URL_PATTERN) || []))].slice(0, 2);
+  if (urls.length === 0) return "";
+
+  const excerpts = await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch(url, {
+          signal: controller.signal,
+          headers: { "User-Agent": "elorahub-bot/1.0 (+https://elorahub.online)" },
+        });
+        clearTimeout(timeout);
+        if (!res.ok) return null;
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("text/html") && !contentType.includes("text/plain")) return null;
+        const raw = await res.text();
+        const cleaned = contentType.includes("text/html") ? htmlToText(raw) : raw.trim();
+        return `--- Content from ${url} ---\n${cleaned.slice(0, 3000)}`;
+      } catch (_err) {
+        return null;
+      }
+    })
+  );
+
+  const found = excerpts.filter(Boolean);
+  if (found.length === 0) return "";
+  return `[The user's message included a link. Here's what was actually on the page, so you can answer about its real content:]\n\n${found.join("\n\n")}`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Use POST." });
   }
 
-  const { messages, plan } = req.body || {};
+  const { messages, plan, images } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages must be a non-empty array." });
@@ -53,6 +108,13 @@ export default async function handler(req, res) {
   if (typeof lastMessage.content !== "string" || lastMessage.content.length > 8000) {
     return res.status(400).json({ error: "Message is empty or too long (8000 char max)." });
   }
+
+  // Up to 3 images per message, matching the vision model's own limit.
+  // Each must be a data: URL the browser already produced client-side —
+  // this server never fetches or stores the image itself.
+  const safeImages = Array.isArray(images)
+    ? images.filter((i) => typeof i === "string" && i.startsWith("data:image/")).slice(0, 3)
+    : [];
 
   const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown";
   const today = new Date().toISOString().slice(0, 10);
@@ -73,7 +135,13 @@ export default async function handler(req, res) {
 
   const endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
   const apiKey = process.env.LLM_API_KEY;
-  const model = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+  const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+  // Vision model — used automatically whenever an image is attached.
+  // Groq's exact vision model ID has changed before; if this 404s, check
+  // console.groq.com/docs/vision for the current one and set
+  // LLM_VISION_MODEL to override without touching code.
+  const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
+  const model = safeImages.length > 0 ? visionModel : textModel;
 
   if (!apiKey) {
     console.error("LLM_API_KEY is not set.");
@@ -81,6 +149,30 @@ export default async function handler(req, res) {
       error: "not_configured",
       message: "The AI model isn't configured yet — LLM_API_KEY is missing.",
     });
+  }
+
+  // Fetch any plain http(s) links found in the newest message and fold in
+  // a short excerpt of each page's text, so Elora can actually answer
+  // questions about a link instead of just seeing the bare URL.
+  const linkContext = await fetchLinkContext(lastMessage.content);
+
+  // Build the final message list: history as-is, but the last message
+  // gets the link excerpts appended, and — if images were attached —
+  // becomes a multipart {text, image_url...} content array instead of
+  // a plain string, per the vision API format.
+  const finalMessages = trimmedHistory.slice(0, -1);
+  const lastText = linkContext ? `${lastMessage.content}\n\n${linkContext}` : lastMessage.content;
+
+  if (safeImages.length > 0) {
+    finalMessages.push({
+      role: "user",
+      content: [
+        { type: "text", text: lastText },
+        ...safeImages.map((url) => ({ type: "image_url", image_url: { url } })),
+      ],
+    });
+  } else {
+    finalMessages.push({ role: "user", content: lastText });
   }
 
   try {
@@ -92,7 +184,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmedHistory],
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...finalMessages],
         max_tokens: 1024,
         temperature: 0.4,
       }),
