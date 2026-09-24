@@ -55,6 +55,7 @@
   --font-body:    'Manrope', sans-serif;
 
   --ease: cubic-bezier(.22,.8,.32,1);
+  --nav-h: 65px; /* bumped by JS when the site announcement banner is showing */
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
@@ -137,6 +138,28 @@ p{ margin:0; }
   display:flex;
   flex-direction:column;
 }
+
+/* ---------- Site announcement banner ---------- */
+.site-banner{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:10px 44px 10px 20px;
+  background:linear-gradient(90deg, rgba(255,36,64,0.18), rgba(122,15,31,0.12));
+  border-bottom:1px solid rgba(255,70,80,0.32);
+  color:var(--text-1);
+  font-size:0.85rem;
+  font-weight:600;
+  position:relative;
+  text-align:center;
+}
+.site-banner.is-visible{ display:flex; }
+.site-banner button{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; color:var(--text-3); font-size:1.2rem; line-height:1; padding:6px; border-radius:8px;
+}
+.site-banner button:hover{ color:var(--text-1); background:rgba(255,255,255,0.06); }
 
 /* ---------- Nav ---------- */
 .nav{
@@ -245,7 +268,7 @@ p{ margin:0; }
 .nav-burger svg{ width:18px; height:18px; stroke:var(--text-1); }
 .mobile-menu{
   display:none;
-  position:fixed; top:65px; left:0; right:0; z-index:190;
+  position:fixed; top:var(--nav-h); left:0; right:0; z-index:190;
   background:rgba(10,10,13,0.98);
   border-bottom:1px solid var(--line);
   padding:10px 16px 18px;
@@ -731,7 +754,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 .chat-app{
   display:flex;
   width:100%;
-  height:calc(100vh - 65px);
+  height:calc(100vh - var(--nav-h));
 }
 .chat-sidebar{
   width:280px;
@@ -1111,7 +1134,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .doc-toc a{ white-space:nowrap; }
   .about-hero{ grid-template-columns:1fr; }
   .value-grid{ grid-template-columns:1fr; }
-  .chat-sidebar{ position:fixed; left:0; top:65px; bottom:0; z-index:150; transform:translateX(-100%); transition:transform .25s var(--ease); box-shadow:20px 0 40px rgba(0,0,0,0.4); }
+  .chat-sidebar{ position:fixed; left:0; top:var(--nav-h); bottom:0; z-index:150; transform:translateX(-100%); transition:transform .25s var(--ease); box-shadow:20px 0 40px rgba(0,0,0,0.4); }
   .chat-sidebar.is-open{ transform:translateX(0); }
   .chat-mobile-toggle{ display:flex; }
   .chat-suggestions{ grid-template-columns:1fr; }
@@ -1142,6 +1165,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 </div>
 
 <div class="app">
+
+  <!-- ============ SITE ANNOUNCEMENT BANNER (hidden unless an admin turns it on) ============ -->
+  <div class="site-banner" id="siteBanner"></div>
 
   <!-- ============ NAV ============ -->
   <nav class="nav">
@@ -1666,11 +1692,11 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     </div>
   </section>
 
-  <!-- ============ OWNER CONSOLE (hidden from main nav — owner-only) ============ -->
+  <!-- ============ ADMINISTRATOR CONSOLE (hidden from main nav — admin-only) ============ -->
   <section class="page" id="page-owner">
     <div class="section">
       <div class="doc-header reveal">
-        <span class="kicker">Owner console</span>
+        <span class="kicker">Administrator console</span>
         <h1>elorahub control room</h1>
         <p class="updated">Restricted area — not linked from the main menu.</p>
       </div>
@@ -1681,7 +1707,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 
       <!-- NOT SIGNED IN -->
       <div id="ownerNotSignedIn" style="max-width:420px;display:none;">
-        <p style="color:var(--text-2);margin-bottom:16px;">Sign in with the owner (or an administrator/moderator) account to open this console.</p>
+        <p style="color:var(--text-2);margin-bottom:16px;">Sign in with an authorized administrator account to open this console.</p>
         <button class="btn btn-primary btn-block" id="ownerSignInBtn">Sign in</button>
       </div>
 
@@ -1700,11 +1726,15 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div class="stat-box"><strong id="statMRR">—</strong><span>Estimated MRR</span></div>
         </div>
 
-        <!-- Owner/administrator only — tabs so everything doesn't load in one long scroll -->
-        <div class="owner-tabs" role="tablist" aria-label="Owner console sections">
+        <!-- Administrator only — tabs so everything doesn't load in one long scroll -->
+        <div class="owner-tabs" role="tablist" aria-label="Administrator console sections">
           <button class="is-active" data-owner-tab="console">Console</button>
+          <button data-owner-tab="users">Users</button>
+          <button data-owner-tab="analytics">Analytics</button>
           <button data-owner-tab="notifications">Notifications</button>
           <button data-owner-tab="purchases">Purchases</button>
+          <button data-owner-tab="announcement">Announcement</button>
+          <button data-owner-tab="status">Status</button>
           <button data-owner-tab="access" id="ownerAccessTabBtn">Access</button>
         </div>
 
@@ -1723,6 +1753,37 @@ body.chat-mode{ overflow:hidden; height:100vh; }
               <div style="padding:18px;border:1px solid var(--line);border-radius:14px;color:var(--text-3);font-size:0.88rem;">
                 Nothing to review yet — chat messages aren't stored server-side, so there's no flagged content until that's added.
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USERS (real signed-up accounts, from Supabase auth + subscriptions) -->
+        <div class="owner-panel" data-owner-panel="users">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Users</h2>
+            <p>Everyone who's signed up, pulled live from Supabase. Change a plan here for support/comp purposes — it takes effect immediately, same as a real Paddle renewal would.</p>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0;align-items:center;">
+              <input type="text" id="userSearchInput" placeholder="Search by email…" style="flex:1;min-width:220px;max-width:340px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
+              <button class="btn btn-primary" id="refreshUsersBtn" style="margin-left:auto;">Refresh</button>
+            </div>
+
+            <div class="compare-table" style="margin-top:6px;">
+              <table>
+                <thead><tr><th>Email</th><th>Signed up</th><th>Plan</th><th>Credits left</th><th></th></tr></thead>
+                <tbody id="usersTableBody"><tr><td colspan="5" style="color:var(--text-3);">Loading…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYTICS (real daily counts, charted) -->
+        <div class="owner-panel" data-owner-panel="analytics">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Analytics</h2>
+            <p>Sign-ups and logged site events over the last 30 days — built from real Supabase data, not sampled or estimated.</p>
+            <div id="analyticsCharts" style="margin-top:22px;display:flex;flex-direction:column;gap:34px;">
+              <div style="color:var(--text-3);font-size:0.88rem;">Loading…</div>
             </div>
           </div>
         </div>
@@ -1757,7 +1818,38 @@ body.chat-mode{ overflow:hidden; height:100vh; }
               <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Paddle…</div>
               <a href="https://vendors.paddle.com/" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Open Paddle Dashboard (payouts)</a>
             </div>
-            <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for the owner account, and Paddle requires its own account login regardless.</p>
+            <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for full-access administrator accounts, and Paddle requires its own account login regardless.</p>
+          </div>
+        </div>
+
+        <!-- ANNOUNCEMENT (sitewide banner, shown to every visitor when enabled) -->
+        <div class="owner-panel" data-owner-panel="announcement">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Site announcement</h2>
+            <p>An optional banner shown at the top of every page to every visitor — maintenance notices, new-feature callouts, that kind of thing. Off by default.</p>
+
+            <div style="max-width:640px;margin-top:18px;">
+              <textarea id="bannerMessageInput" rows="3" placeholder="e.g. elora Vision is now live — try it from the model picker in Chat." style="width:100%;padding:13px 14px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.92rem;font-family:inherit;resize:vertical;"></textarea>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap;">
+                <button class="btn btn-primary" id="bannerSaveEnableBtn">Save &amp; turn on</button>
+                <button class="btn" id="bannerDisableBtn">Turn off</button>
+                <span id="bannerStatusLabel" style="color:var(--text-3);font-size:0.82rem;margin-left:auto;">Checking current status…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATUS (live checks on every external dependency) -->
+        <div class="owner-panel" data-owner-panel="status">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">System status</h2>
+            <p>Live checks against everything elorahub depends on — catches a bad or missing key immediately instead of a silent failure somewhere else.</p>
+            <div style="margin:18px 0;">
+              <button class="btn btn-primary" id="refreshStatusBtn">Re-check now</button>
+            </div>
+            <div id="statusList" style="display:flex;flex-direction:column;gap:10px;">
+              <div style="color:var(--text-3);font-size:0.88rem;">Loading…</div>
+            </div>
           </div>
         </div>
 
@@ -1765,7 +1857,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         <div class="owner-panel" data-owner-panel="access">
           <div class="doc-body" style="margin-top:22px;" id="ownerRolesSection">
             <h2 style="margin-top:0;">Roles &amp; access</h2>
-            <p>Give trusted people Administrator or Moderator access. Only the owner account can add or remove roles.</p>
+            <p>Give trusted people Administrator or Moderator access. Only full-access administrators can add or remove roles.</p>
 
             <div id="ownerAddRoleRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
               <input type="email" id="roleEmailInput" placeholder="teammate@email.com" style="flex:1;min-width:220px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
@@ -2863,6 +2955,13 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       document.querySelectorAll(".owner-panel").forEach(function(p){
         p.classList.toggle("is-active", p.getAttribute("data-owner-panel") === target);
       });
+      // Each of these tabs' data is fetched lazily, the first time it's
+      // opened, rather than all four extra endpoints firing on every
+      // console visit whether you look at them or not.
+      if(target === "users") loadUsers();
+      if(target === "analytics") loadAnalytics();
+      if(target === "announcement") loadBanner();
+      if(target === "status") loadStatus();
     });
   });
 
@@ -2879,7 +2978,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     }
 
     if(!supabaseReady){
-      ownerNotice.textContent = "Owner console needs Supabase configured first — see SUPABASE-SETUP.md. Nothing here is reachable until then, by design.";
+      ownerNotice.textContent = "Administrator console needs Supabase configured first — see SUPABASE-SETUP.md. Nothing here is reachable until then, by design.";
       return;
     }
 
@@ -3024,6 +3123,192 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       payoutNote.textContent = "MRR is calculated live from active Paddle subscriptions. Exact payout amounts and dates live in the Paddle Dashboard, linked below.";
     }
   }
+
+  /* ---------------- Status tab ---------------- */
+  async function loadStatus(){
+    var list = document.getElementById("statusList");
+    list.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">Checking…</div>';
+    try {
+      var res = await adminFetch("/api/admin/status");
+      var data = await res.json();
+      if(!res.ok){ list.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">' + escapeHtml(data.message || "Couldn't load status.") + '</div>'; return; }
+      list.innerHTML = data.checks.map(function(c){
+        var state = c.live === true ? "ok" : (c.live === false ? "down" : (c.configured ? "unknown" : "off"));
+        var color = state === "ok" ? "#4caf6e" : state === "down" ? "#ef5350" : state === "off" ? "#6b6b70" : "#f5c344";
+        var label = state === "ok" ? "Live" : state === "down" ? (c.configured ? "Configured, not responding" : "Not configured") : state === "off" ? "Not configured" : "Configured";
+        return '<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;">' +
+          '<span style="width:9px;height:9px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';flex:none;"></span>' +
+          '<div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">' + escapeHtml(c.name) + '</div><div style="color:var(--text-3);font-size:0.8rem;">' + escapeHtml(c.detail) + '</div></div>' +
+          '<div style="font-size:0.82rem;font-weight:700;color:' + color + ';">' + label + '</div>' +
+        '</div>';
+      }).join("");
+    } catch(err){
+      list.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">Couldn\'t reach the status check.</div>';
+    }
+  }
+  var refreshStatusBtn = document.getElementById("refreshStatusBtn");
+  if(refreshStatusBtn){ refreshStatusBtn.addEventListener("click", loadStatus); }
+
+  /* ---------------- Users tab ---------------- */
+  var allUsers = [];
+  async function loadUsers(){
+    var body = document.getElementById("usersTableBody");
+    body.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">Loading…</td></tr>';
+    try {
+      var res = await adminFetch("/api/admin/users");
+      var data = await res.json();
+      if(!res.ok){ body.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">' + escapeHtml(data.message || "Couldn't load users.") + '</td></tr>'; return; }
+      allUsers = data.users || [];
+      renderUsers();
+    } catch(err){
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">Couldn\'t reach the server.</td></tr>';
+    }
+  }
+  function renderUsers(){
+    var body = document.getElementById("usersTableBody");
+    var searchInput = document.getElementById("userSearchInput");
+    var q = (searchInput && searchInput.value || "").trim().toLowerCase();
+    var rows = allUsers.filter(function(u){ return !q || u.email.toLowerCase().indexOf(q) > -1; });
+    body.innerHTML = "";
+    if(!rows.length){
+      body.innerHTML = '<tr><td colspan="5" style="color:var(--text-3);">No users' + (q ? ' match "' + escapeHtml(q) + '"' : ' yet') + '.</td></tr>';
+      return;
+    }
+    rows.forEach(function(u){
+      var tr = document.createElement("tr");
+      var signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—";
+      var credits = u.creditsRemaining != null ? (u.creditsRemaining + " / " + u.creditsTotal) : "—";
+      tr.innerHTML = '<td>' + escapeHtml(u.email) + '</td><td>' + signedUp + '</td><td class="plan-cell"></td><td>' + credits + '</td><td></td>';
+      var select = document.createElement("select");
+      select.style.cssText = "padding:6px 9px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.82rem;";
+      ["free","private","premium"].forEach(function(p){
+        var opt = document.createElement("option");
+        opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+        if(p === u.plan) opt.selected = true;
+        select.appendChild(opt);
+      });
+      tr.querySelector(".plan-cell").appendChild(select);
+      var saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.style.cssText = "background:none;border:none;color:var(--red-300);font-weight:700;font-size:0.82rem;";
+      saveBtn.addEventListener("click", async function(){
+        var res = await adminFetch("/api/admin/users", { method:"POST", body: JSON.stringify({ email: u.email, plan: select.value }) });
+        var data = await res.json();
+        if(!res.ok){ showToast(data.message || "Couldn't update that user."); return; }
+        showToast(u.email + " is now on " + select.value + ".");
+        loadUsers();
+      });
+      tr.lastElementChild.appendChild(saveBtn);
+      body.appendChild(tr);
+    });
+  }
+  var refreshUsersBtn = document.getElementById("refreshUsersBtn");
+  if(refreshUsersBtn){ refreshUsersBtn.addEventListener("click", loadUsers); }
+  var userSearchInput = document.getElementById("userSearchInput");
+  if(userSearchInput){ userSearchInput.addEventListener("input", renderUsers); }
+
+  /* ---------------- Analytics tab ---------------- */
+  function renderBarChart(labels, values, color){
+    var w = 760, h = 160, pad = 24;
+    var max = Math.max(1, Math.max.apply(null, values));
+    var barW = (w - pad * 2) / values.length;
+    var bars = values.map(function(v, i){
+      var barH = (v / max) * (h - pad * 2 - 14);
+      var x = pad + i * barW;
+      var y = h - pad - barH;
+      return '<rect x="' + (x + barW * 0.15).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (barW * 0.7).toFixed(1) + '" height="' + Math.max(barH, 1).toFixed(1) + '" rx="2" fill="' + color + '"><title>' + labels[i] + ': ' + v + '</title></rect>';
+    }).join("");
+    var labelEls = labels.map(function(l, i){
+      if(i % 5 !== 0 && i !== labels.length - 1) return "";
+      var x = pad + i * barW + barW / 2;
+      return '<text x="' + x.toFixed(1) + '" y="' + (h - 4) + '" font-size="9" fill="rgba(198,196,202,0.55)" text-anchor="middle">' + escapeHtml(l.slice(5)) + '</text>';
+    }).join("");
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" style="display:block;" role="img" aria-label="Bar chart">' +
+      '<line x1="' + pad + '" y1="' + (h - pad) + '" x2="' + (w - pad) + '" y2="' + (h - pad) + '" stroke="rgba(255,255,255,0.1)"/>' +
+      bars + labelEls +
+      '</svg>';
+  }
+  async function loadAnalytics(){
+    var container = document.getElementById("analyticsCharts");
+    container.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">Loading…</div>';
+    try {
+      var res = await adminFetch("/api/admin/analytics");
+      var data = await res.json();
+      if(!res.ok){ container.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">' + escapeHtml(data.message || "Couldn't load analytics.") + '</div>'; return; }
+      var totalSignups = data.signups.reduce(function(a,b){ return a+b; }, 0);
+      var totalEvents = data.events.reduce(function(a,b){ return a+b; }, 0);
+      container.innerHTML =
+        '<div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;"><h3 style="margin:0;font-size:1rem;">Sign-ups — last 30 days</h3><span style="color:var(--text-3);font-size:0.82rem;">' + totalSignups + ' total</span></div>' + renderBarChart(data.days, data.signups, "#ff4d5e") + '</div>' +
+        '<div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;"><h3 style="margin:0;font-size:1rem;">Logged events — last 30 days</h3><span style="color:var(--text-3);font-size:0.82rem;">' + totalEvents + ' total</span></div>' + renderBarChart(data.days, data.events, "#c6c4ca") + '</div>';
+    } catch(err){
+      container.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">Couldn\'t reach the server.</div>';
+    }
+  }
+
+  /* ---------------- Announcement tab ---------------- */
+  async function loadBanner(){
+    var label = document.getElementById("bannerStatusLabel");
+    var textarea = document.getElementById("bannerMessageInput");
+    if(!label || !textarea) return;
+    label.textContent = "Checking current status…";
+    try {
+      var res = await fetch("/api/banner");
+      var data = await res.json();
+      textarea.value = data.message || "";
+      label.textContent = data.enabled ? "Currently ON — visible to every visitor." : "Currently off.";
+    } catch(err){
+      label.textContent = "Couldn't check the current status.";
+    }
+  }
+  var bannerSaveEnableBtn = document.getElementById("bannerSaveEnableBtn");
+  if(bannerSaveEnableBtn){
+    bannerSaveEnableBtn.addEventListener("click", async function(){
+      var msg = document.getElementById("bannerMessageInput").value.trim();
+      if(!msg){ showToast("Write a message first."); return; }
+      var res = await adminFetch("/api/banner", { method:"POST", body: JSON.stringify({ enabled:true, message: msg }) });
+      var data = await res.json();
+      if(!res.ok){ showToast(data.message || "Couldn't save that."); return; }
+      showToast("Banner is live.");
+      loadBanner();
+    });
+  }
+  var bannerDisableBtn = document.getElementById("bannerDisableBtn");
+  if(bannerDisableBtn){
+    bannerDisableBtn.addEventListener("click", async function(){
+      var msg = document.getElementById("bannerMessageInput").value.trim();
+      var res = await adminFetch("/api/banner", { method:"POST", body: JSON.stringify({ enabled:false, message: msg }) });
+      var data = await res.json();
+      if(!res.ok){ showToast(data.message || "Couldn't update that."); return; }
+      showToast("Banner turned off.");
+      loadBanner();
+    });
+  }
+
+  /* ---------------- Sitewide banner display (every page, every visitor) ---------------- */
+  function updateNavOffset(){
+    var banner = document.getElementById("siteBanner");
+    var extra = (banner && banner.classList.contains("is-visible")) ? banner.offsetHeight : 0;
+    document.documentElement.style.setProperty("--nav-h", (65 + extra) + "px");
+  }
+  window.addEventListener("resize", updateNavOffset);
+  (function initSiteBanner(){
+    var el = document.getElementById("siteBanner");
+    if(!el) return;
+    fetch("/api/banner").then(function(r){ return r.ok ? r.json() : null; }).then(function(data){
+      if(!data || !data.enabled || !data.message) return;
+      var dismissed = null;
+      try{ dismissed = sessionStorage.getItem("elorahub_banner_dismissed"); }catch(e){}
+      if(dismissed === data.message) return;
+      el.innerHTML = '<span>' + escapeHtml(data.message) + '</span><button aria-label="Dismiss announcement">&times;</button>';
+      el.classList.add("is-visible");
+      updateNavOffset();
+      el.querySelector("button").addEventListener("click", function(){
+        el.classList.remove("is-visible");
+        updateNavOffset();
+        try{ sessionStorage.setItem("elorahub_banner_dismissed", data.message); }catch(e){}
+      });
+    }).catch(function(){});
+  })();
 
   refreshOwnerConsole();
 
