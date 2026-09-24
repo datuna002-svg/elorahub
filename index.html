@@ -577,13 +577,11 @@ p{ margin:0; }
   transition:transform .3s var(--ease), box-shadow .3s var(--ease);
 }
 .plan:hover{ transform:translateY(-6px); box-shadow:0 26px 54px -18px rgba(0,0,0,0.6); }
-.plan.private{ border-color:rgba(255,36,64,0.3); }
+.plan.private{ border-color:var(--line); }
 .plan.premium{
-  border:1px solid transparent;
-  background:
-    linear-gradient(var(--charcoal-2), var(--charcoal-2)) padding-box,
-    var(--accent-grad) border-box;
-  box-shadow:0 30px 70px -25px rgba(91,31,176,0.4);
+  border:1px solid rgba(255,255,255,0.16);
+  background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.01));
+  box-shadow:0 30px 70px -25px rgba(0,0,0,0.6);
   transform:translateY(-8px);
 }
 .plan-badge{
@@ -901,8 +899,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   transition:border-color .25s var(--ease), box-shadow .25s var(--ease), transform .2s var(--ease);
 }
 .input-shell:focus-within{
-  border-color:rgba(255,36,64,0.4);
-  box-shadow:0 12px 34px -14px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,36,64,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+  border-color:rgba(255,255,255,0.22);
+  box-shadow:0 12px 34px -14px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.06);
   transform:translateY(-1px);
 }
 .icon-btn{
