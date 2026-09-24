@@ -16,14 +16,16 @@ import { logEvent, getSupabaseClient } from "./_lib/supabaseAdmin.js";
 
 // Which plan each Price ID belongs to, and how many chat credits that
 // plan refills to on every successful renewal. Keep these two in sync
-// with what you actually charge — see PADDLE-SETUP.md.
+// with what you actually charge — see PADDLE-SETUP.md. Premium is
+// genuinely unlimited (null) — api/chat.js never spends a credit for it,
+// this is just what gets stored for display in the admin console.
 const PRICE_PLAN = {
   [process.env.PADDLE_PRICE_PRIVATE_MONTHLY]: "private",
   [process.env.PADDLE_PRICE_PRIVATE_YEARLY]: "private",
   [process.env.PADDLE_PRICE_PREMIUM_MONTHLY]: "premium",
   [process.env.PADDLE_PRICE_PREMIUM_YEARLY]: "premium",
 };
-const CREDITS_BY_PLAN = { private: 500, premium: 1500 };
+const CREDITS_BY_PLAN = { private: 500, premium: null };
 
 // Paddle's subscription webhooks only include a customer_id, not the
 // email itself — one extra API call resolves it. Requires the API key
@@ -56,12 +58,12 @@ async function upsertSubscription(sub) {
   try {
     const supabase = await getSupabaseClient();
     if (!supabase) return;
-    const creditsTotal = CREDITS_BY_PLAN[plan] || 0;
+    const creditsTotal = plan === "premium" ? null : CREDITS_BY_PLAN[plan] || 0;
     await supabase.from("subscriptions").upsert({
       email: email.toLowerCase(),
       plan,
       credits_total: creditsTotal,
-      credits_remaining: creditsTotal, // refills every renewal — see note in PADDLE-SETUP.md
+      credits_remaining: creditsTotal, // refills every renewal — see note in PADDLE-SETUP.md; null = unlimited (premium)
       paddle_subscription_id: sub.id,
       updated_at: new Date().toISOString(),
     });

@@ -185,18 +185,24 @@ export default async function handler(req, res) {
   // ------------------------------------------------------------------
   // Who's asking, and can they send this message?
   //
-  // Signed-in users with an active Private/Premium subscription spend
-  // one real, database-backed credit per message (500/month Private,
-  // 1500/month Premium — refilled by the Paddle webhook on renewal).
+  // Premium is genuinely unlimited — no credits, no daily cap, no
+  // per-message spend at all — matching what the pricing page promises.
+  // Private subscribers spend one real, database-backed credit per
+  // message (500/month, refilled by the Paddle webhook on renewal).
   // Everyone else (not signed in, or signed in with no paid plan) gets
   // the free tier's IP-based daily limit instead.
   // ------------------------------------------------------------------
   const { email } = await verifyRequester(req);
   let creditsRemaining = null;
+  let unlimited = false;
 
   if (email) {
     const sub = await getSubscription(email);
-    if (sub && (sub.plan === "private" || sub.plan === "premium") && sub.credits_remaining > 0) {
+    if (sub && sub.plan === "premium") {
+      // Unlimited — deliberately no credit check, no spend, no cap.
+      creditsRemaining = null;
+      unlimited = true;
+    } else if (sub && sub.plan === "private" && sub.credits_remaining > 0) {
       const remaining = await spendCredit(email);
       if (remaining == null) {
         return res.status(429).json({
@@ -325,6 +331,7 @@ export default async function handler(req, res) {
     reply: result.reply,
     usage: result.usage,
     creditsRemaining,
+    unlimited,
     provider: result.label,
   });
 }

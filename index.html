@@ -2866,7 +2866,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       if(!res.ok){ throw new Error("backend responded with " + res.status); }
 
       var data = await res.json();
-      if(data.creditsRemaining != null && inputFoot){
+      if(data.unlimited && inputFoot){
+        inputFoot.textContent = "Unlimited messages — Premium plan.";
+      } else if(data.creditsRemaining != null && inputFoot){
         inputFoot.textContent = data.creditsRemaining + " credit" + (data.creditsRemaining === 1 ? "" : "s") + " left this billing period.";
       }
       return { text: data.reply, real: true };
@@ -3259,7 +3261,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     rows.forEach(function(u){
       var tr = document.createElement("tr");
       var signedUp = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—";
-      var credits = u.creditsRemaining != null ? (u.creditsRemaining + " / " + u.creditsTotal) : "—";
+      var credits = u.plan === "premium" ? "Unlimited" : (u.creditsRemaining != null ? (u.creditsRemaining + " / " + u.creditsTotal) : "—");
       tr.innerHTML = '<td>' + escapeHtml(u.email) + '</td><td>' + signedUp + '</td><td class="plan-cell"></td><td>' + credits + '</td><td></td>';
       var select = document.createElement("select");
       select.style.cssText = "padding:6px 9px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.82rem;";

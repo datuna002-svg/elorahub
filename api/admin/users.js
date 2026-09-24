@@ -6,7 +6,9 @@
 
 import { verifyRequester, getSupabaseClient, logEvent } from "../_lib/supabaseAdmin.js";
 
-const DEFAULT_CREDITS = { free: 0, private: 500, premium: 1500 };
+// Premium is unlimited (null) — api/chat.js never spends a credit for
+// it. This is only what gets stored for display in the admin console.
+const DEFAULT_CREDITS = { free: 0, private: 500, premium: null };
 
 export default async function handler(req, res) {
   const { email, role } = await verifyRequester(req);
@@ -63,7 +65,7 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString(),
     });
     if (dbError) return res.status(500).json({ error: "db_error", message: dbError.message });
-    await logEvent("info", "users", `${email} set ${normalized}'s plan to ${plan} (${credits} credits).`);
+    await logEvent("info", "users", `${email} set ${normalized}'s plan to ${plan} (${credits == null ? "unlimited" : credits + " credits"}).`);
     return res.status(200).json({ ok: true });
   }
 
