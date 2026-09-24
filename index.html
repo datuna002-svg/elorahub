@@ -35,11 +35,15 @@
   --red-400:      #c6c4ca;
   --red-300:      #f1eff3;
 
-  /* Vivid accent — the "cool hub" pop against the dark grey/black base */
+  /* Vivid accent — the "cool hub" pop against the dark grey/black base.
+     Deliberately dark/desaturated on the purple end and with a near-black
+     wine stop in between, so the gradient reads as dark red shading into
+     deep purple — never pink, which is what a bright-red-to-light-violet
+     blend would produce in the middle. */
   --accent-1:     #ff2440;
-  --accent-2:     #8b5cf6;
+  --accent-2:     #5b1fb0;
   --accent-3:     #b91c2c;
-  --accent-grad:  linear-gradient(135deg, var(--accent-1), var(--accent-3) 55%, var(--accent-2));
+  --accent-grad:  linear-gradient(135deg, var(--accent-1) 0%, var(--accent-3) 42%, #300a14 68%, var(--accent-2) 100%);
 
   --text-1:       #f3f1ee;
   --text-2:       #b9b6bd;
@@ -231,7 +235,7 @@ p{ margin:0; }
   animation:shine-drift 7s ease infinite;
   box-shadow:0 8px 22px rgba(255,36,64,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.btn-primary:hover{ box-shadow:0 10px 30px rgba(192,38,211,0.45), inset 0 1px 0 rgba(255,255,255,0.25); filter:brightness(1.06); }
+.btn-primary:hover{ box-shadow:0 10px 30px rgba(91,31,176,0.4), inset 0 1px 0 rgba(255,255,255,0.25); filter:brightness(1.06); }
 @keyframes shine-drift{ 0%,100%{ background-position:0% 40%; } 50%{ background-position:100% 60%; } }
 .btn-ghost{ background:transparent; border-color:transparent; color:var(--text-2); }
 .btn-ghost:hover{ color:var(--text-1); }
@@ -581,13 +585,13 @@ p{ margin:0; }
   background:
     linear-gradient(var(--charcoal-2), var(--charcoal-2)) padding-box,
     var(--accent-grad) border-box;
-  box-shadow:0 30px 70px -25px rgba(192,38,211,0.45);
+  box-shadow:0 30px 70px -25px rgba(91,31,176,0.4);
   transform:translateY(-8px);
 }
 .plan-badge{
   position:absolute; top:22px; right:28px;
   font-size:0.7rem; font-weight:800; letter-spacing:0.02em;
-  color:#ffb0ba;
+  color:var(--text-1);
   background:rgba(255,36,64,0.14);
   border:1px solid rgba(255,36,64,0.35);
   padding:5px 11px; border-radius:var(--radius-pill);
