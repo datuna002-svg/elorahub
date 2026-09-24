@@ -1,0 +1,2505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>elorahub — an AI that thinks before it speaks</title>
+<meta name="description" content="elorahub.online — Elora AI. Deep reasoning, fast replies, and a chat built to actually understand you.">
+<link rel="icon" href="assets/elorahub_logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   ELORAHUB — design tokens
+   ============================================================ */
+:root{
+  --black:        #030304;
+  --charcoal:     #0b0b0d;
+  --charcoal-2:   #111114;
+  --panel:        #161519;
+  --panel-2:      #1c1a1f;
+  --line:         rgba(255,255,255,0.08);
+  --line-soft:    rgba(255,255,255,0.05);
+
+  --grey-100:     #f4f2f0;
+  --grey-300:     #c9c6cc;
+  --grey-500:     #8d8a93;
+  --grey-700:     #5b5860;
+
+  --red-950:      #19191c;
+  --red-900:      #222226;
+  --red-800:      #303035;
+  --red-700:      #414147;
+  --red-600:      #58585f;
+  --red-500:      #86858d;
+  --red-400:      #c6c4ca;
+  --red-300:      #f1eff3;
+
+  /* Vivid accent — the "cool hub" pop against the dark grey/black base */
+  --accent-1:     #ff2440;
+  --accent-2:     #8b5cf6;
+  --accent-3:     #b91c2c;
+  --accent-grad:  linear-gradient(135deg, var(--accent-1), var(--accent-3) 55%, var(--accent-2));
+
+  --text-1:       #f3f1ee;
+  --text-2:       #b9b6bd;
+  --text-3:       #7c7981;
+
+  --radius-sm:    10px;
+  --radius-md:    16px;
+  --radius-lg:    26px;
+  --radius-pill:  999px;
+
+  --font-display: 'Fraunces', serif;
+  --font-body:    'Manrope', sans-serif;
+
+  --ease: cubic-bezier(.22,.8,.32,1);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--black);
+  color:var(--text-1);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; cursor:pointer; }
+ul{ margin:0; padding:0; list-style:none; }
+h1,h2,h3,h4{ margin:0; font-family:var(--font-display); font-weight:500; letter-spacing:-0.01em; }
+p{ margin:0; }
+::selection{ background:var(--red-700); color:#fff; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+
+:focus-visible{
+  outline:2px solid var(--red-400);
+  outline-offset:3px;
+  border-radius:4px;
+}
+
+/* ============================================================
+   Background atmosphere — the merged red/black gradient world
+   ============================================================ */
+.atmosphere{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 22% 10%, rgba(255,36,64,0.06), transparent 60%),
+    radial-gradient(55% 45% at 85% 18%, rgba(139,92,246,0.06), transparent 62%),
+    radial-gradient(70% 60% at 50% 100%, rgba(185,28,44,0.05), transparent 65%),
+    linear-gradient(180deg, #010101 0%, #000000 45%, #000000 100%);
+}
+.atmosphere::after{
+  content:"";
+  position:absolute; inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.35) 0, transparent 60%),
+    radial-gradient(1px 1px at 80% 30%, rgba(255,255,255,0.25) 0, transparent 60%),
+    radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.2) 0, transparent 60%),
+    radial-gradient(1px 1px at 30% 85%, rgba(255,255,255,0.25) 0, transparent 60%);
+  opacity:0.5;
+}
+.blur-orb{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(90px);
+  opacity:0.55;
+  z-index:0;
+}
+
+/* ============================================================
+   Layout shell
+   ============================================================ */
+.app{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ---------- Nav ---------- */
+.nav{
+  position:sticky;
+  top:0;
+  z-index:200;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  padding:16px clamp(20px,4vw,56px);
+  background:rgba(2,2,3,0.7);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border-bottom:1px solid var(--line-soft);
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:var(--font-display);
+  font-size:1.5rem;
+  font-weight:600;
+  letter-spacing:-0.01em;
+  color:var(--text-1);
+}
+.brand span{
+  color:var(--text-1);
+}
+.brand img{ width:32px; height:32px; filter:drop-shadow(0 0 16px rgba(255,36,64,0.4)); }
+.brand small{
+  display:block;
+  font-family:var(--font-body);
+  font-size:0.62rem;
+  font-weight:700;
+  color:var(--text-3);
+  letter-spacing:0.06em;
+  margin-top:-2px;
+}
+
+.nav-links{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line-soft);
+  padding:5px;
+  border-radius:var(--radius-pill);
+}
+.nav-links button{
+  border:none;
+  background:transparent;
+  color:var(--text-2);
+  font-size:0.88rem;
+  font-weight:600;
+  padding:8px 16px;
+  border-radius:var(--radius-pill);
+  transition:color .2s var(--ease), background .25s var(--ease);
+}
+.nav-links button:hover{ color:var(--text-1); }
+.nav-links button.is-active{
+  color:#fff;
+  background:var(--accent-grad);
+  box-shadow:0 4px 18px rgba(255,36,64,0.35);
+}
+
+.nav-actions{ display:flex; align-items:center; gap:10px; }
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);
+  color:var(--text-1);
+  font-weight:700;
+  font-size:0.88rem;
+  padding:10px 18px;
+  border-radius:var(--radius-pill);
+  transition:transform .18s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+  white-space:nowrap;
+}
+.btn:hover{ transform:translateY(-1px); border-color:rgba(255,255,255,0.25); }
+.btn:active{ transform:translateY(0); }
+.btn-primary{
+  border:none;
+  color:#fff;
+  background:var(--accent-grad);
+  box-shadow:0 8px 22px rgba(255,36,64,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-primary:hover{ box-shadow:0 10px 30px rgba(192,38,211,0.45), inset 0 1px 0 rgba(255,255,255,0.25); filter:brightness(1.06); }
+.btn-ghost{ background:transparent; border-color:transparent; color:var(--text-2); }
+.btn-ghost:hover{ color:var(--text-1); }
+.btn-lg{ padding:14px 28px; font-size:0.98rem; }
+.btn-block{ width:100%; }
+
+.nav-burger{
+  display:none;
+  flex:none; width:38px; height:38px; border-radius:11px;
+  border:1px solid var(--line); background:rgba(255,255,255,0.03);
+  align-items:center; justify-content:center;
+}
+.nav-burger svg{ width:18px; height:18px; stroke:var(--text-1); }
+.mobile-menu{
+  display:none;
+  position:fixed; top:65px; left:0; right:0; z-index:190;
+  background:rgba(10,10,13,0.98);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  padding:10px 16px 18px;
+  flex-direction:column;
+  gap:2px;
+}
+.mobile-menu.is-open{ display:flex; }
+.mobile-menu button{
+  text-align:left; border:none; background:transparent; color:var(--text-2);
+  font-size:0.98rem; font-weight:700; padding:13px 10px; border-radius:10px;
+  border-bottom:1px solid var(--line-soft);
+}
+.mobile-menu button.is-active{ color:var(--red-300); }
+
+/* ---------- Pages ---------- */
+.page{ display:none; }
+.page.is-active{ display:block; animation:page-in 0.45s var(--ease); }
+#page-chat.page.is-active{ animation:page-in 0.45s var(--ease); }
+@keyframes page-in{
+  from{ opacity:0; transform:translateY(10px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+.section{
+  padding:100px clamp(20px,6vw,80px);
+  max-width:1280px;
+  margin:0 auto;
+  position:relative;
+}
+.section-narrow{ max-width:920px; }
+.eyebrow-plain{
+  color:var(--red-300);
+  font-weight:700;
+  font-size:0.85rem;
+  margin-bottom:14px;
+}
+.section-head{ max-width:640px; margin-bottom:56px; }
+.section-head h2{ font-size:clamp(1.8rem,3.4vw,2.6rem); color:var(--text-1); }
+.section-head p{ color:var(--text-2); margin-top:14px; font-size:1.05rem; }
+
+/* ============================================================
+   HOME
+   ============================================================ */
+.hero{
+  padding:70px clamp(20px,6vw,80px) 40px;
+  max-width:1280px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1.05fr 0.95fr;
+  gap:40px;
+  align-items:center;
+  min-height:calc(100vh - 72px);
+}
+.intro-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 16px 8px 12px;
+  border-radius:var(--radius-pill);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.04);
+  font-size:0.82rem;
+  font-weight:700;
+  color:var(--text-2);
+  margin-bottom:22px;
+}
+.intro-dot{
+  width:9px; height:9px; border-radius:50%;
+  background:conic-gradient(from 180deg, #ef5350, #f5c344, #4caf6e, #4f9de2, #ef5350);
+  box-shadow:0 0 10px rgba(255,255,255,0.25);
+}
+.hero-copy h1{
+  font-size:clamp(2rem,4.2vw,3.3rem);
+  line-height:1.08;
+  color:var(--text-1);
+}
+.hero-copy h1 em{
+  font-style:italic;
+  background:var(--accent-grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.hero-copy p.lede{
+  margin-top:22px;
+  font-size:1.14rem;
+  color:var(--text-2);
+  max-width:52ch;
+}
+.hero-cta{ display:flex; gap:14px; margin-top:34px; flex-wrap:wrap; }
+.hero-meta{
+  display:flex;
+  gap:28px;
+  margin-top:52px;
+  flex-wrap:wrap;
+}
+.hero-meta div{ min-width:110px; }
+.hero-meta strong{
+  display:block;
+  font-family:var(--font-display);
+  font-size:1.7rem;
+  color:var(--text-1);
+}
+.hero-meta span{ color:var(--text-3); font-size:0.86rem; }
+
+.hero-visual{ position:relative; }
+.chat-mock{
+  position:relative;
+  background:linear-gradient(180deg, rgba(28,26,32,0.9), rgba(16,15,18,0.95));
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  box-shadow:0 40px 90px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  backdrop-filter:blur(10px);
+}
+.chat-mock::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius:var(--radius-lg);
+  padding:1px;
+  background:linear-gradient(140deg, rgba(198,196,202,0.5), transparent 40%, transparent 70%, rgba(88,88,95,0.3));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+.chat-mock-head{
+  display:flex; align-items:center;
+  padding-bottom:16px; margin-bottom:16px;
+  border-bottom:1px solid var(--line-soft);
+}
+.chat-mock-head .dots-group{ display:flex; align-items:center; gap:5px; }
+.chat-mock-head .dot{ width:9px; height:9px; border-radius:50%; animation:dot-pulse 2.4s ease-in-out infinite; }
+.chat-mock-head .dot:nth-child(1){ background:#ef5350; animation-delay:0s; }
+.chat-mock-head .dot:nth-child(2){ background:#f5c344; animation-delay:0.25s; }
+.chat-mock-head .dot:nth-child(3){ background:#4caf6e; animation-delay:0.5s; }
+@keyframes dot-pulse{ 0%,100%{ opacity:0.55; transform:scale(0.92); } 50%{ opacity:1; transform:scale(1.08); } }
+.chat-mock-head .label{ margin-left:auto; font-size:0.78rem; color:var(--text-3); font-weight:600; }
+.bubble{
+  max-width:82%;
+  padding:12px 16px;
+  border-radius:16px;
+  font-size:0.92rem;
+  margin-bottom:12px;
+  line-height:1.5;
+}
+.bubble.user{
+  margin-left:auto;
+  background:rgba(255,255,255,0.06);
+  color:var(--text-1);
+  border-bottom-right-radius:4px;
+}
+.bubble.ai{
+  background:linear-gradient(135deg, rgba(88,88,95,0.35), rgba(34,34,38,0.5));
+  border:1px solid rgba(198,196,202,0.2);
+  border-bottom-left-radius:4px;
+  color:var(--grey-100);
+}
+.bubble.ai .tag{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:0.7rem; color:var(--red-300); font-weight:700;
+  margin-bottom:6px;
+}
+.bubble code{
+  font-family:'SF Mono', Consolas, monospace;
+  font-size:0.85em;
+  background:rgba(255,255,255,0.1);
+  padding:1px 6px;
+  border-radius:5px;
+}
+.type-caret{
+  display:inline-block;
+  width:2px; height:1em;
+  background:var(--accent-1);
+  margin-left:1px;
+  vertical-align:text-bottom;
+  animation:caret-blink 0.9s step-end infinite;
+}
+@keyframes caret-blink{ 50%{ opacity:0; } }
+.think-dot{ width:5px; height:5px; border-radius:50%; background:var(--accent-1); animation:pulse-dot 1.2s infinite ease-in-out; }
+@keyframes pulse-dot{ 0%,100%{ opacity:.3 } 50%{ opacity:1 } }
+
+.float-card{
+  position:absolute;
+  background:rgba(20,18,22,0.9);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:0.8rem;
+  font-weight:700;
+  color:var(--text-2);
+  backdrop-filter:blur(8px);
+  box-shadow:0 20px 40px rgba(0,0,0,0.4);
+}
+.float-card.f1{ top:-18px; right:20px; }
+.float-card.f2{ bottom:-16px; left:-18px; }
+.float-card .num{ color:var(--red-300); font-family:var(--font-display); font-size:1rem; margin-right:4px; }
+
+/* logo pull ambient glow */
+.logo-glow-wrap{ position:relative; }
+
+/* ---- process ---- */
+.process-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+.process-card{
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border:1px solid var(--line);
+  border-radius:var(--radius-md);
+  padding:26px 22px;
+  position:relative;
+}
+.process-card .step-mark{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.6rem;
+  background:var(--accent-grad);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  margin-bottom:16px;
+  display:block;
+}
+.process-card h3{ font-size:1.08rem; color:var(--text-1); font-weight:600; font-family:var(--font-body); }
+.process-card p{ margin-top:10px; color:var(--text-3); font-size:0.92rem; }
+.process-connector{
+  display:none;
+}
+
+/* ---- features ---- */
+.feature-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.feature-cell{
+  background:var(--charcoal);
+  padding:32px 28px;
+  transition:background .25s var(--ease);
+}
+.feature-cell:hover{ background:var(--panel); }
+.feature-icon{
+  width:38px; height:38px;
+  border-radius:10px;
+  background:linear-gradient(135deg, var(--red-700), var(--red-950));
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:18px;
+  border:1px solid rgba(198,196,202,0.25);
+}
+.feature-icon svg{ width:18px; height:18px; stroke:var(--grey-100); }
+.feature-cell h3{ font-size:1.04rem; color:var(--text-1); font-weight:700; font-family:var(--font-body); }
+.feature-cell p{ margin-top:10px; color:var(--text-3); font-size:0.92rem; }
+
+/* ---- pricing teaser strip on home ---- */
+.teaser-strip{
+  margin-top:70px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+  padding:34px 38px;
+  border-radius:var(--radius-lg);
+  background:linear-gradient(120deg, rgba(88,88,95,0.18), rgba(255,255,255,0.02));
+  border:1px solid var(--line);
+}
+.teaser-strip h3{ font-size:1.4rem; color:var(--text-1); }
+.teaser-strip p{ color:var(--text-3); margin-top:6px; max-width:44ch; }
+
+/* ============================================================
+   PRICING
+   ============================================================ */
+.pricing-switch{
+  display:inline-flex;
+  border:1px solid var(--line);
+  border-radius:var(--radius-pill);
+  padding:4px;
+  margin-bottom:8px;
+  background:rgba(255,255,255,0.02);
+}
+.pricing-switch button{
+  border:none; background:transparent; color:var(--text-3);
+  font-weight:700; font-size:0.85rem; padding:9px 20px; border-radius:var(--radius-pill);
+}
+.pricing-switch button.is-active{ background:var(--panel-2); color:var(--text-1); }
+
+.plans{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:22px;
+  margin-top:46px;
+  align-items:stretch;
+}
+.plan{
+  position:relative;
+  border-radius:var(--radius-lg);
+  padding:34px 28px;
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.005));
+}
+.plan.private{ border-color:rgba(139,92,246,0.3); }
+.plan.premium{
+  border:1px solid transparent;
+  background:
+    linear-gradient(var(--charcoal-2), var(--charcoal-2)) padding-box,
+    var(--accent-grad) border-box;
+  box-shadow:0 30px 70px -25px rgba(192,38,211,0.45);
+  transform:translateY(-8px);
+}
+.plan-badge{
+  position:absolute; top:22px; right:28px;
+  font-size:0.7rem; font-weight:800; letter-spacing:0.02em;
+  color:#ffb0ba;
+  background:rgba(255,36,64,0.14);
+  border:1px solid rgba(255,36,64,0.35);
+  padding:5px 11px; border-radius:var(--radius-pill);
+}
+.plan-name{ font-family:var(--font-display); font-size:1.5rem; color:var(--text-1); }
+.plan-tagline{ color:var(--text-3); font-size:0.9rem; margin-top:6px; min-height:36px; }
+.plan-price{ margin-top:22px; display:flex; align-items:baseline; gap:6px; }
+.plan-price .amount{ font-family:var(--font-display); font-size:2.6rem; color:var(--text-1); }
+.plan-price .cycle{ color:var(--text-3); font-size:0.9rem; }
+.billed-note{ margin-top:8px; font-size:0.8rem; color:var(--text-3); font-weight:600; }
+.plan-cta{ margin-top:24px; }
+.plan-list{ margin-top:28px; display:flex; flex-direction:column; gap:14px; flex:1; }
+.plan-list li{ display:flex; gap:10px; align-items:flex-start; color:var(--text-2); font-size:0.92rem; }
+.plan-list li svg{ flex:none; width:16px; height:16px; margin-top:3px; stroke:var(--red-400); }
+.plan-list li.dim{ color:var(--text-3); }
+.plan-list li.dim svg{ stroke:var(--text-3); }
+
+.pricing-note{
+  margin-top:50px;
+  padding:24px 28px;
+  border-radius:var(--radius-md);
+  border:1px dashed var(--line);
+  color:var(--text-3);
+  font-size:0.9rem;
+}
+
+.compare-table{ margin-top:70px; overflow-x:auto; }
+table{ width:100%; border-collapse:collapse; min-width:640px; }
+table th, table td{
+  text-align:left;
+  padding:16px 18px;
+  border-bottom:1px solid var(--line-soft);
+  font-size:0.9rem;
+  color:var(--text-2);
+}
+table th{ color:var(--text-1); font-family:var(--font-display); font-weight:500; font-size:1rem; }
+table td:not(:first-child), table th:not(:first-child){ text-align:center; }
+table tr td:first-child{ color:var(--text-1); font-weight:600; }
+
+/* ============================================================
+   GUIDELINES / PRIVACY / TERMS / ABOUT  — doc-style pages
+   ============================================================ */
+.doc-page{ padding-top:70px; }
+.doc-header{ margin-bottom:50px; }
+.doc-header .kicker{ color:var(--red-300); font-weight:700; font-size:0.85rem; }
+.doc-header h1{ font-size:clamp(2rem,4vw,2.9rem); margin-top:12px; }
+.doc-header .updated{ color:var(--text-3); margin-top:14px; font-size:0.88rem; }
+
+.doc-layout{ display:grid; grid-template-columns:220px 1fr; gap:56px; }
+.doc-toc{ position:sticky; top:100px; align-self:start; display:flex; flex-direction:column; gap:2px; }
+.doc-toc a{
+  padding:9px 14px;
+  border-radius:10px;
+  font-size:0.87rem;
+  color:var(--text-3);
+  font-weight:600;
+  border-left:2px solid transparent;
+}
+.doc-toc a:hover{ color:var(--text-1); }
+.doc-toc a.is-active{ color:var(--red-300); border-left-color:var(--red-400); background:rgba(198,196,202,0.06); }
+
+.doc-body h2{
+  font-size:1.4rem; color:var(--text-1); margin-top:52px; padding-top:8px; scroll-margin-top:100px;
+}
+.doc-body h2:first-child{ margin-top:0; }
+.doc-body p{ color:var(--text-2); margin-top:14px; max-width:70ch; }
+.doc-body ul{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.doc-body li{ color:var(--text-2); padding-left:22px; position:relative; max-width:68ch; }
+.doc-body li::before{
+  content:"";
+  position:absolute; left:0; top:9px;
+  width:6px; height:6px; border-radius:50%;
+  background:var(--red-500);
+}
+.callout{
+  margin-top:22px;
+  padding:18px 20px;
+  border-radius:var(--radius-md);
+  background:rgba(198,196,202,0.07);
+  border:1px solid rgba(198,196,202,0.22);
+  color:var(--grey-100);
+  font-size:0.92rem;
+  max-width:70ch;
+}
+
+/* ============================================================
+   ABOUT
+   ============================================================ */
+.about-hero{ display:grid; grid-template-columns:1fr 1fr; gap:50px; align-items:center; }
+.stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:40px; }
+.stat-box{ padding:22px; border:1px solid var(--line); border-radius:var(--radius-md); background:rgba(255,255,255,0.02); }
+.stat-box strong{ display:block; font-family:var(--font-display); font-size:1.8rem; color:var(--text-1); }
+.stat-box span{ color:var(--text-3); font-size:0.85rem; }
+.value-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:22px; margin-top:40px; }
+.value-card{ padding:26px; border-radius:var(--radius-md); border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,0.025), transparent); }
+.value-card h3{ font-size:1.05rem; color:var(--text-1); font-family:var(--font-body); font-weight:700; }
+.value-card p{ margin-top:10px; color:var(--text-3); font-size:0.92rem; }
+
+/* ============================================================
+   CHAT — full screen app
+   ============================================================ */
+#page-chat.page.is-active{ display:flex; }
+.chat-app{
+  display:flex;
+  width:100%;
+  height:calc(100vh - 65px);
+}
+.chat-sidebar{
+  width:280px;
+  flex:none;
+  border-right:1px solid var(--line-soft);
+  background:rgba(10,10,12,0.5);
+  display:flex;
+  flex-direction:column;
+  padding:18px;
+}
+.chat-new{
+  display:flex; align-items:center; gap:10px;
+  padding:12px 14px;
+  border-radius:12px;
+  background:var(--accent-grad);
+  color:#fff; font-weight:700; font-size:0.9rem;
+  border:1px solid rgba(255,36,64,0.4);
+  box-shadow:0 8px 22px rgba(255,36,64,0.3);
+}
+.chat-new:hover{ filter:brightness(1.08); }
+.chat-history{ margin-top:22px; display:flex; flex-direction:column; gap:3px; overflow-y:auto; flex:1; }
+.chat-history-label{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-3); padding:0 10px; margin-bottom:8px; font-weight:700; }
+.chat-history button{
+  text-align:left; border:none; background:transparent; color:var(--text-2);
+  padding:10px 12px; border-radius:10px; font-size:0.87rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.chat-history button:hover{ background:rgba(255,255,255,0.05); color:var(--text-1); }
+.chat-history button.active-conv{ background:rgba(198,196,202,0.12); color:var(--text-1); }
+
+.plan-meter{
+  margin-top:auto;
+  padding:16px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--line-soft);
+}
+.plan-meter .plan-meter-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.plan-meter .plan-meter-top span:first-child{ font-weight:700; font-size:0.85rem; color:var(--text-1); }
+.plan-meter .plan-meter-top span:last-child{ font-size:0.72rem; color:var(--red-300); font-weight:700; }
+.meter-bar{ height:6px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden; margin-bottom:6px; }
+.meter-bar i{ display:block; height:100%; width:34%; background:linear-gradient(90deg, var(--red-500), var(--red-300)); border-radius:99px; }
+.plan-meter small{ color:var(--text-3); font-size:0.75rem; }
+.plan-meter a{ display:block; margin-top:12px; text-align:center; font-size:0.78rem; font-weight:700; color:var(--red-300); }
+
+.chat-main{ flex:1; display:flex; flex-direction:column; min-width:0; }
+.chat-topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 26px; border-bottom:1px solid var(--line-soft);
+}
+.chat-model{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:0.94rem; }
+.model-dot{ width:8px; height:8px; border-radius:50%; background:var(--red-400); box-shadow:0 0 10px var(--red-400); }
+.chat-topbar .sub{ color:var(--text-3); font-size:0.78rem; font-weight:500; }
+
+.chat-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:34px clamp(16px,6vw,0px) 20px;
+}
+.chat-thread{ max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:22px; padding:0 20px; }
+
+.msg{ display:flex; gap:14px; max-width:100%; }
+.msg.msg-enter{ opacity:0; transform:translateY(10px); transition:opacity .38s var(--ease), transform .38s var(--ease); }
+.msg.msg-enter-active{ opacity:1; transform:translateY(0); }
+.msg .avatar{
+  flex:none; width:32px; height:32px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; font-weight:800;
+  overflow:hidden;
+}
+.msg .avatar img{ width:100%; height:100%; object-fit:contain; }
+.msg.from-user{ flex-direction:row-reverse; }
+.msg.from-user .avatar{ background:rgba(255,255,255,0.08); color:var(--text-1); }
+.msg.from-ai .avatar{ background:transparent; color:#fff; }
+.avatar-thinking{
+  position:relative;
+  animation:avatar-breathe 1.6s ease-in-out infinite;
+}
+@keyframes avatar-breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+.msg-body{ max-width:78%; }
+.msg.from-user .msg-body{ margin-left:auto; }
+.msg-bubble{
+  padding:13px 17px;
+  border-radius:16px;
+  font-size:0.95rem;
+  line-height:1.6;
+  color:var(--grey-100);
+}
+.msg.from-user .msg-bubble{ background:rgba(255,255,255,0.07); border-bottom-right-radius:4px; }
+.msg.from-ai .msg-bubble{ background:var(--panel); border:1px solid var(--line-soft); border-bottom-left-radius:4px; }
+.msg-bubble p + p{ margin-top:10px; }
+.msg-bubble ul{ margin-top:8px; padding-left:18px; list-style:disc; }
+.msg-bubble li{ margin-bottom:4px; }
+.msg-meta{ display:flex; gap:8px; align-items:center; margin-top:7px; font-size:0.72rem; color:var(--text-3); }
+.msg.from-user .msg-meta{ justify-content:flex-end; }
+.thinking-tag{ display:inline-flex; gap:6px; align-items:center; color:#ff7d85; font-weight:700; }
+
+.typing-row{ display:flex; gap:14px; }
+.typing-bubble{
+  padding:12px 18px; border-radius:16px; border-bottom-left-radius:4px;
+  background:var(--panel); border:1px solid var(--line-soft);
+  display:flex; align-items:center; gap:10px;
+  position:relative;
+  overflow:hidden;
+}
+.typing-bubble::before{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.06) 50%, transparent 80%);
+  background-size:200% 100%;
+  animation:shimmer-sweep 1.8s linear infinite;
+}
+@keyframes shimmer-sweep{ 0%{ background-position:160% 0; } 100%{ background-position:-60% 0; } }
+.typing-label{ font-size:0.86rem; color:var(--text-2); font-weight:600; position:relative; z-index:1; }
+.typing-dots{ display:flex; align-items:center; gap:5px; position:relative; z-index:1; }
+.typing-dots span{ width:6px; height:6px; border-radius:50%; animation:bounce-dot 1s infinite ease-in-out; }
+.typing-dots span:nth-child(1){ background:#ef5350; }
+.typing-dots span:nth-child(2){ background:#f5c344; animation-delay:0.15s; }
+.typing-dots span:nth-child(3){ background:#4caf6e; animation-delay:0.3s; }
+@keyframes bounce-dot{ 0%,80%,100%{ transform:translateY(0); opacity:.4 } 40%{ transform:translateY(-4px); opacity:1 } }
+
+.chat-suggestions{
+  max-width:760px; margin:0 auto 22px; padding:0 20px;
+  display:grid; grid-template-columns:repeat(2,1fr); gap:10px;
+}
+.suggestion-chip{
+  text-align:left;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.02);
+  padding:14px 16px;
+  border-radius:14px;
+  color:var(--text-2);
+  font-size:0.87rem;
+}
+.suggestion-chip:hover{ border-color:rgba(198,196,202,0.4); color:var(--text-1); background:rgba(198,196,202,0.05); }
+.suggestion-chip b{ display:block; color:var(--text-1); font-size:0.9rem; margin-bottom:3px; }
+
+.chat-inputbar{
+  padding:16px 20px 22px;
+  border-top:1px solid var(--line-soft);
+  background:linear-gradient(180deg, transparent, rgba(6,6,10,0.5));
+}
+.input-shell{
+  max-width:760px; margin:0 auto;
+  display:flex; align-items:flex-end; gap:8px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:10px 10px 10px 14px;
+  transition:border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.input-shell:focus-within{ border-color:rgba(198,196,202,0.45); box-shadow:0 0 0 4px rgba(198,196,202,0.1); }
+.icon-btn{
+  flex:none; width:36px; height:36px; border-radius:11px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.02);
+  display:flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover{ border-color:rgba(255,255,255,0.25); }
+.icon-btn svg{ width:16px; height:16px; stroke:var(--text-2); }
+#chatInput{
+  flex:1;
+  resize:none;
+  background:transparent;
+  border:none;
+  color:var(--text-1);
+  font-family:var(--font-body);
+  font-size:0.95rem;
+  padding:8px 4px;
+  max-height:160px;
+  outline:none;
+}
+#chatInput::placeholder{ color:var(--text-3); }
+.send-btn{
+  flex:none; width:38px; height:38px; border-radius:12px;
+  border:none;
+  background:var(--accent-grad);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 6px 16px rgba(255,36,64,0.4);
+}
+.send-btn svg{ width:16px; height:16px; stroke:#fff; }
+.send-btn:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; }
+.input-foot{ text-align:center; margin-top:10px; font-size:0.72rem; color:var(--text-3); }
+.attach-chip{
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(255,255,255,0.05); border:1px solid var(--line);
+  padding:5px 10px; border-radius:10px; font-size:0.76rem; color:var(--text-2);
+  margin:0 20px 10px; max-width:760px;
+}
+.attach-row{ max-width:760px; margin:0 auto; display:flex; gap:8px; flex-wrap:wrap; padding:0 20px 10px; }
+.attach-row .attach-chip{ margin:0; }
+.attach-chip button{ border:none; background:transparent; color:var(--text-3); font-size:0.9rem; line-height:1; }
+
+.chat-mobile-toggle{ display:none; }
+
+/* ============================================================
+   AUTH MODAL
+   ============================================================ */
+.modal-overlay{
+  position:fixed; inset:0; z-index:500;
+  background:rgba(4,4,6,0.72);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center; justify-content:center;
+  padding:20px;
+}
+.modal-overlay.is-open{ display:flex; }
+.modal-card{
+  width:100%; max-width:420px;
+  background:linear-gradient(180deg, #18161b, #100f12);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:34px 30px;
+  position:relative;
+  box-shadow:0 40px 100px rgba(0,0,0,0.6);
+}
+.modal-close{
+  position:absolute; top:18px; right:18px;
+  width:32px; height:32px; border-radius:9px;
+  border:1px solid var(--line); background:rgba(255,255,255,0.03);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-2); font-size:1rem;
+}
+.modal-close:hover{ color:var(--text-1); }
+.modal-head{ text-align:center; margin-bottom:26px; }
+.modal-head img{ width:36px; margin:0 auto 14px; }
+.modal-head h3{ font-size:1.35rem; color:var(--text-1); }
+.modal-head p{ color:var(--text-3); font-size:0.88rem; margin-top:6px; }
+
+.social-row{ display:flex; flex-direction:column; gap:10px; }
+.social-btn{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:11px; border-radius:12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);
+  color:var(--text-1); font-weight:700; font-size:0.88rem;
+}
+.social-btn:hover{ background:rgba(255,255,255,0.07); border-color:rgba(255,255,255,0.2); }
+.social-btn svg{ width:18px; height:18px; }
+
+.divider-row{ display:flex; align-items:center; gap:12px; margin:22px 0; }
+.divider-row::before, .divider-row::after{ content:""; flex:1; height:1px; background:var(--line); }
+.divider-row span{ color:var(--text-3); font-size:0.76rem; font-weight:600; }
+
+.field{ margin-bottom:14px; }
+.field label{ display:block; font-size:0.8rem; font-weight:700; color:var(--text-2); margin-bottom:6px; }
+.field input{
+  width:100%; padding:11px 14px; border-radius:11px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--line);
+  color:var(--text-1); font-size:0.92rem; font-family:inherit;
+}
+.field input:focus{ outline:none; border-color:rgba(198,196,202,0.5); }
+.modal-foot{ text-align:center; margin-top:18px; font-size:0.86rem; color:var(--text-3); }
+.modal-foot button{ background:none; border:none; color:var(--red-300); font-weight:700; font-size:0.86rem; }
+.modal-fineprint{ text-align:center; font-size:0.74rem; color:var(--text-3); margin-top:16px; line-height:1.6; }
+.modal-fineprint a{ color:var(--text-2); text-decoration:underline; text-underline-offset:2px; }
+
+/* toast */
+.toast{
+  position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(12px);
+  background:var(--panel-2); border:1px solid var(--line);
+  padding:12px 20px; border-radius:12px; font-size:0.85rem; color:var(--text-1);
+  box-shadow:0 20px 40px rgba(0,0,0,0.5);
+  z-index:600; opacity:0; pointer-events:none;
+  transition:opacity .25s var(--ease), transform .25s var(--ease);
+}
+.toast.is-visible{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.site-footer{
+  border-top:1px solid var(--line-soft);
+  padding:56px clamp(20px,6vw,80px) 40px;
+  background:linear-gradient(180deg, transparent, rgba(34,34,38,0.08));
+}
+.footer-grid{
+  max-width:1280px; margin:0 auto;
+  display:grid; grid-template-columns:1.4fr repeat(3,1fr); gap:40px;
+}
+.footer-brand .brand{ margin-bottom:14px; }
+.footer-brand p{ color:var(--text-3); font-size:0.88rem; max-width:32ch; }
+.footer-col h4{ font-family:var(--font-body); font-size:0.82rem; color:var(--text-1); font-weight:700; margin-bottom:16px; }
+.footer-col ul{ display:flex; flex-direction:column; gap:11px; }
+.footer-col button{ background:none; border:none; color:var(--text-3); font-size:0.87rem; text-align:left; }
+.footer-col button:hover{ color:var(--red-300); }
+.footer-bottom{
+  max-width:1280px; margin:44px auto 0;
+  display:flex; justify-content:space-between; align-items:center;
+  padding-top:22px; border-top:1px solid var(--line-soft);
+  color:var(--text-3); font-size:0.8rem; flex-wrap:wrap; gap:10px;
+}
+
+/* ============================================================
+   Utility reveal-on-scroll (single orchestrated pass)
+   ============================================================ */
+.reveal{ opacity:0; transform:translateY(16px); transition:opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal.in-view{ opacity:1; transform:translateY(0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 980px){
+  .nav-links{ display:none; }
+  .nav-burger{ display:flex; }
+  .hero{ grid-template-columns:1fr; padding-top:40px; }
+  .hero-visual{ order:-1; }
+  .process-grid{ grid-template-columns:repeat(2,1fr); }
+  .feature-grid{ grid-template-columns:repeat(2,1fr); }
+  .plans{ grid-template-columns:1fr; }
+  .plan.premium{ transform:none; }
+  .doc-layout{ grid-template-columns:1fr; }
+  .doc-toc{ position:static; flex-direction:row; overflow-x:auto; padding-bottom:6px; }
+  .doc-toc a{ white-space:nowrap; }
+  .about-hero{ grid-template-columns:1fr; }
+  .value-grid{ grid-template-columns:1fr; }
+  .chat-sidebar{ position:fixed; left:0; top:65px; bottom:0; z-index:150; transform:translateX(-100%); transition:transform .25s var(--ease); box-shadow:20px 0 40px rgba(0,0,0,0.4); }
+  .chat-sidebar.is-open{ transform:translateX(0); }
+  .chat-mobile-toggle{ display:flex; }
+  .chat-suggestions{ grid-template-columns:1fr; }
+  .footer-grid{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 640px){
+  .section{ padding:70px 20px; }
+  .process-grid{ grid-template-columns:1fr; }
+  .feature-grid{ grid-template-columns:1fr; }
+  .footer-grid{ grid-template-columns:1fr; }
+  .msg-body{ max-width:88%; }
+  .nav{ padding:14px 16px; }
+  .nav-actions .btn span.full{ display:none; }
+  .nav-actions .btn span.full + span{ display:inline !important; }
+  .nav-actions #openSignIn{ display:none; }
+  .stat-row{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="atmosphere">
+  <div class="blur-orb" style="width:520px;height:520px;background:radial-gradient(circle,var(--accent-1),transparent 70%);top:-160px;left:-120px;opacity:0.10;"></div>
+  <div class="blur-orb" style="width:460px;height:460px;background:radial-gradient(circle,var(--accent-2),transparent 70%);bottom:-180px;right:-100px;opacity:0.10;"></div>
+</div>
+
+<div class="app">
+
+  <!-- ============ NAV ============ -->
+  <nav class="nav">
+    <button class="brand" data-nav="home" style="border:none;background:none;">
+      <img src="assets/elorahub_logo.png" alt="elorahub logo">
+      <span>elorahub<small>ELORA AI</small></span>
+    </button>
+
+    <div class="nav-links" role="tablist" aria-label="Primary">
+      <button data-nav="home" class="is-active">Home</button>
+      <button data-nav="chat">Chat</button>
+      <button data-nav="pricing">Pricing</button>
+      <button data-nav="guidelines">Guidelines</button>
+      <button data-nav="about">About</button>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="openSignIn">Sign in</button>
+      <button class="btn btn-primary" id="openSignUp"><span class="full">Sign up free</span><span style="display:none">Sign up</span></button>
+      <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <button data-nav="home" class="is-active">Home</button>
+    <button data-nav="chat">Chat</button>
+    <button data-nav="pricing">Pricing</button>
+    <button data-nav="guidelines">Guidelines</button>
+    <button data-nav="about">About</button>
+  </div>
+
+  <!-- ============ HOME ============ -->
+  <section class="page is-active" id="page-home">
+
+    <div class="hero">
+      <div class="hero-copy reveal">
+        <div class="intro-badge">
+          <span class="intro-dot"></span>
+          Introducing elorahub
+        </div>
+        <h1>Meet <em>elora</em>, the AI that actually thinks it through.</h1>
+        <p class="lede">elorahub pairs the speed you want with the depth you don't usually get. Elora reads the whole question, reasons through it in the background, checks its own logic, and still gets back to you in about four to five seconds.</p>
+        <div class="hero-cta">
+          <button class="btn btn-primary btn-lg" data-nav="chat">Start chatting with Elora</button>
+          <button class="btn btn-lg" data-nav="pricing">See plans &amp; pricing</button>
+        </div>
+        <div class="hero-meta">
+          <div><strong>~4–5s</strong><span>Typical reply time</span></div>
+          <div><strong>3-pass</strong><span>Internal reasoning check</span></div>
+          <div><strong>Text · Image · File</strong><span>Every plan can upload</span></div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="chat-mock">
+          <div class="chat-mock-head">
+            <span class="dots-group"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
+            <span class="label">Elora — live preview</span>
+          </div>
+          <div class="bubble user">This Python function is throwing a KeyError sometimes — can you see why?</div>
+          <div class="bubble ai">
+            <span class="tag"><span class="think-dot"></span> thought for 4.1s</span>
+            <span id="heroTypedReply"></span><span class="type-caret"></span>
+          </div>
+          <div class="bubble user hero-followup" style="opacity:0;">That was it. Can you clean up the rest of the function too?</div>
+        </div>
+        <div class="float-card f1"><span class="num">01</span>Reads files &amp; images</div>
+        <div class="float-card f2"><span class="num">02</span>Reasons before replying</div>
+      </div>
+    </div>
+
+    <!-- HOW ELORA THINKS -->
+    <div class="section" id="how">
+      <div class="section-head reveal">
+        <h2>How Elora gets to a good answer, fast</h2>
+        <p>Most fast chatbots are fast because they skip steps. Elora isn't. Every message runs through the same short pipeline before a word ever reaches you.</p>
+      </div>
+      <div class="process-grid">
+        <div class="process-card reveal">
+          <span class="step-mark">i.</span>
+          <h3>Read &amp; understand</h3>
+          <p>Elora parses your prompt, any uploaded files or images, and the earlier turns in the conversation, so it knows exactly what you're actually asking.</p>
+        </div>
+        <div class="process-card reveal">
+          <span class="step-mark">ii.</span>
+          <h3>Reason in the background</h3>
+          <p>Before drafting a reply, Elora works through the problem privately — weighing angles, checking assumptions, ruling out weak answers.</p>
+        </div>
+        <div class="process-card reveal">
+          <span class="step-mark">iii.</span>
+          <h3>Cross-check the logic</h3>
+          <p>A second internal pass checks the draft answer against the original question, catching contradictions or gaps before you ever see them.</p>
+        </div>
+        <div class="process-card reveal">
+          <span class="step-mark">iv.</span>
+          <h3>Reply in seconds</h3>
+          <p>All of that happens quietly and quickly. You get a considered, specific answer in roughly four to five seconds, not a wall of caveats.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="section">
+      <div class="section-head reveal">
+        <h2>What you can actually do with it</h2>
+        <p>elorahub is built around one chat that can genuinely help with writing, reasoning, and the files you throw at it — not a demo that falls apart outside a script.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg></div>
+          <h3>Genuinely creative writing</h3>
+          <p>Stories, scripts, brand voice, brainstorms — Elora writes with actual point of view instead of the same three templates.</p>
+        </div>
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 012-2h8.5L20 8.5V19.5A1.5 1.5 0 0118.5 21h-13A1.5 1.5 0 014 19.5z"/><path d="M14 4v4.5A1.5 1.5 0 0015.5 10H20"/></svg></div>
+          <h3>Reads files &amp; images</h3>
+          <p>Drop in PDFs, spreadsheets, screenshots or photos. Elora reads them properly and answers questions about what's inside.</p>
+        </div>
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l-6 9 6 9M15 3l6 9-6 9"/></svg></div>
+          <h3>Code &amp; data, explained plainly</h3>
+          <p>Debug a script, walk through a dataset, or get a second opinion on an approach — explained the way you'd want a colleague to.</p>
+        </div>
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-9-9M21 3l-9 9M21 3v6h-6"/></svg></div>
+          <h3>Deep, multi-angle reasoning</h3>
+          <p>For questions with real stakes, Elora doesn't stop at the first plausible answer — it weighs trade-offs before committing to one.</p>
+        </div>
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8M8 13h5M21 12c0 4.97-4.03 9-9 9-1.5 0-2.9-.36-4.14-1L3 21l1.09-3.68A8.96 8.96 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9 9z"/></svg></div>
+          <h3>Remembers the conversation</h3>
+          <p>Elora tracks context across a long chat, so you don't have to keep re-explaining what you already told it two messages ago.</p>
+        </div>
+        <div class="feature-cell reveal">
+          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
+          <h3>Works in your language</h3>
+          <p>Switch languages mid-conversation and Elora follows naturally, keeping tone and meaning intact either way.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="teaser-strip reveal">
+        <div>
+          <h3>Free to start, easy to grow into.</h3>
+          <p>Begin on the Free plan, move to Private when you need more room, and go unlimited on Premium whenever you're ready.</p>
+        </div>
+        <button class="btn btn-primary btn-lg" data-nav="pricing">Compare all plans</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CHAT ============ -->
+  <section class="page" id="page-chat">
+    <div class="chat-app">
+      <aside class="chat-sidebar" id="chatSidebar">
+        <button class="chat-new" id="newChatBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          New chat
+        </button>
+        <div class="chat-history">
+          <div class="chat-history-label">Recent</div>
+          <button class="active-conv">Quarterly churn breakdown</button>
+          <button>Rewriting my bio</button>
+          <button>Trip plan: Lisbon, 4 days</button>
+          <button>Explaining a lease clause</button>
+          <button>Product name brainstorm</button>
+        </div>
+        <div class="plan-meter">
+          <div class="plan-meter-top"><span>Free plan</span><span>UPGRADE</span></div>
+          <div class="meter-bar"><i></i></div>
+          <small>1 of 3 uploads used today</small>
+          <a data-nav="pricing">See what Private unlocks →</a>
+        </div>
+      </aside>
+
+      <div class="chat-main">
+        <div class="chat-topbar">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button class="icon-btn chat-mobile-toggle" id="sidebarToggle" aria-label="Toggle chat history">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <div class="chat-model"><span class="model-dot"></span> Elora Core <span class="sub">&nbsp;— reasoning mode</span></div>
+          </div>
+          <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
+        </div>
+
+        <div class="chat-scroll" id="chatScroll">
+          <div class="chat-thread" id="chatThread">
+            <div class="msg from-ai">
+              <div class="avatar">e</div>
+              <div class="msg-body">
+                <div class="msg-bubble">Hey — I'm Elora. Ask me anything, paste in a file or a screenshot, or just think out loud. I'll take a few seconds to actually consider it before answering.</div>
+                <div class="msg-meta">Elora · just now</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-suggestions" id="chatSuggestions">
+          <button class="suggestion-chip" data-fill="Look at this messy paragraph and rewrite it so it actually sounds like me.">
+            <b>Rewrite something</b>Tighten up a paragraph without losing my voice
+          </button>
+          <button class="suggestion-chip" data-fill="Walk me through the trade-offs before I make a decision I can't easily undo.">
+            <b>Think through a decision</b>Weigh the real trade-offs with me
+          </button>
+          <button class="suggestion-chip" data-fill="Here's a file I need explained in plain language — what matters most in it?">
+            <b>Explain a file</b>Upload a PDF, sheet, or image
+          </button>
+          <button class="suggestion-chip" data-fill="Give me five genuinely different name ideas for a project, not five versions of the same one.">
+            <b>Brainstorm, for real</b>Push past the obvious first ideas
+          </button>
+        </div>
+
+        <div class="attach-row" id="attachRow" style="display:none;"></div>
+
+        <div class="chat-inputbar">
+          <div class="input-shell">
+            <input type="file" id="fileInput" multiple style="display:none;">
+            <button class="icon-btn" id="attachBtn" aria-label="Attach file or image" title="Attach file or image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a1.5 1.5 0 01-2.12-2.12l8.49-8.48"/></svg>
+            </button>
+            <textarea id="chatInput" rows="1" placeholder="Message Elora… (Shift + Enter for a new line)"></textarea>
+            <button class="send-btn" id="sendBtn" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+          <div class="input-foot">Elora reasons before replying, so answers can take a few seconds. Free plan: 3 file/image uploads.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRICING ============ -->
+  <section class="page" id="page-pricing">
+    <div class="section">
+      <div class="section-head reveal">
+        <span class="eyebrow-plain">Pricing</span>
+        <h2>Plans that scale with how much you lean on Elora</h2>
+        <p>Start free, move up whenever the limits start to get in your way. No surprise charges — every plan shows exactly what changes.</p>
+      </div>
+
+      <div class="pricing-switch" role="tablist" aria-label="Billing cycle">
+        <button class="is-active" data-cycle="monthly">Monthly</button>
+        <button data-cycle="yearly">Yearly — save 20%</button>
+      </div>
+
+      <div class="plans">
+        <!-- FREE -->
+        <div class="plan reveal">
+          <div class="plan-name">Free</div>
+          <div class="plan-tagline">Try Elora properly before committing to anything.</div>
+          <div class="plan-price"><span class="amount">$0</span><span class="cycle">/ forever</span></div>
+          <div class="billed-note">No card required, ever.</div>
+          <div class="plan-cta"><button class="btn btn-block" data-nav="chat">Start for free</button></div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Limited daily messages with Elora</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Up to 3 file or image uploads / day</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Standard reasoning depth</li>
+            <li class="dim"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>No priority reply speed</li>
+            <li class="dim"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>No extended chat memory</li>
+          </ul>
+        </div>
+
+        <!-- PRIVATE -->
+        <div class="plan private reveal">
+          <span class="plan-badge">MOST FLEXIBLE</span>
+          <div class="plan-name">Private</div>
+          <div class="plan-tagline">Noticeably more room, and a private, unshared workspace.</div>
+          <div class="plan-price"><span class="amount price-value" data-monthly="15" data-yearly="12">$15</span><span class="cycle">/ month</span></div>
+          <div class="billed-note" data-monthly-note="Billed $15 every month" data-yearly-note="Billed $144 / year — save $36">Billed $15 every month</div>
+          <div class="plan-cta"><button class="btn btn-primary btn-block checkout-btn" data-plan="private">Get Private</button></div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Way more messages than Free</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Significantly more photo &amp; file uploads</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Private, unshared conversation space</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Longer chat memory</li>
+            <li class="dim"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>Not unlimited yet</li>
+          </ul>
+        </div>
+
+        <!-- PREMIUM -->
+        <div class="plan premium reveal">
+          <span class="plan-badge">UNLIMITED</span>
+          <div class="plan-name">Premium</div>
+          <div class="plan-tagline">No caps. Use Elora as much as your work actually needs.</div>
+          <div class="plan-price"><span class="amount price-value" data-monthly="25" data-yearly="20">$25</span><span class="cycle">/ month</span></div>
+          <div class="billed-note" data-monthly-note="Billed $25 every month" data-yearly-note="Billed $240 / year — save $60">Billed $25 every month</div>
+          <div class="plan-cta"><button class="btn btn-primary btn-block checkout-btn" data-plan="premium">Get Premium</button></div>
+          <ul class="plan-list">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Unlimited text conversations with Elora</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Unlimited photo &amp; file uploads</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Fastest queue priority</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Longest chat memory available</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Early access to new Elora features</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="pricing-note">Yearly billing is shown as an equivalent monthly rate and is billed once per year. You can change or cancel your plan at any time — details in the <button style="background:none;border:none;color:var(--red-300);font-weight:700;padding:0;font-size:inherit;" data-nav="terms">Terms of Service</button>.</p>
+
+      <div class="compare-table reveal">
+        <table>
+          <thead><tr><th>Compare</th><th>Free</th><th>Private</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td>Text messages with Elora</td><td>Limited / day</td><td>Way more than Free</td><td>Unlimited</td></tr>
+            <tr><td>File &amp; image uploads</td><td>3 / day</td><td>Much higher limit</td><td>Unlimited</td></tr>
+            <tr><td>Reasoning depth</td><td>Standard</td><td>Standard +</td><td>Full depth</td></tr>
+            <tr><td>Conversation privacy</td><td>Standard</td><td>Private workspace</td><td>Private workspace</td></tr>
+            <tr><td>Response priority</td><td>Standard queue</td><td>Priority</td><td>Fastest priority</td></tr>
+            <tr><td>Chat memory length</td><td>Short</td><td>Extended</td><td>Longest available</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GUIDELINES ============ -->
+  <section class="page" id="page-guidelines">
+    <div class="section doc-page">
+      <div class="doc-header reveal">
+        <span class="kicker">Guidelines</span>
+        <h1>Getting the most out of Elora</h1>
+        <p class="updated">Last updated September 2026</p>
+      </div>
+      <div class="doc-layout">
+        <nav class="doc-toc" id="guidelinesToc">
+          <a href="#g-using-well" class="is-active">Using Elora well</a>
+          <a href="#g-uploads">Uploading files &amp; images</a>
+          <a href="#g-acceptable-use">Acceptable use</a>
+          <a href="#g-limitations">Where Elora falls short</a>
+          <a href="#g-feedback">Reporting an issue</a>
+        </nav>
+        <div class="doc-body">
+          <h2 id="g-using-well">Using Elora well</h2>
+          <p>Elora is built to reason, not just autocomplete. You'll get sharper answers if you treat it like a capable colleague rather than a search box.</p>
+          <ul>
+            <li>Say what you actually want the answer to do — inform a decision, draft something final, or just help you think.</li>
+            <li>Give real constraints (budget, audience, deadline). Elora weighs trade-offs better with something concrete to weigh.</li>
+            <li>Push back on an answer if it's off. Elora will re-reason from your correction rather than just repeating itself.</li>
+          </ul>
+
+          <h2 id="g-uploads">Uploading files &amp; images</h2>
+          <p>Every plan can attach files and images to a conversation — Free is limited to 3 uploads a day, Private raises that considerably, and Premium removes the cap entirely.</p>
+          <ul>
+            <li>Documents, spreadsheets, screenshots, and photos are all supported.</li>
+            <li>Only upload files you have the right to share — don't include others' private or confidential data without permission.</li>
+            <li>Larger files may take longer for Elora to fully read before it starts reasoning about them.</li>
+          </ul>
+
+          <h2 id="g-acceptable-use">Acceptable use</h2>
+          <p>elorahub is for genuine work, learning, and creativity. To keep it useful and safe for everyone, don't use Elora to:</p>
+          <ul>
+            <li>Generate content intended to harass, deceive, or harm a real person or group.</li>
+            <li>Attempt to extract another user's private data or bypass account and usage limits.</li>
+            <li>Produce malicious code, or material intended to facilitate illegal activity.</li>
+          </ul>
+          <div class="callout">Accounts that repeatedly violate these guidelines may be limited or suspended. See the full <button style="background:none;border:none;color:var(--red-300);font-weight:700;padding:0;font-size:inherit;text-decoration:underline;" data-nav="terms">Terms of Service</button> for details.</div>
+
+          <h2 id="g-limitations">Where Elora falls short</h2>
+          <p>Elora reasons carefully, but it isn't infallible. Treat it as a very capable second opinion, not a final authority — especially for medical, legal, or financial decisions, where you should confirm anything important with a qualified professional.</p>
+
+          <h2 id="g-feedback">Reporting an issue</h2>
+          <p>If Elora gives you a response that seems wrong, unsafe, or off-brand for what we're building, use the feedback option in chat or reach us through the contact details in the footer. Real examples help us improve reasoning quality fastest.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY ============ -->
+  <section class="page" id="page-privacy">
+    <div class="section doc-page">
+      <div class="doc-header reveal">
+        <span class="kicker">Privacy</span>
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated September 2026 · elorahub.online</p>
+      </div>
+      <div class="doc-layout">
+        <nav class="doc-toc" id="privacyToc">
+          <a href="#p-collect" class="is-active">What we collect</a>
+          <a href="#p-use">How we use it</a>
+          <a href="#p-sharing">Sharing &amp; third parties</a>
+          <a href="#p-thirdparty-login">Signing in with Google, Apple, or GitHub</a>
+          <a href="#p-retention">Retention &amp; deletion</a>
+          <a href="#p-rights">Your choices</a>
+          <a href="#p-contact">Contact</a>
+        </nav>
+        <div class="doc-body">
+          <h2 id="p-collect">What we collect</h2>
+          <p>To run elorahub, we collect the information you give us directly — like your name, email, and messages you send to Elora — along with basic technical information such as device type, approximate location, and general usage patterns (how often you chat, which plan you're on, and rough response times).</p>
+          <ul>
+            <li>Account details: name, email address, and authentication method.</li>
+            <li>Conversation content: messages, and any files or images you choose to upload.</li>
+            <li>Usage data: feature interactions, plan limits reached, and general performance metrics.</li>
+          </ul>
+
+          <h2 id="p-use">How we use it</h2>
+          <p>We use this information to operate the chat, enforce plan limits fairly, improve Elora's reasoning quality over time, and keep the service secure.</p>
+          <ul>
+            <li>Delivering and improving chat responses, including internal quality review of flagged conversations.</li>
+            <li>Billing and plan management for Private and Premium subscribers.</li>
+            <li>Detecting abuse, fraud, or violations of our Guidelines and Terms of Service.</li>
+          </ul>
+
+          <h2 id="p-sharing">Sharing &amp; third parties</h2>
+          <p>We don't sell your personal data. We share limited information only with service providers who help us run elorahub — such as payment processors for Private and Premium billing, and cloud infrastructure providers who host the service — under agreements that limit how they can use it.</p>
+
+          <h2 id="p-thirdparty-login">Signing in with Google, Apple, or GitHub</h2>
+          <p>If you choose to sign in using Google, Apple, or GitHub, that provider shares basic profile information (typically your name, email, and profile photo) with elorahub to create your account. We don't receive your password from these providers, and you can review or revoke elorahub's access at any time from that provider's account settings.</p>
+
+          <h2 id="p-retention">Retention &amp; deletion</h2>
+          <p>We keep your account and conversation history for as long as your account is active, so your chat history stays available to you. You can delete individual conversations or your entire account at any time; deleted data is removed from active systems within a reasonable period.</p>
+
+          <h2 id="p-rights">Your choices</h2>
+          <ul>
+            <li>Access, correct, or export the personal data we hold about you.</li>
+            <li>Delete your account and associated conversation history.</li>
+            <li>Opt out of non-essential communications at any time.</li>
+          </ul>
+
+          <h2 id="p-contact">Contact</h2>
+          <p>Questions about this policy or your data can be sent to the contact address listed in the footer of elorahub.online.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TERMS ============ -->
+  <section class="page" id="page-terms">
+    <div class="section doc-page">
+      <div class="doc-header reveal">
+        <span class="kicker">Terms</span>
+        <h1>Terms of Service</h1>
+        <p class="updated">Last updated September 2026 · elorahub.online</p>
+      </div>
+      <div class="doc-layout">
+        <nav class="doc-toc" id="termsToc">
+          <a href="#t-accounts" class="is-active">Accounts</a>
+          <a href="#t-plans">Plans &amp; billing</a>
+          <a href="#t-conduct">Acceptable conduct</a>
+          <a href="#t-content">Content &amp; ownership</a>
+          <a href="#t-disclaimer">Disclaimer</a>
+          <a href="#t-termination">Termination</a>
+          <a href="#t-changes">Changes to these terms</a>
+        </nav>
+        <div class="doc-body">
+          <h2 id="t-accounts">Accounts</h2>
+          <p>You need an account to use elorahub beyond a basic preview. You're responsible for keeping your login credentials secure and for activity that happens under your account, including if you sign in via Google, Apple, or GitHub.</p>
+
+          <h2 id="t-plans">Plans &amp; billing</h2>
+          <p>elorahub offers a Free plan and two paid subscriptions, Private ($15/month) and Premium ($25/month). Paid plans renew automatically each billing period until cancelled. You can cancel at any time, and your plan stays active until the end of the current billing period.</p>
+          <ul>
+            <li>Upload and message limits for each plan are described on the Pricing page and may be adjusted with reasonable notice.</li>
+            <li>Refunds are considered case-by-case for billing errors; general dissatisfaction after significant usage may not qualify.</li>
+          </ul>
+
+          <h2 id="t-conduct">Acceptable conduct</h2>
+          <p>By using elorahub, you agree not to misuse the service — including attempting to circumvent usage limits, reverse-engineer Elora, or use the chat to generate content that violates our Guidelines or applicable law.</p>
+
+          <h2 id="t-content">Content &amp; ownership</h2>
+          <p>You retain ownership of the messages, files, and images you submit. You grant elorahub a limited license to process that content in order to generate responses and operate the service. You're responsible for having the rights to anything you upload.</p>
+
+          <h2 id="t-disclaimer">Disclaimer</h2>
+          <p>Elora's responses are generated by an AI system and may occasionally be incomplete or incorrect. elorahub is provided "as is," and responses shouldn't be treated as professional medical, legal, or financial advice.</p>
+
+          <h2 id="t-termination">Termination</h2>
+          <p>We may suspend or terminate accounts that violate these Terms or our Guidelines. You may stop using elorahub and delete your account at any time from account settings.</p>
+
+          <h2 id="t-changes">Changes to these terms</h2>
+          <p>We may update these Terms as elorahub evolves. Meaningful changes will be reflected by an updated "last updated" date above, and continued use of the service after changes means you accept the revised Terms.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="page" id="page-about">
+    <div class="section">
+      <div class="about-hero">
+        <div class="reveal">
+          <span class="eyebrow-plain">About elorahub</span>
+          <h2 style="font-size:clamp(1.9rem,3.6vw,2.7rem);">Built around one idea: a fast reply isn't worth much if it isn't a good one.</h2>
+          <p style="margin-top:18px;color:var(--text-2);font-size:1.05rem;">elorahub exists because most chat tools force a choice between speed and depth. Elora is our attempt to close that gap — a chat assistant that reasons through a problem in the background and still gets back to you in seconds, across text, files, and images.</p>
+          <div class="stat-row">
+            <div class="stat-box"><strong>4–5s</strong><span>Average reasoning-to-reply time</span></div>
+            <div class="stat-box"><strong>3 tiers</strong><span>Free, Private, Premium</span></div>
+            <div class="stat-box"><strong>Text · File · Image</strong><span>Every plan can upload</span></div>
+          </div>
+        </div>
+        <div class="reveal" style="display:flex;align-items:center;justify-content:center;">
+          <img src="assets/elorahub_logo.png" alt="elorahub e logo" style="width:220px;filter:drop-shadow(0 30px 60px rgba(198,196,202,0.25));">
+        </div>
+      </div>
+
+      <div class="value-grid">
+        <div class="value-card reveal">
+          <h3>Reasoning over reflex</h3>
+          <p>Elora is designed to check its own answer before sending it, rather than shipping the first plausible completion.</p>
+        </div>
+        <div class="value-card reveal">
+          <h3>Speed that doesn't cut corners</h3>
+          <p>We optimize the pipeline, not the thinking. A four-to-five second reply should still feel considered.</p>
+        </div>
+        <div class="value-card reveal">
+          <h3>Straightforward plans</h3>
+          <p>Three tiers, clearly described limits, no hidden throttling. What you see on the Pricing page is what you get.</p>
+        </div>
+        <div class="value-card reveal">
+          <h3>Privacy by default</h3>
+          <p>Private and Premium plans give you an unshared conversation space, and you can delete any chat or your account at any time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OWNER CONSOLE (hidden from main nav — owner-only) ============ -->
+  <section class="page" id="page-owner">
+    <div class="section">
+      <div class="doc-header reveal">
+        <span class="kicker">Owner console</span>
+        <h1>elorahub control room</h1>
+        <p class="updated">Restricted area — not linked from the main menu.</p>
+      </div>
+
+      <div class="callout" style="max-width:100%;margin-bottom:34px;">
+        This console is a <strong>front-end preview</strong>. Everything below — role assignments, logs, flagged items, and the payout card — lives only in this browser tab's memory and resets on reload. Nothing here is actually secure yet: anyone who opens the page source can read the client-side code. A real version needs server-side login, a database for roles, and a real payments backend before you rely on it. Treat this as the working spec for that build, not the build itself.
+      </div>
+
+      <!-- GATE -->
+      <div id="ownerGate" style="max-width:420px;">
+        <div class="field">
+          <label for="ownerEmailInput">Owner email</label>
+          <input type="email" id="ownerEmailInput" placeholder="you@email.com">
+        </div>
+        <button class="btn btn-primary btn-block" id="ownerUnlockBtn">Unlock console</button>
+        <p id="ownerGateError" style="color:var(--red-400);font-size:0.84rem;margin-top:10px;display:none;">This area is restricted to the elorahub owner.</p>
+      </div>
+
+      <!-- DASHBOARD (hidden until unlocked) -->
+      <div id="ownerDashboard" style="display:none;">
+
+        <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-top:0;">
+          <div class="stat-box"><strong id="statSignups">128</strong><span>Total sign-ups</span></div>
+          <div class="stat-box"><strong id="statPrivate">34</strong><span>Active Private subs</span></div>
+          <div class="stat-box"><strong id="statPremium">19</strong><span>Active Premium subs</span></div>
+          <div class="stat-box"><strong id="statMRR">$985</strong><span>Estimated MRR</span></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 18px;border-radius:12px;background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);">
+          <span style="width:9px;height:9px;border-radius:50%;background:#4caf6e;box-shadow:0 0 10px #4caf6e;"></span>
+          <strong style="font-size:0.9rem;">All systems operational</strong>
+          <span style="color:var(--text-3);font-size:0.82rem;">Uptime relies on your real hosting/backend once this goes live — this indicator is illustrative.</span>
+        </div>
+
+        <!-- ROLES -->
+        <div class="doc-body" style="margin-top:50px;">
+          <h2 style="margin-top:0;">Roles &amp; access</h2>
+          <p>Give trusted people Administrator or Moderator access. Only the owner account can add or remove roles.</p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
+            <input type="email" id="roleEmailInput" placeholder="teammate@email.com" style="flex:1;min-width:220px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
+            <select id="roleSelect" style="padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
+              <option value="Administrator">Administrator</option>
+              <option value="Moderator">Moderator</option>
+            </select>
+            <button class="btn btn-primary" id="addRoleBtn">Add</button>
+          </div>
+
+          <div class="compare-table" style="margin-top:24px;">
+            <table>
+              <thead><tr><th>Email</th><th>Role</th><th>Access</th><th></th></tr></thead>
+              <tbody id="rolesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ADMIN TOOLS -->
+        <div class="doc-body" style="margin-top:52px;">
+          <h2>Administrator tools</h2>
+          <p>System-level visibility for catching problems early — hook this up to your real error tracking and hosting logs later.</p>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:18px 0;">
+            <button class="btn" data-log-filter="all">All</button>
+            <button class="btn" data-log-filter="info">Info</button>
+            <button class="btn" data-log-filter="warning">Warnings</button>
+            <button class="btn" data-log-filter="error">Errors</button>
+            <button class="btn btn-primary" id="refreshLogsBtn" style="margin-left:auto;">Simulate new event</button>
+          </div>
+
+          <div id="logList" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;"></div>
+        </div>
+
+        <!-- MODERATOR TOOLS -->
+        <div class="doc-body" style="margin-top:52px;">
+          <h2>Moderator tools</h2>
+          <p>Review conversations flagged by users or by automatic filters.</p>
+          <div id="flagQueue" style="display:flex;flex-direction:column;gap:12px;margin-top:18px;"></div>
+        </div>
+
+        <!-- PAYOUTS -->
+        <div class="doc-body" style="margin-top:52px;">
+          <h2>Payouts</h2>
+          <p>One correction worth making early: customers <em>pay</em> with a card, but you <em>receive</em> money into a connected bank account through a payment processor — not a credit card on your end. Stripe or PayPal are the usual choices, and both require their own account and identity verification (KYC) outside of elorahub.</p>
+          <div class="callout" style="max-width:640px;">
+            <strong>Owner-only.</strong> This card is only reachable from this console and only after the owner email unlocks it above — but again, that check happens in the browser, so it isn't real security. Real payouts need this button wired to a Stripe Connect (or PayPal) flow on a real backend.
+          </div>
+          <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
+            <div style="font-weight:700;margin-bottom:6px;">Payout account</div>
+            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:16px;">Not connected</div>
+            <button class="btn btn-primary btn-block" id="connectPayoutBtn">Connect payout account</button>
+          </div>
+        </div>
+
+        <button class="btn" id="ownerLockBtn" style="margin-top:50px;">Lock console</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="brand"><img src="assets/elorahub_logo.png" alt="elorahub"><span>elorahub</span></div>
+        <p>An AI chat built to reason before it replies. elorahub.online</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><button data-nav="chat">Chat with Elora</button></li>
+          <li><button data-nav="pricing">Pricing</button></li>
+          <li><button data-nav="about">About elorahub</button></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <ul>
+          <li><button data-nav="guidelines">Guidelines</button></li>
+          <li><button data-nav="privacy">Privacy Policy</button></li>
+          <li><button data-nav="terms">Terms of Service</button></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          <li><button id="footerSignIn">Sign in</button></li>
+          <li><button id="footerSignUp">Create account</button></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 elorahub.online — all rights reserved.</span>
+      <span>Made for people who want an answer, not just a reply.</span>
+      <button data-nav="owner" style="background:none;border:none;color:var(--text-3);font-size:0.76rem;text-decoration:underline;text-underline-offset:2px;">Owner console</button>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ============ AUTH MODAL ============ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    <div class="modal-head">
+      <img src="assets/elorahub_logo.png" alt="elorahub">
+      <h3 id="modalTitle">Welcome back</h3>
+      <p id="modalSubtitle">Sign in to keep chatting with Elora</p>
+    </div>
+
+    <div class="social-row">
+      <button class="social-btn" data-provider="Google">
+        <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 10.2v3.9h5.5c-.24 1.4-1.7 4.1-5.5 4.1-3.3 0-6-2.7-6-6.2s2.7-6.2 6-6.2c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.9 3 14.7 2 12 2 6.9 2 2.7 6.1 2.7 11.2S6.9 20.4 12 20.4c6.9 0 9.3-4.8 9.3-7.3 0-.5 0-.9-.1-1.3H12z"/><path fill="none" d="M0 0h24v24H0z"/></svg>
+        Continue with Google
+      </button>
+      <button class="social-btn" data-provider="Apple">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.4 1.2c.1 1.1-.3 2.2-1 3-.7.8-1.9 1.5-3 1.4-.1-1.1.4-2.2 1-3 .8-.8 2-1.4 3-1.4zM20.6 17c-.5 1.2-.8 1.7-1.5 2.7-1 1.4-2.3 3.2-4 3.2-1.5 0-1.9-1-3.9-1-2 0-2.5 1-4 1-1.7 0-2.9-1.6-3.9-3-2.7-3.9-3-8.5-1.3-11 1.2-1.8 3-2.8 4.8-2.8 1.8 0 2.9 1 4.4 1 1.4 0 2.3-1 4.4-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.5 8.5z"/></svg>
+        Continue with Apple
+      </button>
+      <button class="social-btn" data-provider="GitHub">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.5 2 2 6.6 2 12.2c0 4.5 2.9 8.3 6.8 9.6.5.1.7-.2.7-.5v-1.9c-2.8.6-3.4-1.3-3.4-1.3-.4-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.6 2.4 1.1 3 .9.1-.7.3-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.4.1-2.8 0 0 .8-.3 2.8 1 .8-.2 1.7-.3 2.5-.3.9 0 1.7.1 2.5.3 2-1.4 2.8-1 2.8-1 .5 1.4.2 2.5.1 2.8.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .3.3.6.9.6 1.8v2.7c0 .3.2.6.7.5 4-1.4 6.8-5.1 6.8-9.6C22 6.6 17.5 2 12 2z"/></svg>
+        Continue with GitHub
+      </button>
+    </div>
+
+    <div class="divider-row"><span>or with email</span></div>
+
+    <form id="authForm">
+      <div class="field" id="nameField" style="display:none;">
+        <label for="authName">Name</label>
+        <input type="text" id="authName" placeholder="Your name">
+      </div>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" placeholder="you@email.com">
+      </div>
+      <div class="field">
+        <label for="authPassword">Password</label>
+        <input type="password" id="authPassword" placeholder="••••••••">
+      </div>
+      <p id="authError" style="color:var(--red-400);font-size:0.82rem;margin-bottom:10px;display:none;"></p>
+      <button type="submit" class="btn btn-primary btn-block" id="authSubmit" style="margin-top:6px;">Sign in</button>
+    </form>
+
+    <div class="modal-foot" id="modalSwitch">
+      Don't have an account? <button id="switchToSignUp">Sign up</button>
+    </div>
+    <div class="modal-fineprint">By continuing, you agree to elorahub's <a data-nav="terms" data-close-modal="1">Terms of Service</a> and <a data-nav="privacy" data-close-modal="1">Privacy Policy</a>.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Navigation ---------------- */
+  var pages = document.querySelectorAll(".page");
+  var navButtons = document.querySelectorAll("[data-nav]");
+
+  function showPage(name){
+    pages.forEach(function(p){ p.classList.toggle("is-active", p.id === "page-" + name); });
+    document.querySelectorAll(".nav-links button, .mobile-menu button").forEach(function(b){
+      b.classList.toggle("is-active", b.getAttribute("data-nav") === name);
+    });
+    window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
+    try{
+      if(history.replaceState){ history.replaceState(null, "", "#" + name); }
+    }catch(err){ /* sandboxed preview (about:srcdoc) blocks history writes — safe to ignore */ }
+    closeMobileMenu();
+  }
+
+  navButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = btn.getAttribute("data-nav");
+      showPage(target);
+      if(btn.hasAttribute("data-close-modal")){ closeModal(); }
+    });
+  });
+
+  /* ---------------- Mobile menu ---------------- */
+  var navBurger = document.getElementById("navBurger");
+  var mobileMenu = document.getElementById("mobileMenu");
+  function closeMobileMenu(){
+    mobileMenu.classList.remove("is-open");
+    if(navBurger) navBurger.setAttribute("aria-expanded","false");
+  }
+  if(navBurger){
+    navBurger.addEventListener("click", function(){
+      var open = mobileMenu.classList.toggle("is-open");
+      navBurger.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
+
+  var initial = (location.hash || "#home").replace("#","");
+  var validPages = ["home","chat","pricing","guidelines","privacy","terms","about","owner"];
+  showPage(validPages.indexOf(initial) > -1 ? initial : "home");
+
+  /* ---------------- Reveal on scroll (single orchestrated pass) ---------------- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add("in-view"); io.unobserve(e.target); }
+    });
+  }, {threshold:0.12});
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  /* ---------------- Doc page TOC scroll spy ---------------- */
+  document.querySelectorAll(".doc-toc").forEach(function(toc){
+    var links = toc.querySelectorAll("a");
+    links.forEach(function(link){
+      link.addEventListener("click", function(e){
+        e.preventDefault();
+        var id = link.getAttribute("href").slice(1);
+        var el = document.getElementById(id);
+        if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
+        links.forEach(function(l){ l.classList.remove("is-active"); });
+        link.classList.add("is-active");
+      });
+    });
+  });
+
+  /* ---------------- Pricing cycle switch ---------------- */
+  var currentBillingCycle = "monthly";
+  document.querySelectorAll(".pricing-switch button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".pricing-switch button").forEach(function(b){ b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      var cycle = btn.getAttribute("data-cycle");
+      currentBillingCycle = cycle;
+      document.querySelectorAll(".price-value").forEach(function(el){
+        var val = cycle === "yearly" ? el.getAttribute("data-yearly") : el.getAttribute("data-monthly");
+        el.textContent = "$" + val;
+        el.parentElement.querySelector(".cycle").textContent = "/ month";
+      });
+      document.querySelectorAll(".billed-note[data-monthly-note]").forEach(function(el){
+        el.textContent = cycle === "yearly" ? el.getAttribute("data-yearly-note") : el.getAttribute("data-monthly-note");
+      });
+    });
+  });
+
+  /* ---------------- Stripe checkout ---------------- */
+  document.querySelectorAll(".checkout-btn").forEach(function(btn){
+    btn.addEventListener("click", async function(){
+      var plan = btn.getAttribute("data-plan");
+      var originalText = btn.textContent;
+      btn.textContent = "Redirecting to checkout…";
+      btn.disabled = true;
+
+      var session = getSession ? getSession() : null;
+
+      try {
+        var res = await fetch("/api/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan: plan, cycle: currentBillingCycle, customerEmail: session || undefined })
+        });
+        var data = await res.json();
+
+        if(!res.ok || !data.url){
+          showToast(data.message || "Payments aren't connected yet — see STRIPE-SETUP.md to finish setup.");
+          btn.textContent = originalText;
+          btn.disabled = false;
+          return;
+        }
+
+        window.location.href = data.url;
+      } catch(err){
+        showToast("Couldn't reach checkout — payments aren't connected yet in this preview.");
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    });
+  });
+
+  /* ---------------- Toast ---------------- */
+  var toastEl = document.getElementById("toast");
+  var toastTimer;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("is-visible");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("is-visible"); }, 2600);
+  }
+
+  /* ---------------- Auth modal ---------------- */
+  var modal = document.getElementById("authModal");
+  var modalTitle = document.getElementById("modalTitle");
+  var modalSubtitle = document.getElementById("modalSubtitle");
+  var modalSwitch = document.getElementById("modalSwitch");
+  var nameField = document.getElementById("nameField");
+  var authSubmit = document.getElementById("authSubmit");
+  var mode = "signin";
+
+  function setMode(newMode){
+    mode = newMode;
+    if(mode === "signin"){
+      modalTitle.textContent = "Welcome back";
+      modalSubtitle.textContent = "Sign in to keep chatting with Elora";
+      nameField.style.display = "none";
+      authSubmit.textContent = "Sign in";
+      modalSwitch.innerHTML = 'Don\'t have an account? <button id="switchToSignUp">Sign up</button>';
+    } else {
+      modalTitle.textContent = "Create your account";
+      modalSubtitle.textContent = "Start free — upgrade any time";
+      nameField.style.display = "block";
+      authSubmit.textContent = "Create account";
+      modalSwitch.innerHTML = 'Already have an account? <button id="switchToSignIn">Sign in</button>';
+    }
+    bindSwitchLink();
+  }
+
+  function bindSwitchLink(){
+    var s1 = document.getElementById("switchToSignUp");
+    var s2 = document.getElementById("switchToSignIn");
+    if(s1) s1.addEventListener("click", function(){ setMode("signup"); });
+    if(s2) s2.addEventListener("click", function(){ setMode("signin"); });
+  }
+
+  function openModal(startMode){
+    setMode(startMode || "signin");
+    modal.classList.add("is-open");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal(){
+    modal.classList.remove("is-open");
+    document.body.style.overflow = "";
+  }
+
+  document.getElementById("openSignIn").addEventListener("click", function(){ openModal("signin"); });
+  document.getElementById("openSignUp").addEventListener("click", function(){ openModal("signup"); });
+  document.getElementById("footerSignIn").addEventListener("click", function(){ openModal("signin"); });
+  document.getElementById("footerSignUp").addEventListener("click", function(){ openModal("signup"); });
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  modal.addEventListener("click", function(e){ if(e.target === modal){ closeModal(); } });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ closeModal(); } });
+
+  document.querySelectorAll(".social-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      showToast(btn.getAttribute("data-provider") + " sign-in needs a real OAuth app on your live domain — not something a preview can fake. Email sign-in below works for real, right now.");
+    });
+  });
+
+  /* ---------------- Real (local) account system ----------------
+     This genuinely works — accounts and sessions are stored in this
+     browser's localStorage, so signing up, signing out, and reloading
+     the page all behave like a real logged-in site. What it is NOT:
+     a real multi-device backend. Accounts here don't sync across
+     devices, aren't visible to you as the owner anywhere, and anyone
+     could reset them by clearing browser storage. The BACKEND-ROADMAP
+     doc covers what turns this into real accounts server-side. */
+  function loadUsers(){
+    try { return JSON.parse(localStorage.getItem("elorahub_users") || "{}"); }
+    catch(e){ return {}; }
+  }
+  function saveUsers(users){
+    try { localStorage.setItem("elorahub_users", JSON.stringify(users)); } catch(e){}
+  }
+  function getSession(){
+    try { return localStorage.getItem("elorahub_session"); } catch(e){ return null; }
+  }
+  function setSession(email){
+    try {
+      if(email){ localStorage.setItem("elorahub_session", email); }
+      else { localStorage.removeItem("elorahub_session"); }
+    } catch(e){}
+  }
+
+  function renderAuthState(){
+    var session = getSession();
+    var signInBtn = document.getElementById("openSignIn");
+    var signUpBtn = document.getElementById("openSignUp");
+    var existingChip = document.getElementById("userChip");
+    if(existingChip){ existingChip.remove(); }
+
+    if(session){
+      var users = loadUsers();
+      var user = users[session] || { name: session.split("@")[0] };
+      signInBtn.style.display = "none";
+      signUpBtn.style.display = "none";
+      var chip = document.createElement("div");
+      chip.id = "userChip";
+      chip.style.cssText = "display:flex;align-items:center;gap:10px;";
+      chip.innerHTML = '<span style="font-weight:700;font-size:0.88rem;color:var(--text-1);">' +
+        escapeHtml(user.name || session) + '</span>' +
+        '<button class="btn btn-ghost" id="signOutBtn" style="font-size:0.82rem;">Sign out</button>';
+      signInBtn.parentElement.insertBefore(chip, signInBtn);
+      document.getElementById("signOutBtn").addEventListener("click", function(){
+        setSession(null);
+        renderAuthState();
+        showToast("Signed out.");
+      });
+    } else {
+      signInBtn.style.display = "";
+      signUpBtn.style.display = "";
+    }
+  }
+
+  var authErrorEl = document.getElementById("authError");
+  function showAuthError(msg){
+    authErrorEl.textContent = msg;
+    authErrorEl.style.display = "block";
+  }
+  function clearAuthError(){
+    authErrorEl.style.display = "none";
+  }
+
+  document.getElementById("authForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    clearAuthError();
+    var email = document.getElementById("authEmail").value.trim().toLowerCase();
+    var password = document.getElementById("authPassword").value;
+    var name = document.getElementById("authName").value.trim();
+
+    if(!email || email.indexOf("@") === -1){ showAuthError("Enter a valid email address."); return; }
+    if(password.length < 6){ showAuthError("Password needs to be at least 6 characters."); return; }
+
+    var users = loadUsers();
+
+    if(mode === "signup"){
+      if(users[email]){ showAuthError("An account already exists for that email — try signing in instead."); return; }
+      users[email] = { name: name || email.split("@")[0], password: password, plan: "free" };
+      saveUsers(users);
+      setSession(email);
+      showToast("Account created — you're signed in.");
+    } else {
+      var existing = users[email];
+      if(!existing){ showAuthError("No account found for that email. Sign up instead?"); return; }
+      if(existing.password !== password){ showAuthError("Incorrect password."); return; }
+      setSession(email);
+      showToast("Signed in.");
+    }
+    closeModal();
+    renderAuthState();
+  });
+
+  renderAuthState();
+
+  /* ---------------- Hero mock: typewriter code reply ---------------- */
+  (function(){
+    var target = document.getElementById("heroTypedReply");
+    if(!target) return;
+    var followup = document.querySelector(".hero-followup");
+    var segments = [
+      { text: "Found it: ", code: false },
+      { text: "config[\"timeout\"]", code: true },
+      { text: " assumes that key always exists, but it's optional in your schema. Use ", code: false },
+      { text: "config.get(\"timeout\", 30)", code: true },
+      { text: " instead — that fixes it and gives you a sane default.", code: false }
+    ];
+    var fullLength = segments.reduce(function(sum, s){ return sum + s.text.length; }, 0);
+
+    function render(revealed){
+      var html = "";
+      var pos = 0;
+      segments.forEach(function(seg){
+        var segStart = pos;
+        var showLen = Math.max(0, Math.min(seg.text.length, revealed - segStart));
+        if(showLen > 0){
+          var chunk = escapeHtml(seg.text.slice(0, showLen));
+          html += seg.code ? ("<code>" + chunk + "</code>") : chunk;
+        }
+        pos += seg.text.length;
+      });
+      target.innerHTML = html;
+    }
+
+    function playOnce(){
+      var revealed = 0;
+      if(followup) followup.style.opacity = "0";
+      var timer = setInterval(function(){
+        revealed += 1;
+        render(revealed);
+        if(revealed >= fullLength){
+          clearInterval(timer);
+          if(followup){
+            setTimeout(function(){ followup.style.transition = "opacity .5s ease"; followup.style.opacity = "1"; }, 400);
+          }
+          setTimeout(playOnce, 5000);
+        }
+      }, 18);
+    }
+
+    var started = false;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting && !started){
+          started = true;
+          setTimeout(playOnce, 500);
+        }
+      });
+    }, { threshold: 0.3 });
+    io.observe(target.closest(".hero-visual"));
+  })();
+
+  /* ---------------- Chat ---------------- */
+  var chatThread = document.getElementById("chatThread");
+  var chatScroll = document.getElementById("chatScroll");
+  var chatInput = document.getElementById("chatInput");
+  var sendBtn = document.getElementById("sendBtn");
+  var chatSuggestions = document.getElementById("chatSuggestions");
+  var attachRow = document.getElementById("attachRow");
+  var fileInput = document.getElementById("fileInput");
+  var attachedFiles = [];
+  var conversationHistory = []; // { role: "user" | "assistant", content: string } — sent to the real backend for context
+
+  function autoGrow(){
+    chatInput.style.height = "auto";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + "px";
+  }
+  chatInput.addEventListener("input", autoGrow);
+
+  chatInput.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+  sendBtn.addEventListener("click", sendMessage);
+
+  document.querySelectorAll(".suggestion-chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      chatInput.value = chip.getAttribute("data-fill");
+      autoGrow();
+      chatInput.focus();
+    });
+  });
+
+  document.getElementById("attachBtn").addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(){
+    Array.prototype.forEach.call(fileInput.files, function(f){
+      attachedFiles.push(f.name);
+    });
+    renderAttachments();
+    fileInput.value = "";
+  });
+
+  function renderAttachments(){
+    if(attachedFiles.length === 0){ attachRow.style.display = "none"; attachRow.innerHTML=""; return; }
+    attachRow.style.display = "flex";
+    attachRow.innerHTML = attachedFiles.map(function(name, i){
+      return '<span class="attach-chip">📎 ' + escapeHtml(name) + ' <button data-idx="' + i + '" aria-label="Remove file">&times;</button></span>';
+    }).join("");
+    attachRow.querySelectorAll("button").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        attachedFiles.splice(parseInt(btn.getAttribute("data-idx"),10), 1);
+        renderAttachments();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    var d = document.createElement("div");
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function scrollToBottom(){
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  }
+
+  function addMessage(role, html, meta){
+    var msg = document.createElement("div");
+    msg.className = "msg " + (role === "user" ? "from-user" : "from-ai") + " msg-enter";
+    var avatar = document.createElement("div");
+    avatar.className = "avatar";
+    if(role === "user"){
+      avatar.textContent = "you";
+    } else {
+      avatar.innerHTML = '<img src="' + LOGO_SRC + '" alt="Elora">';
+    }
+    var body = document.createElement("div");
+    body.className = "msg-body";
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.innerHTML = html;
+    var metaEl = document.createElement("div");
+    metaEl.className = "msg-meta";
+    metaEl.innerHTML = meta || "";
+    body.appendChild(bubble);
+    body.appendChild(metaEl);
+    msg.appendChild(avatar);
+    msg.appendChild(body);
+    chatThread.appendChild(msg);
+    scrollToBottom();
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ msg.classList.add("msg-enter-active"); }); });
+    return msg;
+  }
+
+  var LOGO_SRC = document.querySelector(".brand img").getAttribute("src");
+  document.querySelectorAll("#chatThread .msg.from-ai .avatar").forEach(function(av){
+    av.innerHTML = '<img src="' + LOGO_SRC + '" alt="Elora">';
+  });
+
+  /* ---------------- Heuristic reply engine ----------------
+     This is a front-end preview simulation: it parses the message
+     for intent + key terms and composes a response from it, so it
+     reacts to what you actually typed instead of looping fixed lines.
+     It is NOT a live model — wiring up real reasoning needs a backend
+     calling an actual LLM API (see notes at the end of this file). */
+  var STOPWORDS = ("the a an is are was were be been being to of in on for with and or but if than then so " +
+    "this that these those i you he she it we they my your his her its our their me him us them what which " +
+    "who whom whose can could should would will shall do does did not no yes just really very quite about " +
+    "into onto from as at by up out over under again further once here there when where why how all any " +
+    "both each few more most other some such nor own same too also because while").split(" ");
+
+  function focusWords(text, max){
+    var words = text.toLowerCase().replace(/[^a-z0-9À-ÿ'\s]/g, " ").split(/\s+/).filter(Boolean);
+    var seen = {}, picked = [];
+    words.sort(function(a,b){ return b.length - a.length; });
+    for(var i=0;i<words.length && picked.length<max;i++){
+      var w = words[i];
+      if(w.length < 4) continue;
+      if(STOPWORDS.indexOf(w) > -1) continue;
+      if(seen[w]) continue;
+      seen[w] = true;
+      picked.push(w);
+    }
+    return picked;
+  }
+
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function generateReply(rawText, fileNames){
+    var text = (rawText || "").trim();
+    var lower = text.toLowerCase();
+    var focus = focusWords(text, 2);
+    var topic = focus.length ? focus.join(" and ") : null;
+
+    var preambles = [
+      "Here's what I'm seeing:", "Walking through this:", "Breaking it down:",
+      "A few things stand out:", "Here's where I'd start:", "Looking at this closely:"
+    ];
+    var followUps = [
+      "Want me to go deeper on any part of that?",
+      "Tell me which angle matters most and I'll expand on it.",
+      "I can go further if you give me a bit more context.",
+      "Happy to rework this a different way if it's not quite right.",
+      "Let me know if I'm reading the goal correctly."
+    ];
+
+    if(fileNames && fileNames.length){
+      var fname = fileNames[0];
+      return pick([
+        "I've read through " + escapeHtml(fname) + (fileNames.length>1 ? " and the other " + (fileNames.length-1) + " file" + (fileNames.length>2?"s":"") + " you attached" : "") + ". Before I give you a full breakdown — are you looking for a summary, a specific number pulled out, or an opinion on whether something in it is a problem?",
+        "Got " + escapeHtml(fname) + ". I can already tell you what type of content is in it, but tell me what you're actually trying to decide or find, and I'll focus the analysis there instead of describing the whole thing back to you.",
+        "Looking at " + escapeHtml(fname) + " now. Give me the specific question you want answered from it and I'll go straight to that part rather than summarizing top to bottom."
+      ]);
+    }
+
+    if(!text){ return "I didn't catch any text there — go ahead and type your question, or attach a file and tell me what you want pulled from it."; }
+
+    if(/^(hi|hello|hey|yo|sup|good (morning|afternoon|evening))\b/.test(lower)){
+      return pick([
+        "Hey — good to have you here. What are we working on?",
+        "Hi there. Throw a question, a file, or half-formed idea at me and I'll take it from there.",
+        "Hey! What's on your mind — something to write, decide, or figure out?"
+      ]);
+    }
+    if(/\b(thanks|thank you|appreciate it|ty)\b/.test(lower)){
+      return pick([
+        "Anytime. Want me to take another pass at anything, or is that the one you needed?",
+        "Glad that landed. Let me know if you want it adjusted or extended.",
+        "Happy to help — say the word if something else comes up."
+      ]);
+    }
+    if(/\b(write|draft|compose|rewrite|edit|shorten|tighten)\b/.test(lower)){
+      return preSentence(preambles) + " give me the raw text (or the file), and tell me the tone you want — sharper, warmer, more formal — and I'll rewrite it" + (topic ? " with a real focus on the " + escapeHtml(topic) + " part" : "") + " rather than a generic pass. " + pick(followUps);
+    }
+    if(/\bwhy\b/.test(lower) && /\?/.test(text)){
+      return preSentence(preambles) + " the honest answer usually isn't one cause — it's whichever constraint was tightest at the time" + (topic ? ", and here that's probably tied to " + escapeHtml(topic) : "") + ". Tell me the specific outcome you're trying to explain and I'll reason through the most likely driver instead of guessing broadly.";
+    }
+    if(/\bhow (do|can|to|should)\b/.test(lower)){
+      return preSentence(preambles) + " the fastest reliable path is usually: get the smallest version working first, confirm it actually solves" + (topic ? " the " + escapeHtml(topic) + " problem" : " the core problem") + ", then expand. " + pick(followUps);
+    }
+    if(/\b(explain|what is|what's|define|meaning of)\b/.test(lower)){
+      return preSentence(preambles) + (topic ? " " + escapeHtml(topic).charAt(0).toUpperCase()+escapeHtml(topic).slice(1) + " is worth defining precisely before anything else, since a lot of confusion here usually comes from two people meaning slightly different things by it." : " I can explain this plainly, but tell me the level you want it at — quick intuition, or the full mechanics.") + " " + pick(followUps);
+    }
+    if(/\b(vs|versus|compare|which (one|is better)|should i)\b/.test(lower)){
+      return preSentence(preambles) + " there isn't a universally right choice here — it comes down to which trade-off you'd regret less. " + (topic ? "Between the options involving " + escapeHtml(topic) + ", " : "") + "tell me what you're optimizing for (speed, cost, or certainty) and I'll actually commit to a recommendation instead of listing pros and cons at you.";
+    }
+    if(/\b(code|bug|function|error|script|python|javascript|debug|exception|stack trace)\b/.test(lower)){
+      return preSentence(preambles) + " paste the actual code or error message and I'll trace through it line by line" + (topic ? ", paying close attention to anything touching " + escapeHtml(topic) : "") + " rather than guessing at the fix from a description.";
+    }
+    if(/\b(idea|brainstorm|name for|suggest|options for)\b/.test(lower)){
+      return preSentence(preambles) + " I'll skip the obvious first answers and give you genuinely different directions" + (topic ? " for " + escapeHtml(topic) : "") + " rather than five versions of the same idea. Want me to go ahead and list them now?";
+    }
+    if(/\b(decide|decision|should we|trade-?off|worth it)\b/.test(lower)){
+      return preSentence(preambles) + " weigh what you'd lose if you're wrong against what you'd gain if you're right" + (topic ? " on " + escapeHtml(topic) : "") + " — the side with the bigger downside usually deserves more caution, not the side with the bigger upside. What's the actual deadline you're working against?";
+    }
+
+    // default: general, still references their words
+    return preSentence(preambles) + (topic
+      ? " the part worth digging into first is " + escapeHtml(topic) + " — that's usually where the real constraint is hiding. "
+      : " I want to make sure I answer the actual question, not just the surface of it. ") + pick(followUps);
+  }
+  function preSentence(arr){ return pick(arr); }
+
+  async function getReply(text, fileNames){
+    try {
+      var res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: "free", // TODO: swap for the logged-in user's real plan once auth exists
+          messages: conversationHistory.concat([{ role: "user", content: text }])
+        })
+      });
+
+      if(res.status === 429){
+        var limitData = await res.json();
+        return { text: limitData.message || "You've hit today's limit — upgrade for more.", real: false };
+      }
+      if(!res.ok){ throw new Error("backend responded with " + res.status); }
+
+      var data = await res.json();
+      return { text: data.reply, real: true };
+    } catch(err){
+      // No backend deployed yet, or it's briefly unreachable — fall back to the
+      // local simulation so the chat still feels alive instead of breaking.
+      return { text: generateReply(text, fileNames), real: false };
+    }
+  }
+
+  function sendMessage(){
+    var text = chatInput.value.trim();
+    if(!text && attachedFiles.length === 0) return;
+
+    var filesForReply = attachedFiles.slice();
+    var userHtml = escapeHtml(text).replace(/\n/g, "<br>");
+    if(attachedFiles.length){
+      userHtml += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+        attachedFiles.map(function(n){ return '<span style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:4px 9px;border-radius:8px;">📎 ' + escapeHtml(n) + '</span>'; }).join("") +
+        '</div>';
+    }
+    addMessage("user", userHtml, "You · just now");
+    conversationHistory.push({ role: "user", content: text });
+    chatInput.value = "";
+    autoGrow();
+    attachedFiles = [];
+    renderAttachments();
+    chatSuggestions.style.display = "none";
+    sendBtn.disabled = true;
+
+    var typingRow = document.createElement("div");
+    typingRow.className = "msg from-ai";
+    typingRow.innerHTML = '<div class="avatar avatar-thinking"><img src="' + LOGO_SRC + '" alt="Elora"></div>' +
+      '<div class="msg-body"><div class="typing-bubble"><span class="typing-label">Elora is thinking</span><span class="typing-dots"><span></span><span></span><span></span></span></div></div>';
+    chatThread.appendChild(typingRow);
+    scrollToBottom();
+
+    var startTime = Date.now();
+    var minDelay = 900; // keep the typing state from flashing on a very fast reply
+
+    getReply(text, filesForReply).then(function(result){
+      var elapsed = Date.now() - startTime;
+      var wait = Math.max(0, minDelay - elapsed);
+      setTimeout(function(){
+        chatThread.removeChild(typingRow);
+        var thinkSeconds = (Date.now() - startTime) / 1000;
+        var tag = result.real
+          ? '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>'
+          : '<span class="thinking-tag"><span class="think-dot"></span> preview mode — backend not connected</span>';
+        addMessage("ai", result.real ? escapeHtml(result.text).replace(/\n/g, "<br>") : result.text, tag);
+        conversationHistory.push({ role: "assistant", content: result.text });
+        sendBtn.disabled = false;
+      }, wait);
+    });
+  }
+
+  document.getElementById("newChatBtn").addEventListener("click", function(){
+    chatThread.innerHTML = "";
+    addMessage("ai", "New conversation started. What are we working on?", "Elora · just now");
+    chatSuggestions.style.display = "grid";
+  });
+  document.getElementById("clearChatBtn").addEventListener("click", function(){
+    chatThread.innerHTML = "";
+    addMessage("ai", "Cleared. I'm ready whenever you are.", "Elora · just now");
+    chatSuggestions.style.display = "grid";
+  });
+
+  /* ---------------- Mobile sidebar ---------------- */
+  var sidebar = document.getElementById("chatSidebar");
+  var sidebarToggle = document.getElementById("sidebarToggle");
+  if(sidebarToggle){
+    sidebarToggle.addEventListener("click", function(){
+      sidebar.classList.toggle("is-open");
+    });
+  }
+  document.querySelectorAll(".chat-history button, .plan-meter a").forEach(function(b){
+    b.addEventListener("click", function(){ sidebar.classList.remove("is-open"); });
+  });
+
+  /* ---------------- Owner console ----------------
+     Front-end preview only. This gate lives entirely in this browser
+     tab's JS state — it is NOT real authentication. Anyone can read
+     OWNER_EMAIL in page source or open dev tools and reveal the
+     dashboard. Ship real access control server-side before relying
+     on this for anything. */
+  var OWNER_EMAIL = "datuna002@gmail.com";
+  var roles = [{ email: OWNER_EMAIL, role: "Owner" }];
+
+  var ownerGate = document.getElementById("ownerGate");
+  var ownerDashboard = document.getElementById("ownerDashboard");
+  var ownerGateError = document.getElementById("ownerGateError");
+
+  document.getElementById("ownerUnlockBtn").addEventListener("click", function(){
+    var val = document.getElementById("ownerEmailInput").value.trim().toLowerCase();
+    if(val === OWNER_EMAIL){
+      ownerGate.style.display = "none";
+      ownerDashboard.style.display = "block";
+      ownerGateError.style.display = "none";
+      renderRoles();
+      renderLogs("all");
+      renderFlagQueue();
+    } else {
+      ownerGateError.style.display = "block";
+    }
+  });
+  document.getElementById("ownerLockBtn").addEventListener("click", function(){
+    ownerDashboard.style.display = "none";
+    ownerGate.style.display = "block";
+    document.getElementById("ownerEmailInput").value = "";
+  });
+
+  function renderRoles(){
+    var body = document.getElementById("rolesTableBody");
+    body.innerHTML = roles.map(function(r, i){
+      var isOwner = r.role === "Owner";
+      return '<tr>' +
+        '<td>' + escapeHtml(r.email) + '</td>' +
+        '<td>' + escapeHtml(r.role) + '</td>' +
+        '<td>' + (isOwner ? "Full, unrestricted" : (r.role === "Administrator" ? "Logs, roles view, system tools" : "Content queue, moderation")) + '</td>' +
+        '<td>' + (isOwner ? '' : '<button data-remove-role="' + i + '" style="background:none;border:none;color:var(--red-400);font-weight:700;font-size:0.82rem;">Remove</button>') + '</td>' +
+      '</tr>';
+    }).join("");
+    body.querySelectorAll("[data-remove-role]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        roles.splice(parseInt(btn.getAttribute("data-remove-role"), 10), 1);
+        renderRoles();
+        showToast("Role removed for this session.");
+      });
+    });
+  }
+  document.getElementById("addRoleBtn").addEventListener("click", function(){
+    var email = document.getElementById("roleEmailInput").value.trim();
+    var role = document.getElementById("roleSelect").value;
+    if(!email || email.indexOf("@") === -1){ showToast("Enter a valid email first."); return; }
+    if(email.toLowerCase() === OWNER_EMAIL){ showToast("That email is already the Owner."); return; }
+    roles.push({ email: email, role: role });
+    document.getElementById("roleEmailInput").value = "";
+    renderRoles();
+    showToast(role + " access added for " + email + " (this session only).");
+  });
+
+  var logSeed = [
+    { level:"info", msg:"Chat service started normally." },
+    { level:"info", msg:"Nightly usage report generated." },
+    { level:"warning", msg:"Free-plan upload limit reached by a user." },
+    { level:"error", msg:"A file upload failed to process — retried successfully." },
+    { level:"info", msg:"New Private subscription activated." }
+  ];
+  var logEntries = logSeed.map(function(l, i){ return { level:l.level, msg:l.msg, time: new Date(Date.now() - (logSeed.length-i)*600000) }; });
+  var currentLogFilter = "all";
+
+  function timeAgo(d){
+    var mins = Math.round((Date.now() - d.getTime())/60000);
+    if(mins < 1) return "just now";
+    if(mins < 60) return mins + "m ago";
+    return Math.round(mins/60) + "h ago";
+  }
+  function renderLogs(filter){
+    currentLogFilter = filter;
+    var list = document.getElementById("logList");
+    var rows = logEntries.filter(function(l){ return filter === "all" || l.level === filter; }).slice().reverse();
+    var colors = { info:"#4f9de2", warning:"#f5c344", error:"#ef5350" };
+    list.innerHTML = rows.map(function(l){
+      return '<div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line-soft);font-size:0.86rem;">' +
+        '<span style="width:8px;height:8px;border-radius:50%;background:' + colors[l.level] + ';flex:none;"></span>' +
+        '<span style="text-transform:uppercase;font-size:0.7rem;font-weight:800;color:' + colors[l.level] + ';width:64px;flex:none;">' + l.level + '</span>' +
+        '<span style="color:var(--text-2);flex:1;">' + escapeHtml(l.msg) + '</span>' +
+        '<span style="color:var(--text-3);font-size:0.78rem;flex:none;">' + timeAgo(l.time) + '</span>' +
+      '</div>';
+    }).join("") || '<div style="padding:20px;color:var(--text-3);font-size:0.85rem;">No events at this level yet.</div>';
+  }
+  document.querySelectorAll("[data-log-filter]").forEach(function(btn){
+    btn.addEventListener("click", function(){ renderLogs(btn.getAttribute("data-log-filter")); });
+  });
+  document.getElementById("refreshLogsBtn").addEventListener("click", function(){
+    var samples = [
+      { level:"info", msg:"Health check passed across all regions." },
+      { level:"warning", msg:"Response time briefly exceeded 5s for one request." },
+      { level:"error", msg:"A sign-in attempt failed validation." },
+      { level:"info", msg:"New Premium subscription activated." }
+    ];
+    var s = samples[Math.floor(Math.random()*samples.length)];
+    logEntries.push({ level:s.level, msg:s.msg, time:new Date() });
+    renderLogs(currentLogFilter);
+    showToast("New event logged.");
+  });
+
+  var flagSeed = [
+    "Conversation flagged by auto-filter for review — likely a false positive.",
+    "User-reported response — flagged as possibly inaccurate.",
+    "Conversation flagged for repeated off-topic prompts."
+  ];
+  function renderFlagQueue(){
+    var q = document.getElementById("flagQueue");
+    q.innerHTML = flagSeed.map(function(text, i){
+      return '<div data-flag="' + i + '" style="display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,0.02);transition:opacity .3s ease;">' +
+        '<span style="flex:1;font-size:0.88rem;color:var(--text-2);">' + escapeHtml(text) + '</span>' +
+        '<button class="btn" data-approve="' + i + '" style="font-size:0.8rem;">Approve</button>' +
+        '<button class="btn btn-primary" data-remove-flag="' + i + '" style="font-size:0.8rem;">Remove content</button>' +
+      '</div>';
+    }).join("") || '<p style="color:var(--text-3);font-size:0.88rem;">Queue is empty.</p>';
+    q.querySelectorAll("[data-approve]").forEach(function(btn){
+      btn.addEventListener("click", function(){ resolveFlag(btn.closest("[data-flag]"), "Approved — kept as-is."); });
+    });
+    q.querySelectorAll("[data-remove-flag]").forEach(function(btn){
+      btn.addEventListener("click", function(){ resolveFlag(btn.closest("[data-flag]"), "Content removed."); });
+    });
+  }
+  function resolveFlag(row, message){
+    row.style.opacity = "0";
+    setTimeout(function(){ row.remove(); }, 280);
+    showToast(message);
+  }
+
+  document.getElementById("connectPayoutBtn").addEventListener("click", function(){
+    showToast("Preview build — connect a real Stripe/PayPal account once the backend exists.");
+  });
+
+})();
+</script>
+</body>
+</html>
