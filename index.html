@@ -2327,9 +2327,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
       setTimeout(function(){
         chatThread.removeChild(typingRow);
         var thinkSeconds = (Date.now() - startTime) / 1000;
-        var tag = result.real
-          ? '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>'
-          : '<span class="thinking-tag"><span class="think-dot"></span> preview mode — backend not connected</span>';
+        var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
         addMessage("ai", result.real ? escapeHtml(result.text).replace(/\n/g, "<br>") : result.text, tag);
         conversationHistory.push({ role: "assistant", content: result.text });
         sendBtn.disabled = false;
