@@ -785,7 +785,17 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   padding:16px 26px; border-bottom:1px solid var(--line-soft);
 }
 .chat-model{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:0.94rem; }
-.model-dot{ width:8px; height:8px; border-radius:50%; background:var(--red-400); box-shadow:0 0 10px var(--red-400); }
+.model-dot{
+  width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle at 30% 25%, #ffc4c0 0%, #ff6f6b 35%, #ef5350 60%, #b71c1c 100%);
+  box-shadow:0 0 4px 1px rgba(239,83,80,0.7), 0 0 10px rgba(239,83,80,0.4);
+  transition:background .25s ease, box-shadow .25s ease;
+}
+.model-dot.is-active{
+  background:radial-gradient(circle at 30% 25%, #c8f5d4 0%, #7ddb9a 35%, #4caf6e 60%, #256b39 100%);
+  box-shadow:0 0 4px 1px rgba(76,175,110,0.7), 0 0 12px rgba(76,175,110,0.5);
+  animation:glow-pulse 1s infinite ease-in-out;
+}
 .chat-topbar .sub{ color:var(--text-3); font-size:0.78rem; font-weight:500; }
 
 .chat-scroll{
@@ -1316,7 +1326,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             <button class="icon-btn chat-mobile-toggle" id="sidebarToggle" aria-label="Toggle chat history">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <div class="chat-model"><span class="model-dot"></span> elora Core <span class="sub">&nbsp;— reasoning mode</span></div>
+            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span> elora Core <span class="sub">&nbsp;— reasoning mode</span></div>
           </div>
           <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
         </div>
@@ -2378,6 +2388,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   var chatScroll = document.getElementById("chatScroll");
   var chatInput = document.getElementById("chatInput");
   var sendBtn = document.getElementById("sendBtn");
+  var chatStatusDot = document.getElementById("chatStatusDot");
   var chatSuggestions = document.getElementById("chatSuggestions");
   var attachRow = document.getElementById("attachRow");
   var fileInput = document.getElementById("fileInput");
@@ -2514,6 +2525,60 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     scrollToBottom();
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ msg.classList.add("msg-enter-active"); }); });
     return msg;
+  }
+
+  // Reveals an AI reply gradually (like the homepage demo) instead of
+  // dumping the whole answer in at once. `escape` controls whether the
+  // text still needs HTML-escaping (real API replies do; the local
+  // simulation fallback already contains safe, pre-escaped fragments).
+  function isNearBottom(){
+    return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 140;
+  }
+  function addMessageTyped(fullText, meta, escape){
+    var msg = document.createElement("div");
+    msg.className = "msg from-ai msg-enter";
+    var avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora">';
+    var body = document.createElement("div");
+    body.className = "msg-body";
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    var caret = document.createElement("span");
+    caret.className = "type-caret";
+    bubble.appendChild(caret);
+    var metaEl = document.createElement("div");
+    metaEl.className = "msg-meta";
+    metaEl.innerHTML = meta || "";
+    body.appendChild(bubble);
+    body.appendChild(metaEl);
+    msg.appendChild(avatar);
+    msg.appendChild(body);
+    chatThread.appendChild(msg);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ msg.classList.add("msg-enter-active"); }); });
+
+    return new Promise(function(resolve){
+      var total = fullText.length;
+      if(total === 0){ bubble.removeChild(caret); resolve(msg); return; }
+      var revealed = 0;
+      // Reveal in proportionally bigger steps for longer replies, so every
+      // answer finishes typing in roughly the same couple of seconds
+      // instead of long ones dragging on forever.
+      var step = Math.max(1, Math.ceil(total / 130));
+      var timer = setInterval(function(){
+        var stickToBottom = isNearBottom();
+        revealed = Math.min(total, revealed + step);
+        var slice = fullText.slice(0, revealed);
+        bubble.innerHTML = escape ? escapeHtml(slice).replace(/\n/g, "<br>") : slice;
+        bubble.appendChild(caret);
+        if(stickToBottom){ scrollToBottom(); }
+        if(revealed >= total){
+          clearInterval(timer);
+          caret.remove();
+          resolve(msg);
+        }
+      }, 20);
+    });
   }
 
   var LOGO_SRC = document.querySelector(".brand img").getAttribute("src");
@@ -2715,6 +2780,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       '<div class="msg-body"><div class="typing-bubble"><span class="typing-label">elora is thinking</span><span class="typing-dots"><span></span><span></span><span></span></span></div></div>';
     chatThread.appendChild(typingRow);
     scrollToBottom();
+    if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
 
     var startTime = Date.now();
     var minDelay = 900; // keep the typing state from flashing on a very fast reply
@@ -2726,9 +2792,11 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         chatThread.removeChild(typingRow);
         var thinkSeconds = (Date.now() - startTime) / 1000;
         var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
-        addMessage("ai", result.real ? escapeHtml(result.text).replace(/\n/g, "<br>") : result.text, tag);
         conversationHistory.push({ role: "assistant", content: result.text });
-        sendBtn.disabled = false;
+        addMessageTyped(result.text, tag, result.real).then(function(){
+          if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
+          sendBtn.disabled = false;
+        });
       }, wait);
     });
   }
@@ -2755,6 +2823,16 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   document.querySelectorAll(".chat-history button, .plan-meter a").forEach(function(b){
     b.addEventListener("click", function(){ sidebar.classList.remove("is-open"); });
   });
+  // Widening past the mobile breakpoint (e.g. rotating a tablet, or the
+  // window being resized) could otherwise leave the sidebar's off-canvas
+  // "is-open" state stuck mid-transition, rendering as a stray sliver of
+  // content over the chat — drop it whenever we're back on the desktop
+  // side-by-side layout.
+  if(sidebar){
+    window.addEventListener("resize", function(){
+      if(window.innerWidth > 980){ sidebar.classList.remove("is-open"); }
+    });
+  }
 
   /* ---------------- Owner console (real, server-verified) ----------------
      Every screen below is decided by the server, not the browser: the
