@@ -141,11 +141,11 @@ p{ margin:0; }
 
 /* ---------- Site announcement banner ---------- */
 .site-banner{
-  display:none;
+  display:flex;
   align-items:center;
   justify-content:center;
-  gap:14px;
-  padding:10px 44px 10px 20px;
+  gap:12px;
+  padding:0 44px 0 20px;
   background:linear-gradient(90deg, rgba(255,36,64,0.18), rgba(122,15,31,0.12));
   border-bottom:1px solid rgba(255,70,80,0.32);
   color:var(--text-1);
@@ -153,11 +153,47 @@ p{ margin:0; }
   font-weight:600;
   position:relative;
   text-align:center;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transform:translateY(-14px);
+  pointer-events:none;
+  transition:max-height 0.5s var(--ease), opacity 0.4s var(--ease), transform 0.45s var(--ease), padding 0.5s var(--ease), border-color 0.4s var(--ease);
+  border-bottom-color:transparent;
 }
-.site-banner.is-visible{ display:flex; }
+.site-banner.is-visible{
+  max-height:80px;
+  opacity:1;
+  transform:translateY(0);
+  padding:10px 44px 10px 20px;
+  pointer-events:auto;
+  border-bottom-color:rgba(255,70,80,0.32);
+}
+.site-banner::before{
+  content:"";
+  position:absolute;
+  top:0; left:-45%;
+  width:45%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+  pointer-events:none;
+}
+.site-banner.is-visible::before{ animation:banner-shine 5s ease-in-out 0.4s infinite; }
+@keyframes banner-shine{
+  0%{ left:-45%; }
+  50%{ left:115%; }
+  100%{ left:115%; }
+}
+.site-banner img{
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  box-shadow:0 0 10px rgba(255,36,64,0.55);
+  position:relative; z-index:1;
+  animation:glow-pulse 2.2s ease-in-out infinite;
+}
+.site-banner span{ position:relative; z-index:1; }
 .site-banner button{
   position:absolute; right:12px; top:50%; transform:translateY(-50%);
   background:none; border:none; color:var(--text-3); font-size:1.2rem; line-height:1; padding:6px; border-radius:8px;
+  z-index:2;
 }
 .site-banner button:hover{ color:var(--text-1); background:rgba(255,255,255,0.06); }
 
@@ -2985,6 +3021,30 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     ownerNotice.textContent = "Checking your access…";
 
     try {
+      // whoami is safe for any role (owner/administrator/moderator) to
+      // call — it only ever reveals the caller's own role. This is what
+      // decides whether the full console or the limited moderator panel
+      // renders below.
+      var whoRes = await adminFetch("/api/admin/whoami");
+      var whoData = await whoRes.json();
+      if(!whoRes.ok || !whoData.role){
+        ownerNotice.style.display = "none";
+        ownerRestricted.style.display = "block";
+        document.getElementById("ownerRestrictedEmail").textContent = currentUser.email;
+        return;
+      }
+      myRole = whoData.role;
+      ownerNotice.style.display = "none";
+      ownerDashboard.style.display = "block";
+      applyRoleVisibility(myRole);
+
+      if(myRole === "moderator"){
+        // Limited panel: Console tab only, no revenue stats, no
+        // roles/users/analytics/purchases data ever fetched.
+        loadLogs();
+        return;
+      }
+
       var res = await adminFetch("/api/admin/roles");
       var data = await res.json();
       if(!res.ok){
@@ -2993,9 +3053,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         document.getElementById("ownerRestrictedEmail").textContent = currentUser.email;
         return;
       }
-      myRole = data.yourRole;
-      ownerNotice.style.display = "none";
-      ownerDashboard.style.display = "block";
       document.getElementById("ownerRolesSection").style.display = myRole === "owner" ? "block" : (myRole === "administrator" ? "block" : "none");
       document.getElementById("ownerAddRoleRow").style.display = myRole === "owner" ? "flex" : "none";
       document.getElementById("managePayoutBtn").style.display = myRole === "owner" ? "block" : "none";
@@ -3007,6 +3064,31 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       ownerNotice.textContent = "";
       ownerRestricted.style.display = "block";
       document.getElementById("ownerRestrictedEmail").textContent = currentUser.email;
+    }
+  }
+
+  // Moderators get the console itself, but only the Console tab — no
+  // Users, Analytics, Notifications, Purchases, Announcement, Status or
+  // Access data. Purchases in particular stays administrator+owner only.
+  function applyRoleVisibility(role){
+    var statRow = ownerDashboard.querySelector(".stat-row");
+    if(role === "moderator"){
+      if(statRow) statRow.style.display = "none";
+      document.querySelectorAll(".owner-tabs button").forEach(function(btn){
+        btn.style.display = btn.getAttribute("data-owner-tab") === "console" ? "" : "none";
+      });
+      var activeBtn = document.querySelector(".owner-tabs button.is-active");
+      if(!activeBtn || activeBtn.getAttribute("data-owner-tab") !== "console"){
+        document.querySelectorAll(".owner-tabs button").forEach(function(b){ b.classList.remove("is-active"); });
+        var consoleBtn = document.querySelector('.owner-tabs button[data-owner-tab="console"]');
+        if(consoleBtn) consoleBtn.classList.add("is-active");
+        document.querySelectorAll(".owner-panel").forEach(function(p){
+          p.classList.toggle("is-active", p.getAttribute("data-owner-panel") === "console");
+        });
+      }
+    } else {
+      if(statRow) statRow.style.display = "";
+      document.querySelectorAll(".owner-tabs button").forEach(function(btn){ btn.style.display = ""; });
     }
   }
 
@@ -3299,12 +3381,22 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       var dismissed = null;
       try{ dismissed = sessionStorage.getItem("elorahub_banner_dismissed"); }catch(e){}
       if(dismissed === data.message) return;
-      el.innerHTML = '<span>' + escapeHtml(data.message) + '</span><button aria-label="Dismiss announcement">&times;</button>';
-      el.classList.add("is-visible");
-      updateNavOffset();
+      el.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora"><span>' + escapeHtml(data.message) + '</span><button aria-label="Dismiss announcement">&times;</button>';
+      // rAF so the class toggle happens on its own paint tick — lets the
+      // enter transition (slide + fade + shine) actually play instead of
+      // snapping straight to the visible state.
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          el.classList.add("is-visible");
+          updateNavOffset();
+        });
+      });
+      el.addEventListener("transitionend", function(e){
+        if(e.propertyName === "max-height") updateNavOffset();
+      });
       el.querySelector("button").addEventListener("click", function(){
         el.classList.remove("is-visible");
-        updateNavOffset();
+        setTimeout(updateNavOffset, 480);
         try{ sessionStorage.setItem("elorahub_banner_dismissed", data.message); }catch(e){}
       });
     }).catch(function(){});

@@ -2,7 +2,7 @@
 //         page load calls this, no sign-in required).
 // POST -> turn the banner on/off and set its message. Owner + admins only.
 
-import { verifyRequester, getSupabaseClient } from "./_lib/supabaseAdmin.js";
+import { verifyRequester, getSupabaseClient, logEvent } from "./_lib/supabaseAdmin.js";
 
 export default async function handler(req, res) {
   const supabase = await getSupabaseClient();
@@ -32,6 +32,13 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString(),
     });
     if (dbError) return res.status(500).json({ error: "db_error", message: dbError.message });
+    await logEvent(
+      "info",
+      "banner",
+      enabled
+        ? `${email} turned the site announcement ON: "${String(message || "").slice(0, 200)}"`
+        : `${email} turned the site announcement OFF.`
+    );
     return res.status(200).json({ ok: true });
   }
 

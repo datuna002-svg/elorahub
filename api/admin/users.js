@@ -4,7 +4,7 @@
 //         purposes. Takes effect immediately, same as a real Paddle
 //         renewal would. Owner + admins.
 
-import { verifyRequester, getSupabaseClient } from "../_lib/supabaseAdmin.js";
+import { verifyRequester, getSupabaseClient, logEvent } from "../_lib/supabaseAdmin.js";
 
 const DEFAULT_CREDITS = { free: 0, private: 500, premium: 1500 };
 
@@ -63,6 +63,7 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString(),
     });
     if (dbError) return res.status(500).json({ error: "db_error", message: dbError.message });
+    await logEvent("info", "users", `${email} set ${normalized}'s plan to ${plan} (${credits} credits).`);
     return res.status(200).json({ ok: true });
   }
 

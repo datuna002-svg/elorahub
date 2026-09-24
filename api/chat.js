@@ -57,6 +57,77 @@ function htmlToText(html) {
     .trim();
 }
 
+// ---------------------------------------------------------------------------
+// Provider selection + automatic failover.
+//
+// Both free-tier providers occasionally return a transient error (Groq's
+// "high demand" 503 is the common one). Rather than surfacing that straight
+// to the user, we retry once, then automatically fail over to the other
+// provider if it's configured. This is what actually fixes the recurring
+// 503s users would otherwise see — not a manual "fix" button (there's no
+// way to guarantee a fix for an upstream provider outage from here).
+// ---------------------------------------------------------------------------
+function buildProviderConfig(providerName, hasImages) {
+  if (providerName === "gemini") {
+    return {
+      endpointUrl: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      apiKey: process.env.GEMINI_API_KEY,
+      // Gemini is natively multimodal, so the same model handles text
+      // and images — no separate vision model needed like Groq below.
+      model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+      label: "Gemini",
+    };
+  }
+  const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+  // Vision model — used automatically whenever an image is attached.
+  // Groq's exact vision model ID has changed before; if this 404s, check
+  // console.groq.com/docs/vision for the current one and set
+  // LLM_VISION_MODEL to override without touching code.
+  const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
+  return {
+    endpointUrl: process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions",
+    apiKey: process.env.LLM_API_KEY,
+    model: hasImages ? visionModel : textModel,
+    label: "Groq",
+  };
+}
+
+async function callProvider(providerName, hasImages, finalMessages) {
+  const cfg = buildProviderConfig(providerName, hasImages);
+  if (!cfg.apiKey) return { ok: false, configured: false, label: cfg.label };
+  try {
+    const response = await fetch(cfg.endpointUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...finalMessages],
+        max_tokens: 1024,
+        temperature: 0.4,
+      }),
+    });
+    if (!response.ok) {
+      const errBody = await response.text().catch(() => "");
+      return { ok: false, configured: true, status: response.status, errBody, label: cfg.label };
+    }
+    const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content ?? "";
+    if (!reply) return { ok: false, configured: true, status: 502, errBody: "empty reply", label: cfg.label };
+    return { ok: true, reply, usage: data.usage || null, label: cfg.label };
+  } catch (err) {
+    return { ok: false, configured: true, status: 0, errBody: err.message, label: cfg.label };
+  }
+}
+
+// Errors worth retrying / failing over for: rate-limited, overloaded,
+// upstream server errors, or the request never completed at all.
+function isTransient(status) {
+  return status === 429 || status === 503 || status === 500 || status === 502 || status === 0;
+}
+
 async function fetchLinkContext(text) {
   const urls = [...new Set((text.match(URL_PATTERN) || []))].slice(0, 2);
   if (urls.length === 0) return "";
@@ -171,33 +242,6 @@ export default async function handler(req, res) {
   // ------------------------------------------------------------------
   const safeProvider = provider === "gemini" ? "gemini" : "groq";
 
-  let endpointUrl, apiKey, model;
-  if (safeProvider === "gemini") {
-    endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-    apiKey = process.env.GEMINI_API_KEY;
-    // Gemini is natively multimodal, so the same model handles text
-    // and images — no separate vision model needed like Groq below.
-    model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-  } else {
-    endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
-    apiKey = process.env.LLM_API_KEY;
-    const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
-    // Vision model — used automatically whenever an image is attached.
-    // Groq's exact vision model ID has changed before; if this 404s,
-    // check console.groq.com/docs/vision for the current one and set
-    // LLM_VISION_MODEL to override without touching code.
-    const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
-    model = safeImages.length > 0 ? visionModel : textModel;
-  }
-
-  if (!apiKey) {
-    console.error(`${safeProvider} API key is not set.`);
-    return res.status(500).json({
-      error: "not_configured",
-      message: `The ${safeProvider === "gemini" ? "Gemini" : "Groq"} model isn't configured yet — its API key is missing.`,
-    });
-  }
-
   // Fetch any plain http(s) links found in the newest message and fold in
   // a short excerpt of each page's text, so elora can actually answer
   // questions about a link instead of just seeing the bare URL.
@@ -222,53 +266,65 @@ export default async function handler(req, res) {
     finalMessages.push({ role: "user", content: lastText });
   }
 
-  try {
-    const response = await fetch(endpointUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...finalMessages],
-        max_tokens: 1024,
-        temperature: 0.4,
-      }),
-    });
+  // Try the user's selected provider. On a transient error, retry once
+  // after a short delay (Groq's overload errors are often momentary). If
+  // it still fails, automatically fail over to the other provider — the
+  // user never sees the first provider's error at all when this works.
+  const primary = safeProvider;
+  const fallbackName = primary === "gemini" ? "groq" : "gemini";
 
-    if (!response.ok) {
-      const errBody = await response.text().catch(() => "");
-      console.error("Self-hosted model error:", response.status, errBody);
-      await logEvent("error", "chat", `Model endpoint returned ${response.status}: ${errBody.slice(0, 300)}`);
-      return res.status(502).json({
-        error: "model_error",
-        message: "elora couldn't reach the model just now. Try again in a moment.",
+  let result = await callProvider(primary, safeImages.length > 0, finalMessages);
+
+  if (!result.ok && result.configured && isTransient(result.status)) {
+    await new Promise((r) => setTimeout(r, 600));
+    result = await callProvider(primary, safeImages.length > 0, finalMessages);
+  }
+
+  let usedFallback = false;
+  if (!result.ok) {
+    const fallbackCfg = buildProviderConfig(fallbackName, safeImages.length > 0);
+    if (fallbackCfg.apiKey) {
+      const fallbackResult = await callProvider(fallbackName, safeImages.length > 0, finalMessages);
+      if (fallbackResult.ok) {
+        result = fallbackResult;
+        usedFallback = true;
+      }
+    }
+  }
+
+  if (!result.ok) {
+    if (result.configured === false) {
+      console.error(`${result.label} API key is not set.`);
+      await logEvent("error", "chat", `${result.label} isn't configured.`);
+      return res.status(500).json({
+        error: "not_configured",
+        message: `The ${result.label} model isn't configured yet — its API key is missing.`,
       });
     }
-
-    const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content ?? "";
-
-    if (!reply) {
-      console.error("Unexpected response shape from model endpoint:", JSON.stringify(data).slice(0, 500));
-      return res.status(502).json({
-        error: "model_error",
-        message: "elora's response came back empty. Try again.",
-      });
-    }
-
-    return res.status(200).json({
-      reply,
-      usage: data.usage || null,
-      creditsRemaining,
-    });
-  } catch (err) {
-    console.error("Self-hosted model request failed:", err);
-    await logEvent("error", "chat", `Model request threw: ${err.message}`);
+    console.error("Model request failed after retry + fallback:", result.status, result.errBody);
+    await logEvent(
+      "error",
+      "chat",
+      `Both providers failed. Last: ${result.label} returned ${result.status}: ${String(result.errBody).slice(0, 300)}`
+    );
     return res.status(502).json({
       error: "model_error",
-      message: "elora couldn't reach the model just now. Try again in a moment.",
+      message: "elora couldn't reach any model just now — it's under heavy load. Try again in a moment.",
     });
   }
+
+  if (usedFallback) {
+    await logEvent(
+      "warning",
+      "chat",
+      `${primary === "gemini" ? "Gemini" : "Groq"} was overloaded/unavailable — automatically failed over to ${result.label} for this reply.`
+    );
+  }
+
+  return res.status(200).json({
+    reply: result.reply,
+    usage: result.usage,
+    creditsRemaining,
+    provider: result.label,
+  });
 }
