@@ -829,6 +829,24 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 .suggestion-chip:hover{ border-color:rgba(198,196,202,0.4); color:var(--text-1); background:rgba(198,196,202,0.05); }
 .suggestion-chip b{ display:block; color:var(--text-1); font-size:0.9rem; margin-bottom:3px; }
 
+.model-picker{
+  max-width:760px; margin:0 auto 10px; padding:0 20px;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.model-chip{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.02);
+  color:var(--text-2);
+  padding:6px 13px;
+  border-radius:999px;
+  font-size:0.78rem;
+  transition:border-color .2s var(--ease), color .2s var(--ease), background .2s var(--ease);
+}
+.model-chip:hover:not(:disabled){ border-color:rgba(198,196,202,0.4); color:var(--text-1); }
+.model-chip.is-active{ border-color:var(--accent-1); color:var(--text-1); background:rgba(255,36,64,0.08); }
+.model-chip:disabled{ opacity:0.45; cursor:not-allowed; }
+.model-chip .soon{ font-size:0.68rem; opacity:0.75; margin-left:3px; }
+
 .chat-inputbar{
   padding:16px 20px 22px;
   border-top:1px solid var(--line-soft);
@@ -1256,6 +1274,13 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 
         <div class="attach-row" id="attachRow" style="display:none;"></div>
 
+        <div class="model-picker" id="modelPicker">
+          <button class="model-chip is-active" data-model="groq" type="button">Groq</button>
+          <button class="model-chip" data-model="gemini" type="button">Gemini</button>
+          <button class="model-chip" data-model="claude" type="button" disabled>Claude<span class="soon">soon</span></button>
+          <button class="model-chip" data-model="gpt" type="button" disabled>GPT<span class="soon">soon</span></button>
+        </div>
+
         <div class="chat-inputbar">
           <div class="input-shell">
             <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
@@ -1267,7 +1292,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
             </button>
           </div>
-          <div class="input-foot">Elora reasons before replying, so answers can take a few seconds. Free plan: 3 file/image uploads.</div>
+          <div class="input-foot" id="inputFoot">Elora reasons before replying, so answers can take a few seconds. Free plan: 3 file/image uploads.</div>
         </div>
       </div>
     </div>
@@ -2484,6 +2509,18 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   }
   function preSentence(arr){ return pick(arr); }
 
+  /* ---------------- Model picker (Groq / Gemini live; Claude / GPT coming soon) ---------------- */
+  var selectedModel = "groq";
+  var inputFoot = document.getElementById("inputFoot");
+  document.querySelectorAll(".model-chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      if(chip.disabled) return;
+      document.querySelectorAll(".model-chip").forEach(function(c){ c.classList.remove("is-active"); });
+      chip.classList.add("is-active");
+      selectedModel = chip.getAttribute("data-model");
+    });
+  });
+
   async function getReply(text, fileEntries){
     var fileNames = fileEntries.map(function(e){ return e.name; });
     // Fold text-file contents into the message so the model can actually
@@ -2502,9 +2539,12 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     try {
       var res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: Object.assign(
+          { "Content-Type": "application/json" },
+          getAccessToken() ? { "Authorization": "Bearer " + getAccessToken() } : {}
+        ),
         body: JSON.stringify({
-          plan: "free", // TODO: swap for the logged-in user's real plan once auth exists
+          provider: selectedModel,
           messages: conversationHistory.concat([{ role: "user", content: enrichedText }]),
           images: images
         })
@@ -2517,6 +2557,9 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
       if(!res.ok){ throw new Error("backend responded with " + res.status); }
 
       var data = await res.json();
+      if(data.creditsRemaining != null && inputFoot){
+        inputFoot.textContent = data.creditsRemaining + " credit" + (data.creditsRemaining === 1 ? "" : "s") + " left this billing period.";
+      }
       return { text: data.reply, real: true };
     } catch(err){
       // No backend deployed yet, or it's briefly unreachable — fall back to the

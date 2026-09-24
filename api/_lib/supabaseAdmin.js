@@ -71,4 +71,45 @@ export async function logEvent(level, source, message) {
   }
 }
 
+/**
+ * Looks up a signed-in user's plan + remaining chat credits by email.
+ * Returns null if the table/row doesn't exist yet (treat as "free plan,
+ * use the anonymous IP-based limit" rather than crashing).
+ */
+export async function getSubscription(email) {
+  try {
+    const supabase = await getClient();
+    if (!supabase || !email) return null;
+    const { data } = await supabase
+      .from("subscriptions")
+      .select("plan, credits_total, credits_remaining")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+    return data || null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+/**
+ * Atomically takes 1 credit from a user's balance via the
+ * spend_one_credit() Postgres function (see supabase-schema-credits.sql)
+ * — a single atomic UPDATE, so two chat requests arriving at the same
+ * moment can't both read the same balance and both decrement from it.
+ * Returns the new remaining count on success, or null if they had none
+ * left (or no subscriptions row exists yet — caller should fall back to
+ * the free-plan limit in that case, never silently allow unlimited use).
+ */
+export async function spendCredit(email) {
+  try {
+    const supabase = await getClient();
+    if (!supabase || !email) return null;
+    const { data, error } = await supabase.rpc("spend_one_credit", { user_email: email.toLowerCase() });
+    if (error || data == null) return null;
+    return data;
+  } catch (_err) {
+    return null;
+  }
+}
+
 export { getClient as getSupabaseClient };

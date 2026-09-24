@@ -1,8 +1,12 @@
 # Getting real AI chat working — free, no credit card
 
-Elora's chat calls a real LLM through `/api/chat.js`. By default it's wired
-up for [Groq](https://console.groq.com), which has a genuinely free API
-tier — fast responses, no credit card required to start.
+Elora's chat calls a real LLM through `/api/chat.js`. The in-chat model
+picker offers two genuinely free options right now — [Groq](https://console.groq.com)
+and [Gemini](https://aistudio.google.com) — plus "Claude" and "GPT" shown
+as **coming soon** placeholders until you're ready to pay for those (they
+have no free tier — see PADDLE-SETUP.md's cost notes for context on that
+decision). Setting up Groq below is required; Gemini is optional but
+recommended since it's also free.
 
 ## 1. Get a free Groq API key
 
@@ -69,3 +73,34 @@ page itself (6-second timeout, first ~3000 characters of visible text)
 and gives the model that content, so Elora can actually answer questions
 about what's on the page. This only works for public pages that don't
 require login, and only reads the first 2 links in a message.
+
+## Adding Gemini (the second free option)
+
+1. Go to **aistudio.google.com/apikey** and sign in with a Google account.
+2. Click **Create API key** — copy it (starts with `AIza...`). No credit
+   card needed for the free tier.
+3. In Vercel → Settings → Environment Variables, add:
+   ```
+   GEMINI_API_KEY=AIza...
+   ```
+4. Redeploy. The "Gemini" option in the chat's model picker will now work
+   — no other setup needed. Gemini handles images natively (the same
+   model does both text and vision, unlike Groq's separate vision model
+   above).
+
+If you ever need to change which Gemini model is used, set `GEMINI_MODEL`
+in Vercel (default is `gemini-3.8-flash`) — check
+**ai.google.dev/gemini-api/docs/pricing** for the current free-tier model
+list before changing it.
+
+## How chat credits work (Private/Premium plans)
+
+Signed-in users on a paid plan spend real credits tracked in Supabase
+(500/month Private, 1500/month Premium), refilled automatically whenever
+Paddle tells your site their subscription renewed (see
+`api/paddle-webhook.js` and `supabase-schema-credits.sql` — run that SQL
+file once in Supabase's SQL Editor if you haven't already). Anyone not
+signed in, or signed in without a paid plan, gets a simple 20-messages/day
+free-tier limit instead, same as before. This applies no matter which
+model (Groq or Gemini) they're chatting with — the credit is for a
+message sent, not tied to a specific model's cost.

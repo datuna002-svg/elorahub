@@ -9,27 +9,22 @@
 // (your own self-hosted vLLM/Ollama server, RunPod, OpenRouter, etc.) by
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
-import { logEvent } from "./_lib/supabaseAdmin.js";
+import { logEvent, verifyRequester, getSubscription, spendCredit } from "./_lib/supabaseAdmin.js";
 
 // ---------------------------------------------------------------------------
-// TEMPORARY in-memory rate limiting — same caveat as before: resets on
-// restart, doesn't work across multiple server instances, and is keyed by
-// IP rather than a real logged-in user. Replace with a database-backed
-// usage_counters table (see BACKEND-ROADMAP.md) once real accounts exist.
+// Free-plan (not signed in, or signed in with no active subscription)
+// rate limiting — still in-memory, resets on restart, keyed by IP. This
+// is fine for the free tier since there's nothing to lose by it being
+// approximate. Paying users (Private/Premium) are NOT covered by this —
+// they get real, database-backed credits below instead.
 // ---------------------------------------------------------------------------
-const usage = new Map();
+const FREE_DAILY_LIMIT = 20;
+const freeUsage = new Map();
 
-const PLAN_LIMITS = {
-  free: 20,
-  private: 200,
-  premium: Infinity,
-};
-
-function checkAndBumpUsage(key, plan) {
-  const limit = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
-  const count = usage.get(key) || 0;
-  if (count >= limit) return false;
-  usage.set(key, count + 1);
+function checkAndBumpFreeUsage(key) {
+  const count = freeUsage.get(key) || 0;
+  if (count >= FREE_DAILY_LIMIT) return false;
+  freeUsage.set(key, count + 1);
   return true;
 }
 
@@ -98,7 +93,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Use POST." });
   }
 
-  const { messages, plan, images } = req.body || {};
+  const { messages, provider, images } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages must be a non-empty array." });
@@ -109,23 +104,56 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Message is empty or too long (8000 char max)." });
   }
 
-  // Up to 3 images per message, matching the vision model's own limit.
-  // Each must be a data: URL the browser already produced client-side —
-  // this server never fetches or stores the image itself.
+  // Up to 3 images per message. Each must be a data: URL the browser
+  // already produced client-side — this server never fetches or stores
+  // the image itself.
   const safeImages = Array.isArray(images)
     ? images.filter((i) => typeof i === "string" && i.startsWith("data:image/")).slice(0, 3)
     : [];
 
-  const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown";
-  const today = new Date().toISOString().slice(0, 10);
-  const usageKey = `${ip}:${today}`;
-  const safePlan = ["free", "private", "premium"].includes(plan) ? plan : "free";
+  // ------------------------------------------------------------------
+  // Who's asking, and can they send this message?
+  //
+  // Signed-in users with an active Private/Premium subscription spend
+  // one real, database-backed credit per message (500/month Private,
+  // 1500/month Premium — refilled by the Paddle webhook on renewal).
+  // Everyone else (not signed in, or signed in with no paid plan) gets
+  // the free tier's IP-based daily limit instead.
+  // ------------------------------------------------------------------
+  const { email } = await verifyRequester(req);
+  let creditsRemaining = null;
 
-  if (!checkAndBumpUsage(usageKey, safePlan)) {
-    return res.status(429).json({
-      error: "limit_reached",
-      message: "You've hit today's message limit for your plan. Upgrade for more.",
-    });
+  if (email) {
+    const sub = await getSubscription(email);
+    if (sub && (sub.plan === "private" || sub.plan === "premium") && sub.credits_remaining > 0) {
+      const remaining = await spendCredit(email);
+      if (remaining == null) {
+        return res.status(429).json({
+          error: "limit_reached",
+          message: "You're out of credits for this billing period. They'll refill on your next renewal.",
+        });
+      }
+      creditsRemaining = remaining;
+    } else {
+      // Signed in, but free plan (or no subscriptions row yet) — same
+      // free-tier limit as an anonymous visitor, just keyed by email
+      // instead of IP so it's a bit more accurate.
+      if (!checkAndBumpFreeUsage(`user:${email}`)) {
+        return res.status(429).json({
+          error: "limit_reached",
+          message: "You've hit today's free-plan message limit. Upgrade for more.",
+        });
+      }
+    }
+  } else {
+    const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown";
+    const today = new Date().toISOString().slice(0, 10);
+    if (!checkAndBumpFreeUsage(`ip:${ip}:${today}`)) {
+      return res.status(429).json({
+        error: "limit_reached",
+        message: "You've hit today's message limit. Sign in or upgrade for more.",
+      });
+    }
   }
 
   const trimmedHistory = messages.slice(-20).map((m) => ({
@@ -133,21 +161,40 @@ export default async function handler(req, res) {
     content: m.content,
   }));
 
-  const endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
-  const apiKey = process.env.LLM_API_KEY;
-  const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
-  // Vision model — used automatically whenever an image is attached.
-  // Groq's exact vision model ID has changed before; if this 404s, check
-  // console.groq.com/docs/vision for the current one and set
-  // LLM_VISION_MODEL to override without touching code.
-  const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
-  const model = safeImages.length > 0 ? visionModel : textModel;
+  // ------------------------------------------------------------------
+  // Which model actually answers — both providers speak the same
+  // OpenAI-compatible chat-completions format, so only the endpoint,
+  // key, and model name change. Both are genuinely free tiers (no
+  // per-message cost to you). "Claude" and "GPT" are shown in the UI
+  // as coming soon — wiring those in later just means adding their
+  // real API keys here, same pattern.
+  // ------------------------------------------------------------------
+  const safeProvider = provider === "gemini" ? "gemini" : "groq";
+
+  let endpointUrl, apiKey, model;
+  if (safeProvider === "gemini") {
+    endpointUrl = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+    apiKey = process.env.GEMINI_API_KEY;
+    // Gemini is natively multimodal, so the same model handles text
+    // and images — no separate vision model needed like Groq below.
+    model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  } else {
+    endpointUrl = process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions";
+    apiKey = process.env.LLM_API_KEY;
+    const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+    // Vision model — used automatically whenever an image is attached.
+    // Groq's exact vision model ID has changed before; if this 404s,
+    // check console.groq.com/docs/vision for the current one and set
+    // LLM_VISION_MODEL to override without touching code.
+    const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
+    model = safeImages.length > 0 ? visionModel : textModel;
+  }
 
   if (!apiKey) {
-    console.error("LLM_API_KEY is not set.");
+    console.error(`${safeProvider} API key is not set.`);
     return res.status(500).json({
       error: "not_configured",
-      message: "The AI model isn't configured yet — LLM_API_KEY is missing.",
+      message: `The ${safeProvider === "gemini" ? "Gemini" : "Groq"} model isn't configured yet — its API key is missing.`,
     });
   }
 
@@ -214,6 +261,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       reply,
       usage: data.usage || null,
+      creditsRemaining,
     });
   } catch (err) {
     console.error("Self-hosted model request failed:", err);

@@ -42,7 +42,11 @@ copy all four; you'll need them in step 4.
 Paddle Dashboard → **Developer tools → Authentication**:
 
 - **API key** — a secret, server-side-only key (starts with a long
-  string, shown once). This is `PADDLE_API_KEY` below.
+  string, shown once). This is `PADDLE_API_KEY` below. Give it **Read**
+  access to **Subscriptions** and **Customers** — the second one is
+  needed so the webhook can look up a subscriber's email address (Paddle
+  only sends a customer ID in its webhook events, not the email itself).
+  No **Write** permissions are needed.
 - **Client-side token** — this one is *designed to be public*, similar to
   how Stripe's old publishable key worked. It's what lets the checkout
   form open in the browser. This is `PADDLE_CLIENT_TOKEN` below.
@@ -89,13 +93,15 @@ back with an active checkout confirmation, and — the important part —
 check Vercel's function logs for the webhook: you should see `Paddle
 subscription created: ...` printed, confirming the whole loop works.
 
-## 7. What still needs the database
+## 7. Run the credits database migration
 
-Right now, `paddle-webhook.js` logs each event but doesn't update anyone's
-plan anywhere permanent, because there's no `users`/`subscriptions` table
-yet (see BACKEND-ROADMAP.md). The exact spots to add that are marked with
-comments in that file — once those tables exist, that's where a signed-up
-user's account actually flips from Free to Private/Premium.
+`paddle-webhook.js` automatically updates a subscriber's plan and refills
+their chat credits (500/month Private, 1500/month Premium) whenever
+Paddle confirms an active subscription — but this needs one extra table
+in Supabase first. If you haven't already, go to Supabase → SQL Editor →
+New query, paste in the contents of `supabase-schema-credits.sql`, and
+run it once. Without this, subscription events still log correctly, but
+credits won't actually update.
 
 ## 8. Going live
 

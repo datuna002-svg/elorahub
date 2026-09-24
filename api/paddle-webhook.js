@@ -12,7 +12,82 @@
 // tables exist, this is where you'd flip a user's plan in the database.
 
 import crypto from "node:crypto";
-import { logEvent } from "./_lib/supabaseAdmin.js";
+import { logEvent, getSupabaseClient } from "./_lib/supabaseAdmin.js";
+
+// Which plan each Price ID belongs to, and how many chat credits that
+// plan refills to on every successful renewal. Keep these two in sync
+// with what you actually charge — see PADDLE-SETUP.md.
+const PRICE_PLAN = {
+  [process.env.PADDLE_PRICE_PRIVATE_MONTHLY]: "private",
+  [process.env.PADDLE_PRICE_PRIVATE_YEARLY]: "private",
+  [process.env.PADDLE_PRICE_PREMIUM_MONTHLY]: "premium",
+  [process.env.PADDLE_PRICE_PREMIUM_YEARLY]: "premium",
+};
+const CREDITS_BY_PLAN = { private: 500, premium: 1500 };
+
+// Paddle's subscription webhooks only include a customer_id, not the
+// email itself — one extra API call resolves it. Requires the API key
+// to have "Customer — Read" permission (see PADDLE-SETUP.md).
+async function resolveCustomerEmail(customerId) {
+  if (!customerId || !process.env.PADDLE_API_KEY) return null;
+  try {
+    const res = await fetch(`https://api.paddle.com/customers/${customerId}`, {
+      headers: { Authorization: `Bearer ${process.env.PADDLE_API_KEY}` },
+    });
+    if (!res.ok) return null;
+    const body = await res.json();
+    return body.data?.email || null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+// Writes (or refills) a user's plan + credits in the subscriptions
+// table, based on a Paddle subscription object. Never throws — a
+// database hiccup here shouldn't fail the webhook response to Paddle.
+async function upsertSubscription(sub) {
+  const priceId = sub.items?.[0]?.price?.id;
+  const plan = PRICE_PLAN[priceId];
+  if (!plan) return; // unrecognized price — nothing to record
+
+  const email = await resolveCustomerEmail(sub.customer_id);
+  if (!email) return;
+
+  try {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return;
+    const creditsTotal = CREDITS_BY_PLAN[plan] || 0;
+    await supabase.from("subscriptions").upsert({
+      email: email.toLowerCase(),
+      plan,
+      credits_total: creditsTotal,
+      credits_remaining: creditsTotal, // refills every renewal — see note in PADDLE-SETUP.md
+      paddle_subscription_id: sub.id,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (_err) {
+    // best-effort — logged separately by the caller if needed
+  }
+}
+
+async function downgradeToFree(sub) {
+  const email = await resolveCustomerEmail(sub.customer_id);
+  if (!email) return;
+  try {
+    const supabase = await getSupabaseClient();
+    if (!supabase) return;
+    await supabase.from("subscriptions").upsert({
+      email: email.toLowerCase(),
+      plan: "free",
+      credits_total: 0,
+      credits_remaining: 0,
+      paddle_subscription_id: sub.id,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (_err) {
+    // best-effort
+  }
+}
 
 // Vercel needs the raw, untouched request body to verify Paddle's
 // signature — turning off the default JSON body parser makes that
@@ -97,6 +172,9 @@ export default async function handler(req, res) {
       const sub = event.data || {};
       console.log(`Paddle subscription created: ${sub.id}, status: ${sub.status}`);
       await logEvent("info", "paddle-webhook", `New subscription: ${sub.id} (${sub.status})`);
+      if (sub.status === "active" || sub.status === "trialing") {
+        await upsertSubscription(sub);
+      }
       break;
     }
 
@@ -105,6 +183,10 @@ export default async function handler(req, res) {
       console.log(`Paddle subscription updated: ${sub.id}, status: ${sub.status}`);
       if (sub.status === "past_due" || sub.status === "paused") {
         await logEvent("warning", "paddle-webhook", `Subscription ${sub.id} is now ${sub.status} — a payment likely failed.`);
+      } else if (sub.status === "active") {
+        // Covers both a plan change and a normal renewal — either way,
+        // this refills credits_remaining back to the plan's full amount.
+        await upsertSubscription(sub);
       }
       break;
     }
@@ -113,6 +195,7 @@ export default async function handler(req, res) {
       const sub = event.data || {};
       console.log(`Paddle subscription cancelled: ${sub.id}`);
       await logEvent("info", "paddle-webhook", `Subscription cancelled: ${sub.id}`);
+      await downgradeToFree(sub);
       break;
     }
 
