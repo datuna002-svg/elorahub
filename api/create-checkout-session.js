@@ -1,8 +1,16 @@
 // /api/create-checkout-session.js
 //
-// Creates a real Stripe Checkout session and returns its URL. The front end
-// redirects the browser there — Stripe hosts the actual payment page, so
-// this server never sees or touches card details.
+// Creates a real Stripe Checkout session in EMBEDDED mode — the payment
+// form mounts inside elorahub's own page (via Stripe.js on the client)
+// instead of redirecting the browser away to a stripe.com page. Stripe
+// still renders and handles the actual card/PayPal fields inside that
+// embedded form, so this server (and elorahub's own code) never sees or
+// touches card numbers or bank details — that boundary doesn't change,
+// only where the iframe visually sits.
+//
+// Which payment methods appear (card, PayPal, etc.) is controlled in the
+// Stripe Dashboard → Settings → Payment methods, not in this code — see
+// STRIPE-SETUP.md.
 //
 // Requires a Stripe account (any account can do this — you do NOT need
 // Stripe Connect, which is only for platforms paying out to other people).
@@ -49,16 +57,16 @@ export default async function handler(req, res) {
     });
   }
 
-  // Where Stripe sends the browser back to after checkout. Adjust these
-  // paths if your success/cancel handling should land somewhere else.
+  // Where Stripe sends the browser once payment completes, inside the
+  // embedded form (a real navigation only happens on success/exit).
   const origin = req.headers.origin || `https://${req.headers.host}`;
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      ui_mode: "embedded",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?checkout=cancelled`,
+      return_url: `${origin}/?checkout=complete&session_id={CHECKOUT_SESSION_ID}`,
       customer_email: customerEmail || undefined,
       // Carrying the plan/cycle through as metadata means the webhook
       // (stripe-webhook.js) can read them back without a database lookup —
@@ -69,7 +77,7 @@ export default async function handler(req, res) {
       },
     });
 
-    return res.status(200).json({ url: session.url });
+    return res.status(200).json({ clientSecret: session.client_secret });
   } catch (err) {
     console.error("Stripe checkout session creation failed:", err.message);
     await logEvent("error", "checkout", `Checkout session creation failed: ${err.message}`);

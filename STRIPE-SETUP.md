@@ -1,9 +1,12 @@
 # Connecting real payments — Stripe setup
 
 This makes the "Get Private" / "Get Premium" buttons charge actual money
-and land in your bank account. Code side is already built and tested
-(`api/create-checkout-session.js` and `api/stripe-webhook.js`) — this is
-the account setup that makes it real.
+and land in your bank account. The checkout form itself is **embedded**
+directly in elorahub's own page (not a redirect to a stripe.com page) —
+Stripe still renders and handles the actual card/PayPal fields inside it,
+so elorahub's code never sees or touches card numbers or bank details.
+Code side is already built and tested (`api/create-checkout-session.js`
+and `api/stripe-webhook.js`) — this is the account setup that makes it real.
 
 ## 1. Create a Stripe account
 
@@ -24,7 +27,17 @@ In the Stripe Dashboard → Product catalog → **+ Add product**, create:
 Each price you create gets an ID like `price_1Qxxxxxxxxxxxxxxxxxxxxxx` —
 copy all four.
 
-## 3. Set environment variables in Vercel
+## 3. Turn on the payment methods you want
+
+Stripe Dashboard → **Settings → Payment methods**. Card is on by default.
+To add **PayPal**: find it in that list and toggle it on (Stripe may ask
+a couple of quick questions the first time). Debit cards need no separate
+toggle — Stripe's "card" method already covers both credit and debit.
+
+The checkout code doesn't hardcode which methods show up — whatever's
+turned on here is what customers see automatically.
+
+## 4. Set environment variables in Vercel
 
 ```
 STRIPE_SECRET_KEY=sk_test_...          (or sk_live_... when you go live)
@@ -32,13 +45,30 @@ STRIPE_PRICE_PRIVATE_MONTHLY=price_...
 STRIPE_PRICE_PRIVATE_YEARLY=price_...
 STRIPE_PRICE_PREMIUM_MONTHLY=price_...
 STRIPE_PRICE_PREMIUM_YEARLY=price_...
-STRIPE_WEBHOOK_SECRET=whsec_...        (from step 4 below)
+STRIPE_WEBHOOK_SECRET=whsec_...        (from step 5 below)
 ```
 
 Use your **test mode** secret key (`sk_test_...`) while trying this out —
 test mode payments use fake card numbers and charge nothing real.
 
-## 4. Point a webhook at your deployed site
+## 5. Add the publishable key to the site itself
+
+Unlike the secret key above, this one is **safe to be public** — it's
+designed to be embedded in client-side code. Stripe Dashboard → Developers
+→ API keys → copy the **Publishable key** (starts with `pk_test_...` or
+`pk_live_...`).
+
+Open `index.html`, find this line near the Stripe checkout code:
+
+```js
+var STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY";
+```
+
+Replace the placeholder with your real publishable key, commit, and push.
+Without this, checkout buttons show a "payments aren't connected" toast
+instead of opening the embedded form.
+
+## 6. Point a webhook at your deployed site
 
 In Stripe Dashboard → Developers → Webhooks → **+ Add endpoint**:
 
@@ -46,9 +76,9 @@ In Stripe Dashboard → Developers → Webhooks → **+ Add endpoint**:
 - Events to send: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
 
 Stripe shows you a signing secret (`whsec_...`) right after you create the
-endpoint — that's `STRIPE_WEBHOOK_SECRET` from step 3.
+endpoint — that's `STRIPE_WEBHOOK_SECRET` from step 4.
 
-## 5. Test it for real (with fake money)
+## 7. Test it for real (with fake money)
 
 With Stripe in test mode, click "Get Private" on your deployed site and
 use Stripe's test card `4242 4242 4242 4242`, any future expiry, any CVC.
@@ -57,7 +87,7 @@ Vercel's function logs for the webhook: you should see `Checkout
 completed: ... → private (monthly)` printed, confirming the whole loop
 works end to end.
 
-## 6. What still needs the database
+## 8. What still needs the database
 
 Right now, `stripe-webhook.js` logs each event but doesn't update anyone's
 plan anywhere permanent, because there's no `users` table yet (see
@@ -65,10 +95,12 @@ BACKEND-ROADMAP.md). The exact lines to add are marked with `// TODO` in
 that file — once the `users` and `subscriptions` tables exist, that's
 where a signed-up user's account actually flips from Free to Private.
 
-## 7. Going live
+## 9. Going live
 
 When ready for real money: finish Stripe's account activation (identity +
 bank details for payouts — this is where your bank account gets connected,
 not a credit card), flip the dashboard out of test mode, swap
-`STRIPE_SECRET_KEY` for the `sk_live_...` version, and repeat step 4 for a
-live-mode webhook endpoint (test and live mode have separate webhooks).
+`STRIPE_SECRET_KEY` for the `sk_live_...` version, swap
+`STRIPE_PUBLISHABLE_KEY` in `index.html` for its `pk_live_...` version too,
+and repeat step 6 for a live-mode webhook endpoint (test and live mode
+have separate webhooks).

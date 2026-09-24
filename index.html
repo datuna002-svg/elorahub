@@ -1028,6 +1028,7 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
 
@@ -1747,6 +1748,20 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
   </div>
 </div>
 
+<!-- ============ CHECKOUT MODAL (Stripe embedded, stays on elorahub) ============ -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-card" style="max-width:480px;">
+    <button class="modal-close" id="checkoutModalClose" aria-label="Close">&times;</button>
+    <div class="modal-head">
+      <img src="assets/elorahub_logo.png" alt="elorahub">
+      <h3>Complete your subscription</h3>
+      <p>Card, debit, or PayPal — handled securely by Stripe, without leaving elorahub.</p>
+    </div>
+    <div id="checkoutLoading" style="text-align:center;padding:30px 0;color:var(--text-3);font-size:0.9rem;">Loading secure checkout…</div>
+    <div id="checkoutContainer"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1837,36 +1852,71 @@ table tr td:first-child{ color:var(--text-1); font-weight:600; }
     });
   });
 
-  /* ---------------- Stripe checkout ---------------- */
+  /* ---------------- Stripe checkout (embedded — stays on elorahub) ----------------
+     Card, debit, and PayPal all show up automatically here IF they're
+     turned on in the Stripe Dashboard (Settings → Payment methods) — see
+     STRIPE-SETUP.md. This code doesn't hardcode which methods appear. */
+  var STRIPE_PUBLISHABLE_KEY = "YOUR_STRIPE_PUBLISHABLE_KEY";
+  var stripeJs = (STRIPE_PUBLISHABLE_KEY.indexOf("YOUR_") === -1 && window.Stripe)
+    ? window.Stripe(STRIPE_PUBLISHABLE_KEY)
+    : null;
+  var activeEmbeddedCheckout = null;
+
+  var checkoutModal = document.getElementById("checkoutModal");
+  var checkoutLoading = document.getElementById("checkoutLoading");
+  var checkoutContainer = document.getElementById("checkoutContainer");
+
+  function closeCheckoutModal(){
+    checkoutModal.classList.remove("is-open");
+    document.body.style.overflow = "";
+    if(activeEmbeddedCheckout){
+      try { activeEmbeddedCheckout.destroy(); } catch(e){}
+      activeEmbeddedCheckout = null;
+    }
+    checkoutContainer.innerHTML = "";
+    checkoutLoading.style.display = "block";
+  }
+  document.getElementById("checkoutModalClose").addEventListener("click", closeCheckoutModal);
+  checkoutModal.addEventListener("click", function(e){ if(e.target === checkoutModal){ closeCheckoutModal(); } });
+
   document.querySelectorAll(".checkout-btn").forEach(function(btn){
     btn.addEventListener("click", async function(){
       var plan = btn.getAttribute("data-plan");
       var originalText = btn.textContent;
-      btn.textContent = "Redirecting to checkout…";
+      btn.textContent = "Loading checkout…";
       btn.disabled = true;
 
-      var session = getSession ? getSession() : null;
+      if(!stripeJs){
+        showToast("Payments aren't connected yet — see STRIPE-SETUP.md to finish setup.");
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+      }
 
       try {
         var res = await fetch("/api/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ plan: plan, cycle: currentBillingCycle, customerEmail: session || undefined })
+          body: JSON.stringify({ plan: plan, cycle: currentBillingCycle, customerEmail: currentUser ? currentUser.email : undefined })
         });
         var data = await res.json();
+        btn.textContent = originalText;
+        btn.disabled = false;
 
-        if(!res.ok || !data.url){
+        if(!res.ok || !data.clientSecret){
           showToast(data.message || "Payments aren't connected yet — see STRIPE-SETUP.md to finish setup.");
-          btn.textContent = originalText;
-          btn.disabled = false;
           return;
         }
 
-        window.location.href = data.url;
+        checkoutModal.classList.add("is-open");
+        document.body.style.overflow = "hidden";
+        activeEmbeddedCheckout = await stripeJs.initEmbeddedCheckout({ clientSecret: data.clientSecret });
+        checkoutLoading.style.display = "none";
+        activeEmbeddedCheckout.mount("#checkoutContainer");
       } catch(err){
-        showToast("Couldn't reach checkout — payments aren't connected yet in this preview.");
         btn.textContent = originalText;
         btn.disabled = false;
+        showToast("Couldn't reach checkout — try again in a moment.");
       }
     });
   });
