@@ -114,7 +114,6 @@ p{ margin:0; }
 .blur-orb{
   position:absolute;
   border-radius:50%;
-  filter:blur(130px);
   opacity:0.06;
   z-index:0;
   animation:orb-drift 22s ease-in-out infinite;
@@ -149,9 +148,9 @@ p{ margin:0; }
   justify-content:space-between;
   gap:24px;
   padding:16px clamp(20px,4vw,56px);
-  background:rgba(2,2,3,0.7);
-  backdrop-filter:blur(18px) saturate(140%);
-  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  background:rgba(2,2,3,0.82);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
   border-bottom:1px solid var(--line-soft);
 }
 .brand{
@@ -248,7 +247,6 @@ p{ margin:0; }
   display:none;
   position:fixed; top:65px; left:0; right:0; z-index:190;
   background:rgba(10,10,13,0.98);
-  backdrop-filter:blur(16px);
   border-bottom:1px solid var(--line);
   padding:10px 16px 18px;
   flex-direction:column;
@@ -371,7 +369,7 @@ p{ margin:0; }
   border-radius:var(--radius-lg);
   padding:16px;
   box-shadow:0 40px 90px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.02) inset;
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(6px);
   transform:scale(0.92);
   transform-origin:top right;
   transition:transform .3s var(--ease);
@@ -576,6 +574,24 @@ p{ margin:0; }
   font-weight:700; font-size:0.85rem; padding:9px 20px; border-radius:var(--radius-pill);
 }
 .pricing-switch button.is-active{ background:var(--panel-2); color:var(--text-1); }
+
+.owner-tabs{
+  display:inline-flex;
+  flex-wrap:wrap;
+  border:1px solid var(--line);
+  border-radius:var(--radius-pill);
+  padding:4px;
+  margin-top:34px;
+  background:rgba(255,255,255,0.02);
+}
+.owner-tabs button{
+  border:none; background:transparent; color:var(--text-3);
+  font-weight:700; font-size:0.85rem; padding:9px 18px; border-radius:var(--radius-pill);
+  transition:background .2s var(--ease), color .2s var(--ease);
+}
+.owner-tabs button.is-active{ background:var(--accent-grad); color:#fff; }
+.owner-panel{ display:none; }
+.owner-panel.is-active{ display:block; animation:page-in 0.3s var(--ease); }
 
 .plans{
   display:grid;
@@ -808,9 +824,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 }
 .msg.from-user .msg-bubble{ background:rgba(255,255,255,0.07); border-bottom-right-radius:4px; }
 .msg.from-ai .msg-bubble{
-  background:rgba(22,21,25,0.7);
-  backdrop-filter:blur(16px) saturate(130%);
-  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  background:linear-gradient(155deg, rgba(26,25,29,0.96), rgba(14,13,16,0.98));
   border:1px solid var(--line-soft);
   border-bottom-left-radius:4px;
   box-shadow:0 10px 28px -16px rgba(0,0,0,0.55);
@@ -825,9 +839,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 .typing-row{ display:flex; gap:14px; }
 .typing-bubble{
   padding:12px 18px; border-radius:16px; border-bottom-left-radius:4px;
-  background:rgba(22,21,25,0.7);
-  backdrop-filter:blur(16px) saturate(130%);
-  -webkit-backdrop-filter:blur(16px) saturate(130%);
+  background:linear-gradient(155deg, rgba(26,25,29,0.96), rgba(14,13,16,0.98));
   border:1px solid var(--line-soft);
   box-shadow:0 10px 28px -16px rgba(0,0,0,0.55);
   display:flex; align-items:center; gap:10px;
@@ -907,9 +919,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 .input-shell{
   max-width:760px; margin:0 auto;
   display:flex; align-items:flex-end; gap:8px;
-  background:rgba(22,21,25,0.6);
-  backdrop-filter:blur(22px) saturate(140%);
-  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  background:rgba(22,21,25,0.82);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
   border:1px solid var(--line);
   border-radius:22px;
   padding:10px 10px 10px 14px;
@@ -1678,73 +1690,89 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div class="stat-box"><strong id="statMRR">—</strong><span>Estimated MRR</span></div>
         </div>
 
-        <div id="ownerHealthBanner" style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 18px;border-radius:12px;background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);">
-          <span style="width:9px;height:9px;border-radius:50%;background:#4caf6e;box-shadow:0 0 10px #4caf6e;"></span>
-          <strong style="font-size:0.9rem;">All systems operational</strong>
-          <span style="color:var(--text-3);font-size:0.82rem;">No errors logged recently.</span>
+        <!-- Owner/administrator only — tabs so everything doesn't load in one long scroll -->
+        <div class="owner-tabs" role="tablist" aria-label="Owner console sections">
+          <button class="is-active" data-owner-tab="console">Console</button>
+          <button data-owner-tab="notifications">Notifications</button>
+          <button data-owner-tab="purchases">Purchases</button>
+          <button data-owner-tab="access" id="ownerAccessTabBtn">Access</button>
         </div>
 
-        <!-- ROLES -->
-        <div class="doc-body" style="margin-top:50px;" id="ownerRolesSection">
-          <h2 style="margin-top:0;">Roles &amp; access</h2>
-          <p>Give trusted people Administrator or Moderator access. Only the owner account can add or remove roles.</p>
-
-          <div id="ownerAddRoleRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
-            <input type="email" id="roleEmailInput" placeholder="teammate@email.com" style="flex:1;min-width:220px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
-            <select id="roleSelect" style="padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
-              <option value="administrator">Administrator</option>
-              <option value="moderator">Moderator</option>
-            </select>
-            <button class="btn btn-primary" id="addRoleBtn">Add</button>
+        <!-- CONSOLE -->
+        <div class="owner-panel is-active" data-owner-panel="console">
+          <div id="ownerHealthBanner" style="display:flex;align-items:center;gap:10px;margin-top:22px;padding:14px 18px;border-radius:12px;background:rgba(76,175,110,0.08);border:1px solid rgba(76,175,110,0.25);">
+            <span style="width:9px;height:9px;border-radius:50%;background:#4caf6e;box-shadow:0 0 10px #4caf6e;"></span>
+            <strong style="font-size:0.9rem;">All systems operational</strong>
+            <span style="color:var(--text-3);font-size:0.82rem;">No errors logged recently.</span>
           </div>
 
-          <div class="compare-table" style="margin-top:24px;">
-            <table>
-              <thead><tr><th>Email</th><th>Role</th><th>Access</th><th></th></tr></thead>
-              <tbody id="rolesTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ADMIN TOOLS -->
-        <div class="doc-body" style="margin-top:52px;">
-          <h2>Administrator tools</h2>
-          <p>Real events logged by the site itself — empty until something actually happens.</p>
-
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:18px 0;">
-            <button class="btn" data-log-filter="all">All</button>
-            <button class="btn" data-log-filter="info">Info</button>
-            <button class="btn" data-log-filter="warning">Warnings</button>
-            <button class="btn" data-log-filter="error">Errors</button>
-            <button class="btn btn-primary" id="refreshLogsBtn" style="margin-left:auto;">Send test event</button>
-          </div>
-
-          <div id="logList" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;"></div>
-        </div>
-
-        <!-- MODERATOR TOOLS -->
-        <div class="doc-body" style="margin-top:52px;">
-          <h2>Moderator tools</h2>
-          <p>Review conversations flagged by users or by automatic filters.</p>
-          <div id="flagQueue" style="display:flex;flex-direction:column;gap:12px;margin-top:18px;">
-            <div style="padding:18px;border:1px solid var(--line);border-radius:14px;color:var(--text-3);font-size:0.88rem;">
-              Nothing to review yet — chat messages aren't stored server-side, so there's no flagged content until that's added.
+          <div class="doc-body" style="margin-top:40px;">
+            <h2 style="margin-top:0;">Moderation queue</h2>
+            <p>Review conversations flagged by users or by automatic filters.</p>
+            <div id="flagQueue" style="display:flex;flex-direction:column;gap:12px;margin-top:18px;">
+              <div style="padding:18px;border:1px solid var(--line);border-radius:14px;color:var(--text-3);font-size:0.88rem;">
+                Nothing to review yet — chat messages aren't stored server-side, so there's no flagged content until that's added.
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- PAYOUTS -->
-        <div class="doc-body" style="margin-top:52px;">
-          <h2>Payouts</h2>
-          <p>Active subscriptions and revenue come from Paddle, who handle the sale and pay out to your bank account on their own schedule (Paddle is the "merchant of record" — this is what makes real payments work from Georgia, since Stripe itself isn't available there).</p>
-          <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
-            <div style="font-weight:700;margin-bottom:10px;">Monthly recurring revenue</div>
-            <div style="font-family:var(--font-display);font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
-            <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">&nbsp;</div>
-            <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Paddle…</div>
-            <a href="https://vendors.paddle.com/" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Open Paddle Dashboard (payouts)</a>
+        <!-- NOTIFICATIONS (real site events — sign-ups, subscription changes, errors) -->
+        <div class="owner-panel" data-owner-panel="notifications">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Notifications</h2>
+            <p>Real events logged by the site itself — sign-ups, subscription changes, errors. Empty until something actually happens.</p>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin:18px 0;">
+              <button class="btn" data-log-filter="all">All</button>
+              <button class="btn" data-log-filter="info">Info</button>
+              <button class="btn" data-log-filter="warning">Warnings</button>
+              <button class="btn" data-log-filter="error">Errors</button>
+              <button class="btn btn-primary" id="refreshLogsBtn" style="margin-left:auto;">Send test event</button>
+            </div>
+
+            <div id="logList" style="border:1px solid var(--line);border-radius:14px;overflow:hidden;"></div>
           </div>
-          <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for the owner account, and Paddle requires its own account login regardless.</p>
+        </div>
+
+        <!-- PURCHASES (Paddle subscriptions + revenue) -->
+        <div class="owner-panel" data-owner-panel="purchases">
+          <div class="doc-body" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Purchases</h2>
+            <p>Active subscriptions and revenue come from Paddle, who handle the sale and pay out to your bank account on their own schedule (Paddle is the "merchant of record" — this is what makes real payments work from Georgia, since Stripe itself isn't available there).</p>
+            <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
+              <div style="font-weight:700;margin-bottom:10px;">Monthly recurring revenue</div>
+              <div style="font-family:var(--font-body);font-weight:800;font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
+              <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">&nbsp;</div>
+              <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Paddle…</div>
+              <a href="https://vendors.paddle.com/" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Open Paddle Dashboard (payouts)</a>
+            </div>
+            <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for the owner account, and Paddle requires its own account login regardless.</p>
+          </div>
+        </div>
+
+        <!-- ACCESS (roles) -->
+        <div class="owner-panel" data-owner-panel="access">
+          <div class="doc-body" style="margin-top:22px;" id="ownerRolesSection">
+            <h2 style="margin-top:0;">Roles &amp; access</h2>
+            <p>Give trusted people Administrator or Moderator access. Only the owner account can add or remove roles.</p>
+
+            <div id="ownerAddRoleRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;max-width:640px;">
+              <input type="email" id="roleEmailInput" placeholder="teammate@email.com" style="flex:1;min-width:220px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
+              <select id="roleSelect" style="padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
+                <option value="administrator">Administrator</option>
+                <option value="moderator">Moderator</option>
+              </select>
+              <button class="btn btn-primary" id="addRoleBtn">Add</button>
+            </div>
+
+            <div class="compare-table" style="margin-top:24px;">
+              <table>
+                <thead><tr><th>Email</th><th>Role</th><th>Access</th><th></th></tr></thead>
+                <tbody id="rolesTableBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1868,6 +1896,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     // Chat is a true full-screen app view — lock body scroll so nothing
     // (footer, other sections) can ever peek in below it.
     document.body.classList.toggle("chat-mode", name === "chat");
+    if(name === "owner" && typeof refreshOwnerConsole === "function"){ refreshOwnerConsole(); }
     window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
     try{
       if(history.replaceState){ history.replaceState(null, "", "#" + name); }
@@ -2747,6 +2776,17 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(token){ options.headers.Authorization = "Bearer " + token; }
     return fetch(path, options);
   }
+
+  document.querySelectorAll(".owner-tabs button").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll(".owner-tabs button").forEach(function(b){ b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      var target = btn.getAttribute("data-owner-tab");
+      document.querySelectorAll(".owner-panel").forEach(function(p){
+        p.classList.toggle("is-active", p.getAttribute("data-owner-panel") === target);
+      });
+    });
+  });
 
   async function refreshOwnerConsole(){
     ownerNotSignedIn.style.display = "none";
