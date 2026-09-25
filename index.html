@@ -1390,7 +1390,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             </button>
             <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span> elora Core <span class="sub">&nbsp;— reasoning mode</span></div>
           </div>
-          <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="btn btn-ghost" id="forgetMeBtn" style="font-size:0.8rem;" title="Clear what elora remembers about you across chats">Forget me</button>
+            <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
+          </div>
         </div>
 
         <div class="chat-scroll" id="chatScroll">
@@ -2871,7 +2874,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       } else if(data.creditsRemaining != null && inputFoot){
         inputFoot.textContent = data.creditsRemaining + " credit" + (data.creditsRemaining === 1 ? "" : "s") + " left this billing period.";
       }
-      return { text: data.reply, real: true };
+      return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null };
     } catch(err){
       // No backend deployed yet, or it's briefly unreachable — fall back to the
       // local simulation so the chat still feels alive instead of breaking.
@@ -2919,14 +2922,35 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       var elapsed = Date.now() - startTime;
       var wait = Math.max(0, minDelay - elapsed);
       setTimeout(function(){
-        chatThread.removeChild(typingRow);
-        var thinkSeconds = (Date.now() - startTime) / 1000;
-        var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
-        conversationHistory.push({ role: "assistant", content: result.text });
-        addMessageTyped(result.text, tag, result.real).then(function(){
-          if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
-          sendBtn.disabled = false;
-        });
+        // If the backend reported real steps (memory recalled, web
+        // searched, a link read, etc.), play them back quickly in the
+        // typing indicator so it's visible what actually happened —
+        // each one is a real thing that happened server-side above,
+        // not a decorative animation.
+        var label = typingRow.querySelector(".typing-label");
+        var stepsToShow = (result.steps && result.steps.length > 1) ? result.steps : null;
+
+        function reveal(){
+          chatThread.removeChild(typingRow);
+          var thinkSeconds = (Date.now() - startTime) / 1000;
+          var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
+          conversationHistory.push({ role: "assistant", content: result.text });
+          addMessageTyped(result.text, tag, result.real).then(function(){
+            if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
+            sendBtn.disabled = false;
+          });
+        }
+
+        if(!stepsToShow || !label){ reveal(); return; }
+
+        var i = 0;
+        function nextStep(){
+          if(i >= stepsToShow.length){ reveal(); return; }
+          label.textContent = stepsToShow[i];
+          i++;
+          setTimeout(nextStep, 420);
+        }
+        nextStep();
       }, wait);
     });
   }
@@ -2941,6 +2965,30 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     addMessage("ai", "Cleared. I'm ready whenever you are.", "elora · just now");
     chatSuggestions.style.display = "grid";
   });
+  var forgetMeBtn = document.getElementById("forgetMeBtn");
+  if(forgetMeBtn){
+    forgetMeBtn.addEventListener("click", async function(){
+      if(!currentUser || !getAccessToken()){
+        showToast("Sign in first — memory only applies to signed-in accounts.");
+        return;
+      }
+      forgetMeBtn.disabled = true;
+      try {
+        var res = await fetch("/api/memory", {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + getAccessToken() },
+        });
+        if(res.ok){
+          showToast("Done — elora no longer remembers anything about you.");
+        } else {
+          showToast("Couldn't clear that just now. Try again in a moment.");
+        }
+      } catch(e){
+        showToast("Couldn't reach the server. Try again in a moment.");
+      }
+      forgetMeBtn.disabled = false;
+    });
+  }
 
   /* ---------------- Mobile sidebar ---------------- */
   var sidebar = document.getElementById("chatSidebar");

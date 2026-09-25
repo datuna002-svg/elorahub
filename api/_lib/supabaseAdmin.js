@@ -112,4 +112,51 @@ export async function spendCredit(email) {
   }
 }
 
+/**
+ * Reads a signed-in user's persistent memory profile — a short block of
+ * stable facts elora has learned about them across past conversations
+ * (name, role, ongoing projects, preferences). Returns "" if there's
+ * none yet or the table/DB isn't reachable — never throws.
+ */
+export async function getUserMemory(email) {
+  try {
+    const supabase = await getClient();
+    if (!supabase || !email) return "";
+    const { data } = await supabase
+      .from("user_memory")
+      .select("summary")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+    return data?.summary || "";
+  } catch (_err) {
+    return "";
+  }
+}
+
+/** Overwrites a user's memory profile. Never throws. */
+export async function saveUserMemory(email, summary) {
+  try {
+    const supabase = await getClient();
+    if (!supabase || !email) return;
+    await supabase.from("user_memory").upsert({
+      email: email.toLowerCase(),
+      summary: String(summary || "").slice(0, 1000),
+      updated_at: new Date().toISOString(),
+    });
+  } catch (_err) {
+    // best-effort — losing a memory update shouldn't fail the chat reply
+  }
+}
+
+/** Wipes a user's memory profile entirely — used by "forget me". */
+export async function deleteUserMemory(email) {
+  try {
+    const supabase = await getClient();
+    if (!supabase || !email) return;
+    await supabase.from("user_memory").delete().eq("email", email.toLowerCase());
+  } catch (_err) {
+    // best-effort
+  }
+}
+
 export { getClient as getSupabaseClient };

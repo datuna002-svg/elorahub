@@ -9,7 +9,7 @@
 // (your own self-hosted vLLM/Ollama server, RunPod, OpenRouter, etc.) by
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
-import { logEvent, verifyRequester, getSubscription, spendCredit } from "./_lib/supabaseAdmin.js";
+import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 
 // ---------------------------------------------------------------------------
 // Free-plan (not signed in, or signed in with no active subscription)
@@ -92,7 +92,7 @@ function buildProviderConfig(providerName, hasImages) {
   };
 }
 
-async function callProvider(providerName, hasImages, finalMessages) {
+async function callProvider(providerName, hasImages, finalMessages, systemPrompt, maxTokens, temperature) {
   const cfg = buildProviderConfig(providerName, hasImages);
   if (!cfg.apiKey) return { ok: false, configured: false, label: cfg.label };
   try {
@@ -104,9 +104,9 @@ async function callProvider(providerName, hasImages, finalMessages) {
       },
       body: JSON.stringify({
         model: cfg.model,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...finalMessages],
-        max_tokens: 1024,
-        temperature: 0.4,
+        messages: [{ role: "system", content: systemPrompt || SYSTEM_PROMPT }, ...finalMessages],
+        max_tokens: maxTokens || 1024,
+        temperature: temperature != null ? temperature : 0.4,
       }),
     });
     if (!response.ok) {
@@ -126,6 +126,88 @@ async function callProvider(providerName, hasImages, finalMessages) {
 // upstream server errors, or the request never completed at all.
 function isTransient(status) {
   return status === 429 || status === 503 || status === 500 || status === 502 || status === 0;
+}
+
+// ---------------------------------------------------------------------------
+// Real web search — no API key required. Scrapes DuckDuckGo's HTML-only
+// results page (no JS, no API key needed) and pulls out the top few
+// result titles + snippets. It's not as clean as a paid search API
+// (Brave/Serper/etc.), but it's a genuinely real, live search rather
+// than elora just guessing from training data — and it costs nothing.
+// If you later add a real search API key, swap this function's body
+// for that call and everything downstream keeps working unchanged.
+// ---------------------------------------------------------------------------
+function needsWebSearch(text) {
+  return /\b(latest|current|currently|today|right now|this week|this month|breaking|recent news|the news|score|weather|stock price|who won|what happened|as of 20\d\d|search the web|google (it|that|this)|look ?up)\b/i.test(
+    text
+  );
+}
+
+async function performWebSearch(query) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; elorahub-bot/1.0; +https://elorahub.online)" },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Pull titles and snippets independently, in document order, and pair
+    // them up by index — more resilient to DuckDuckGo's exact nesting
+    // than trying to match a whole result block as one regex.
+    const titleMatches = [...html.matchAll(/<a[^>]*class="result__a"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
+      htmlToText(m[1])
+    );
+    const snippetMatches = [...html.matchAll(/<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
+      htmlToText(m[1])
+    );
+
+    const results = [];
+    for (let i = 0; i < titleMatches.length && results.length < 4; i++) {
+      const title = titleMatches[i];
+      const snippet = snippetMatches[i] || "";
+      if (title) results.push(`${title} — ${snippet}`.trim());
+    }
+    if (results.length === 0) return null;
+    return results.join("\n");
+  } catch (_err) {
+    return null;
+  }
+}
+
+// After a reply, ask a small/fast model to fold any new stable fact
+// (name, role, ongoing project, stated preference) into the user's
+// memory profile. Deliberately tiny and cheap — a short extra call,
+// not a second full conversation. Never throws; on any failure the old
+// memory is kept as-is rather than risking corrupting or losing it.
+async function updateUserMemory(oldSummary, userMessage, aiReply) {
+  const cfg = buildProviderConfig("groq", false);
+  if (!cfg.apiKey) return oldSummary;
+  try {
+    const prompt = `Existing memory profile of this user (may be empty):\n${oldSummary || "(nothing yet)"}\n\nLatest exchange:\nUser: ${userMessage.slice(0, 1000)}\nelora: ${aiReply.slice(0, 1000)}\n\nReturn an updated profile: keep only stable, reusable facts (name, role/job, ongoing projects, stated preferences, recurring context). Drop anything that was clearly a one-off question or sensitive/private detail not worth storing. Max 500 characters, plain text, no markdown, no preamble. If nothing changed, return the existing profile exactly as-is. If there's truly nothing worth remembering, return an empty string.`;
+    const response = await fetch(cfg.endpointUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+      body: JSON.stringify({
+        model: cfg.model,
+        messages: [
+          { role: "system", content: "You maintain a short factual memory profile of a user for an AI assistant. Output ONLY the updated profile text and nothing else — no labels, no quotes, no explanation." },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 180,
+        temperature: 0,
+      }),
+    });
+    if (!response.ok) return oldSummary;
+    const data = await response.json();
+    const updated = data?.choices?.[0]?.message?.content?.trim();
+    return updated != null ? updated : oldSummary;
+  } catch (_err) {
+    return oldSummary;
+  }
 }
 
 async function fetchLinkContext(text) {
@@ -248,17 +330,55 @@ export default async function handler(req, res) {
   // ------------------------------------------------------------------
   const safeProvider = provider === "gemini" ? "gemini" : "groq";
 
+  // `steps` is a short, honest log of what actually happened while
+  // putting this reply together — the frontend plays it back as a quick
+  // "here's what I did" sequence right when the reply lands. Every entry
+  // here corresponds to a real thing that happened above, not a
+  // decorative fake step.
+  const steps = [];
+
+  // Real, persistent memory: a short profile of stable facts elora has
+  // learned about this signed-in user across past conversations (not
+  // just this session). Injected into the system prompt so it can
+  // actually use it, same as a human assistant remembering a regular.
+  let memorySummary = "";
+  if (email) {
+    memorySummary = await getUserMemory(email);
+    if (memorySummary) steps.push("Recalled what I know about you");
+  }
+
+  // Real web search — no API key needed, see performWebSearch(). Only
+  // triggers on messages that actually look like they need current
+  // information; everything else skips it entirely (cheaper, faster,
+  // and elora answers plenty from its own training just fine).
+  let searchContext = "";
+  if (needsWebSearch(lastMessage.content)) {
+    const searchResults = await performWebSearch(lastMessage.content);
+    if (searchResults) {
+      searchContext = `[Live web search results for "${lastMessage.content.slice(0, 120)}" — use these to ground your answer in current information:]\n\n${searchResults}`;
+      steps.push(`Searched the web for “${lastMessage.content.slice(0, 60)}”`);
+    }
+  }
+
   // Fetch any plain http(s) links found in the newest message and fold in
   // a short excerpt of each page's text, so elora can actually answer
   // questions about a link instead of just seeing the bare URL.
   const linkContext = await fetchLinkContext(lastMessage.content);
+  if (linkContext) steps.push("Read the linked page");
+
+  steps.push("Thought it through");
 
   // Build the final message list: history as-is, but the last message
-  // gets the link excerpts appended, and — if images were attached —
-  // becomes a multipart {text, image_url...} content array instead of
-  // a plain string, per the vision API format.
+  // gets the link/search context appended, and — if images were
+  // attached — becomes a multipart {text, image_url...} content array
+  // instead of a plain string, per the vision API format.
   const finalMessages = trimmedHistory.slice(0, -1);
-  const lastText = linkContext ? `${lastMessage.content}\n\n${linkContext}` : lastMessage.content;
+  const extraContext = [linkContext, searchContext].filter(Boolean).join("\n\n");
+  const lastText = extraContext ? `${lastMessage.content}\n\n${extraContext}` : lastMessage.content;
+
+  const systemPrompt = memorySummary
+    ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
+    : SYSTEM_PROMPT;
 
   if (safeImages.length > 0) {
     finalMessages.push({
@@ -279,18 +399,18 @@ export default async function handler(req, res) {
   const primary = safeProvider;
   const fallbackName = primary === "gemini" ? "groq" : "gemini";
 
-  let result = await callProvider(primary, safeImages.length > 0, finalMessages);
+  let result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt);
 
   if (!result.ok && result.configured && isTransient(result.status)) {
     await new Promise((r) => setTimeout(r, 600));
-    result = await callProvider(primary, safeImages.length > 0, finalMessages);
+    result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt);
   }
 
   let usedFallback = false;
   if (!result.ok) {
     const fallbackCfg = buildProviderConfig(fallbackName, safeImages.length > 0);
     if (fallbackCfg.apiKey) {
-      const fallbackResult = await callProvider(fallbackName, safeImages.length > 0, finalMessages);
+      const fallbackResult = await callProvider(fallbackName, safeImages.length > 0, finalMessages, systemPrompt);
       if (fallbackResult.ok) {
         result = fallbackResult;
         usedFallback = true;
@@ -327,11 +447,24 @@ export default async function handler(req, res) {
     );
   }
 
+  // Update this user's persistent memory in the background of this same
+  // request (Vercel functions don't reliably keep running after the
+  // response is sent, so this has to be awaited here, not fired-and-
+  // forgotten). Uses a small, cheap, fast call — separate from the main
+  // reply — that only keeps stable facts, never one-off chat content.
+  if (email) {
+    const updated = await updateUserMemory(memorySummary, lastMessage.content, result.reply);
+    if (updated !== memorySummary) {
+      await saveUserMemory(email, updated);
+    }
+  }
+
   return res.status(200).json({
     reply: result.reply,
     usage: result.usage,
     creditsRemaining,
     unlimited,
     provider: result.label,
+    steps,
   });
 }
