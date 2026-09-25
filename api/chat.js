@@ -147,12 +147,23 @@ async function performWebSearch(query) {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
+    // A real desktop-browser User-Agent, not an obvious bot string —
+    // DuckDuckGo's anti-bot filtering blocks/CAPTCHAs an identifiable
+    // bot UA outright, especially from datacenter IPs like Vercel's.
     const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; elorahub-bot/1.0; +https://elorahub.online)" },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
     });
     clearTimeout(timeout);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      await logEvent("warning", "chat", `Web search fetch failed: DuckDuckGo returned ${res.status} for "${query.slice(0, 80)}".`);
+      return null;
+    }
     const html = await res.text();
 
     // Pull titles and snippets independently, in document order, and pair
@@ -171,9 +182,13 @@ async function performWebSearch(query) {
       const snippet = snippetMatches[i] || "";
       if (title) results.push(`${title} — ${snippet}`.trim());
     }
-    if (results.length === 0) return null;
+    if (results.length === 0) {
+      await logEvent("warning", "chat", `Web search returned no parseable results for "${query.slice(0, 80)}" (got ${html.length} bytes back).`);
+      return null;
+    }
     return results.join("\n");
-  } catch (_err) {
+  } catch (err) {
+    await logEvent("warning", "chat", `Web search threw for "${query.slice(0, 80)}": ${err.message}`);
     return null;
   }
 }
