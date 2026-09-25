@@ -143,54 +143,93 @@ function needsWebSearch(text) {
   );
 }
 
-async function performWebSearch(query) {
+const REAL_BROWSER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+};
+
+async function fetchText(url, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
-    // A real desktop-browser User-Agent, not an obvious bot string —
-    // DuckDuckGo's anti-bot filtering blocks/CAPTCHAs an identifiable
-    // bot UA outright, especially from datacenter IPs like Vercel's.
-    const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
+    const res = await fetch(url, { signal: controller.signal, headers: REAL_BROWSER_HEADERS });
     clearTimeout(timeout);
-    if (!res.ok) {
-      await logEvent("warning", "chat", `Web search fetch failed: DuckDuckGo returned ${res.status} for "${query.slice(0, 80)}".`);
-      return null;
-    }
-    const html = await res.text();
-
-    // Pull titles and snippets independently, in document order, and pair
-    // them up by index — more resilient to DuckDuckGo's exact nesting
-    // than trying to match a whole result block as one regex.
-    const titleMatches = [...html.matchAll(/<a[^>]*class="result__a"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
-      htmlToText(m[1])
-    );
-    const snippetMatches = [...html.matchAll(/<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
-      htmlToText(m[1])
-    );
-
-    const results = [];
-    for (let i = 0; i < titleMatches.length && results.length < 4; i++) {
-      const title = titleMatches[i];
-      const snippet = snippetMatches[i] || "";
-      if (title) results.push(`${title} — ${snippet}`.trim());
-    }
-    if (results.length === 0) {
-      await logEvent("warning", "chat", `Web search returned no parseable results for "${query.slice(0, 80)}" (got ${html.length} bytes back).`);
-      return null;
-    }
-    return results.join("\n");
+    return { ok: res.ok, status: res.status, text: res.ok ? await res.text() : "" };
   } catch (err) {
-    await logEvent("warning", "chat", `Web search threw for "${query.slice(0, 80)}": ${err.message}`);
-    return null;
+    clearTimeout(timeout);
+    return { ok: false, status: 0, text: "", error: err.message };
   }
+}
+
+function extractDuckDuckGoResults(html) {
+  // Pull titles and snippets independently, in document order, and pair
+  // them up by index — more resilient to exact nesting differences
+  // between DuckDuckGo's "html" and "lite" endpoints than trying to
+  // match a whole result block as one regex.
+  const titleMatches = [...html.matchAll(/<a[^>]*class="result__a"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
+    htmlToText(m[1])
+  );
+  const snippetMatches = [...html.matchAll(/<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g)].map((m) =>
+    htmlToText(m[1])
+  );
+  const results = [];
+  for (let i = 0; i < titleMatches.length && results.length < 4; i++) {
+    const title = titleMatches[i];
+    const snippet = snippetMatches[i] || "";
+    if (title) results.push(`${title} — ${snippet}`.trim());
+  }
+  return results;
+}
+
+// Tries a couple of DuckDuckGo's no-JS endpoints in turn (they're served
+// from different infrastructure and don't always share the same block
+// list), then falls back to Wikipedia's public search API for at least
+// encyclopedic grounding. Logs exactly what happened at each step so the
+// real outcome is visible in the admin console rather than guessed at.
+async function performWebSearch(query) {
+  const endpoints = [
+    { name: "DuckDuckGo (html)", url: `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}` },
+    { name: "DuckDuckGo (lite)", url: `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}` },
+  ];
+
+  for (const endpoint of endpoints) {
+    const { ok, status, text, error } = await fetchText(endpoint.url, 6000);
+    if (!ok) {
+      await logEvent("warning", "chat", `Web search: ${endpoint.name} failed (${error ? "network error: " + error : "HTTP " + status}) for "${query.slice(0, 80)}".`);
+      continue;
+    }
+    const results = extractDuckDuckGoResults(text);
+    if (results.length > 0) {
+      await logEvent("info", "chat", `Web search: ${endpoint.name} returned ${results.length} results for "${query.slice(0, 80)}".`);
+      return results.join("\n");
+    }
+    await logEvent("warning", "chat", `Web search: ${endpoint.name} responded (${text.length} bytes) but had no parseable results for "${query.slice(0, 80)}".`);
+  }
+
+  // Last resort: Wikipedia's own public search API. Not "current events"
+  // in the news sense, but genuinely live and unblocked from Vercel, and
+  // useful for a decent chunk of what people actually ask about.
+  try {
+    const wikiRes = await fetchText(
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&srlimit=3`,
+      5000
+    );
+    if (wikiRes.ok) {
+      const data = JSON.parse(wikiRes.text);
+      const hits = data?.query?.search || [];
+      if (hits.length > 0) {
+        const results = hits.map((h) => `${h.title} — ${htmlToText(h.snippet)}`);
+        await logEvent("info", "chat", `Web search: DuckDuckGo blocked, fell back to Wikipedia (${results.length} results) for "${query.slice(0, 80)}".`);
+        return results.join("\n");
+      }
+    }
+  } catch (_err) {
+    // fall through to null below
+  }
+
+  return null;
 }
 
 // After a reply, ask a small/fast model to fold any new stable fact
