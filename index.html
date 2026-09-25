@@ -2626,6 +2626,49 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     return d.innerHTML;
   }
 
+  // Turns elora's raw markdown-flavored reply into real HTML: fenced code
+  // blocks, inline `code`, **bold**, *italic*, bullet/numbered lists, and
+  // paragraphs — instead of dumping literal "**" characters at the user.
+  // Escapes everything first, so markdown syntax is the only thing that
+  // can produce real tags; nothing from the model can inject raw HTML.
+  function mdToHtml(raw){
+    var codeBlocks = [];
+    var text = String(raw).replace(/```[a-zA-Z0-9_+-]*\n?([\s\S]*?)```/g, function(_, code){
+      var idx = codeBlocks.length;
+      codeBlocks.push("<pre><code>" + escapeHtml(code.replace(/\n$/, "")) + "</code></pre>");
+      return "\u0000CB" + idx + "\u0000";
+    });
+
+    text = escapeHtml(text);
+
+    text = text.replace(/`([^`\n]+)`/g, function(_, code){ return "<code>" + code + "</code>"; });
+    text = text.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
+    text = text.replace(/__([^_\n]+?)__/g, "<strong>$1</strong>");
+    text = text.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, "$1<em>$2</em>");
+    text = text.replace(/(^|[^_])_([^_\n]+?)_(?!_)/g, "$1<em>$2</em>");
+
+    var blocks = text.split(/\n{2,}/);
+    var html = blocks.map(function(block){
+      var trimmed = block.trim();
+      if(/^\u0000CB\d+\u0000$/.test(trimmed)) return trimmed;
+
+      var lines = block.split("\n").filter(function(l){ return l.trim().length; });
+      if(lines.length && lines.every(function(l){ return /^\s*[-*]\s+/.test(l); })){
+        return "<ul>" + lines.map(function(l){ return "<li>" + l.replace(/^\s*[-*]\s+/, "") + "</li>"; }).join("") + "</ul>";
+      }
+      if(lines.length && lines.every(function(l){ return /^\s*\d+[.)]\s+/.test(l); })){
+        return "<ol>" + lines.map(function(l){ return "<li>" + l.replace(/^\s*\d+[.)]\s+/, "") + "</li>"; }).join("") + "</ol>";
+      }
+      var headingMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
+      if(headingMatch && lines.length === 1){
+        return '<p style="font-weight:700;margin-top:2px;">' + headingMatch[2] + "</p>";
+      }
+      return "<p>" + block.split("\n").join("<br>") + "</p>";
+    }).join("");
+
+    return html.replace(/\u0000CB(\d+)\u0000/g, function(_, idx){ return codeBlocks[idx]; });
+  }
+
   function scrollToBottom(){
     chatScroll.scrollTop = chatScroll.scrollHeight;
   }
@@ -2700,10 +2743,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         var stickToBottom = isNearBottom();
         revealed = Math.min(total, revealed + step);
         var slice = fullText.slice(0, revealed);
-        bubble.innerHTML = escape ? escapeHtml(slice).replace(/\n/g, "<br>") : slice;
-        bubble.appendChild(caret);
+        var atEnd = revealed >= total;
+        // Mid-typing, show plain escaped text — parsing partial, unclosed
+        // markdown (a dangling "**" mid-stream) looks broken. Once the
+        // full reply has landed, render it properly as markdown.
+        bubble.innerHTML = escape ? (atEnd ? mdToHtml(slice) : escapeHtml(slice).replace(/\n/g, "<br>")) : slice;
+        if(!atEnd){ bubble.appendChild(caret); }
         if(stickToBottom){ scrollToBottom(); }
-        if(revealed >= total){
+        if(atEnd){
           clearInterval(timer);
           caret.remove();
           resolve(msg);
