@@ -202,7 +202,7 @@ async function updateUserMemory(oldSummary, userMessage, aiReply) {
   const cfg = buildProviderConfig("groq", false);
   if (!cfg.apiKey) return oldSummary;
   try {
-    const prompt = `Existing memory profile of this user (may be empty):\n${oldSummary || "(nothing yet)"}\n\nLatest exchange:\nUser: ${userMessage.slice(0, 1000)}\nelora: ${aiReply.slice(0, 1000)}\n\nReturn an updated profile: keep only stable, reusable facts (name, role/job, ongoing projects, stated preferences, recurring context). Drop anything that was clearly a one-off question or sensitive/private detail not worth storing. Max 500 characters, plain text, no markdown, no preamble. If nothing changed, return the existing profile exactly as-is. If there's truly nothing worth remembering, return an empty string.`;
+    const prompt = `Existing memory profile of this user (may be empty):\n${oldSummary || "(nothing yet)"}\n\nLatest exchange:\nUser: ${userMessage.slice(0, 1000)}\nelora: ${aiReply.slice(0, 1000)}\n\nReturn an updated profile: keep every existing fact that's still true, and add any new stable, reusable fact from this exchange (name, role/job, ongoing projects, stated preferences, recurring context). Drop nothing from the existing profile unless this exchange directly contradicts it. Max 500 characters, plain text, no markdown, no preamble. IMPORTANT: if this exchange was just a one-off question with nothing new to add, return the existing profile completely unchanged — never return it shorter or empty just because this particular exchange had nothing new.`;
     const response = await fetch(cfg.endpointUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
@@ -469,7 +469,11 @@ export default async function handler(req, res) {
   // reply — that only keeps stable facts, never one-off chat content.
   if (email) {
     const updated = await updateUserMemory(memorySummary, lastMessage.content, result.reply);
-    if (updated !== memorySummary) {
+    // Never let this step erase existing memory — only "Forget me"
+    // (DELETE /api/memory) is allowed to clear it. If the extraction
+    // came back empty (nothing new/stable in this exchange) or failed,
+    // the existing profile is kept exactly as it was.
+    if (updated && updated.trim() && updated !== memorySummary) {
       await saveUserMemory(email, updated);
     }
   }
