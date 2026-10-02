@@ -300,7 +300,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Use POST." });
   }
 
-  const { messages, provider, images } = req.body || {};
+  const { messages, provider, images, preferences } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages must be a non-empty array." });
@@ -406,7 +406,8 @@ export default async function handler(req, res) {
   // information; everything else skips it entirely (cheaper, faster,
   // and elora answers plenty from its own training just fine).
   let searchContext = "";
-  if (needsWebSearch(lastMessage.content)) {
+  const useWebSearch = preferences?.webSearch !== false;
+  if (useWebSearch && needsWebSearch(lastMessage.content)) {
     const searchResults = await performWebSearch(lastMessage.content);
     if (searchResults) {
       searchContext = `[Live web search results for "${lastMessage.content.slice(0, 120)}" — use these to ground your answer in current information:]\n\n${searchResults}`;
@@ -430,9 +431,16 @@ export default async function handler(req, res) {
   const extraContext = [linkContext, searchContext].filter(Boolean).join("\n\n");
   const lastText = extraContext ? `${lastMessage.content}\n\n${extraContext}` : lastMessage.content;
 
-  const systemPrompt = memorySummary
+  const styleGuide = [
+    preferences?.style === "concise" ? "Prefer concise answers: lead with the answer, then only the essential context." : "",
+    preferences?.style === "deep" ? "Prefer deeper answers: explain the reasoning, assumptions, trade-offs, and next steps when useful." : "",
+    preferences?.tone === "warm" ? "Use a warm, conversational tone while staying precise." : "",
+    preferences?.tone === "technical" ? "Use a technical, exact tone with precise terminology and concrete examples." : "",
+    preferences?.tone === "direct" ? "Use a direct, practical tone and avoid filler." : "",
+  ].filter(Boolean).join(" ");
+  const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT;
+    : SYSTEM_PROMPT) + (styleGuide ? `\n\nUser's current response preferences: ${styleGuide}` : "");
 
   if (safeImages.length > 0) {
     finalMessages.push({

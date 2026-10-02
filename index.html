@@ -1260,6 +1260,107 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   @keyframes ambient-breathe{ 0%,100%{ box-shadow:0 0 0 rgba(255,82,106,0); } 50%{ box-shadow:0 0 32px rgba(255,82,106,.12); } }
   .hero-visual .chat-mock,.teaser-strip,.plan.premium{ animation:ambient-breathe 5s ease-in-out infinite; }
   @media (prefers-reduced-motion:reduce){ .hero-visual .chat-mock,.teaser-strip,.plan.premium{ animation:none; } }
+
+  /* Chat workspace v2 */
+  .workspace-mark{ display:flex; align-items:center; gap:10px; padding:2px 4px 18px; }
+  .workspace-mark img{ width:29px; height:29px; filter:drop-shadow(0 0 12px rgba(255,93,108,.45)); }
+  .workspace-mark strong,.workspace-mark span{ display:block; }
+  .workspace-mark strong{ color:var(--text-1); font-size:.84rem; letter-spacing:-.01em; }
+  .workspace-mark span{ color:var(--text-3); font-size:.68rem; margin-top:2px; }
+  .shortcut{ margin-left:auto; padding:3px 6px; border:1px solid rgba(255,255,255,.16); border-radius:6px; color:rgba(255,255,255,.65); font-size:.68rem; font-weight:600; }
+  .chat-history{ margin-top:24px; }
+  .chat-history-head{ display:flex; justify-content:space-between; align-items:center; padding:0 6px; margin-bottom:7px; }
+  .chat-history-label{ padding:0; margin:0; }
+  .sidebar-mini-btn{ width:26px; height:26px; border:1px solid transparent; background:transparent; color:var(--text-3); border-radius:8px; font-size:1rem; display:inline-flex; align-items:center; justify-content:center; }
+  .sidebar-mini-btn:hover{ color:var(--text-1); background:rgba(255,255,255,.07); border-color:var(--line); }
+  .chat-history button{ display:grid; grid-template-columns:18px 1fr auto; align-items:center; gap:6px; padding:11px 9px; }
+  .chat-history button small{ color:var(--text-3); font-size:.65rem; opacity:.8; }
+  .history-icon{ color:var(--text-3); font-size:.8rem; text-align:center; }
+  .chat-history button.active-conv .history-icon{ color:var(--accent-3); }
+  .sidebar-bottom{ margin-top:auto; }
+  .sidebar-user{ display:flex; align-items:center; gap:9px; padding:12px 4px 0; border-top:1px solid var(--line-soft); margin-top:12px; }
+  .sidebar-avatar,.profile-avatar-large{ display:flex; align-items:center; justify-content:center; flex:none; color:#fff; background:linear-gradient(135deg,#46515a,#1a2026); border:1px solid rgba(255,255,255,.20); font-weight:800; }
+  .sidebar-avatar{ width:29px; height:29px; border-radius:9px; font-size:.62rem; }
+  .sidebar-user>div:nth-child(2){ min-width:0; flex:1; }
+  .sidebar-user strong,.sidebar-user span{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sidebar-user strong{ color:var(--text-1); font-size:.75rem; }
+  .sidebar-user span{ color:var(--text-3); font-size:.65rem; margin-top:2px; }
+  .chat-model{ gap:9px; }
+  .chat-model>div strong,.chat-model>div span{ display:block; }
+  .chat-model>div span{ margin-top:1px; }
+  .smart-pill{ padding:4px 7px; border-radius:6px; color:#ffb5ab; background:rgba(255,93,108,.10); border:1px solid rgba(255,145,132,.25); font-size:.58rem; letter-spacing:.08em; font-weight:800; }
+  .chat-top-action{ display:inline-flex; }
+  .activity-tray{ max-width:760px; margin:0 auto 12px; padding:0 20px; }
+  .activity-card{ display:flex; align-items:center; gap:10px; padding:10px 13px; border:1px solid rgba(255,145,132,.22); border-radius:12px; background:linear-gradient(90deg,rgba(255,82,106,.10),rgba(255,255,255,.035)); box-shadow:0 0 28px rgba(255,82,106,.08); animation:activity-in .35s var(--ease); }
+  .activity-icon{ width:25px; height:25px; display:flex; align-items:center; justify-content:center; border-radius:8px; color:#ffc2b5; background:rgba(255,93,108,.15); font-size:.82rem; }
+  .activity-copy{ flex:1; min-width:0; }
+  .activity-copy strong,.activity-copy span{ display:block; }
+  .activity-copy strong{ color:var(--text-1); font-size:.77rem; }
+  .activity-copy span{ color:var(--text-3); font-size:.68rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .activity-pulse{ width:7px; height:7px; border-radius:50%; background:var(--accent-1); box-shadow:0 0 0 4px rgba(255,93,108,.11),0 0 14px var(--accent-1); animation:pulse-dot 1.2s infinite; }
+  .activity-done{ opacity:.78; background:rgba(76,175,110,.08); border-color:rgba(126,219,154,.20); }
+  .activity-done .activity-icon{ color:#9ce3ad; background:rgba(76,175,110,.14); }
+  .activity-done .activity-pulse{ background:#72d58d; box-shadow:0 0 12px rgba(114,213,141,.75); animation:none; }
+  @keyframes activity-in{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .settings-card{ width:min(760px,100%); max-height:min(700px,calc(100vh - 40px)); overflow:auto; background:linear-gradient(145deg,rgba(28,35,41,.98),rgba(7,10,13,.99)); border:1px solid rgba(218,230,238,.16); border-radius:26px; padding:30px; position:relative; box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 48px rgba(255,82,106,.11); backdrop-filter:blur(20px); }
+  .settings-head{ display:flex; gap:14px; align-items:flex-start; padding-right:28px; }
+  .settings-orb{ width:42px; height:42px; display:flex; align-items:center; justify-content:center; flex:none; color:#fff; border-radius:14px; background:var(--accent-grad); box-shadow:0 0 28px rgba(255,82,106,.32); }
+  .settings-head .kicker{ color:var(--accent-3); font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .settings-head h3{ margin-top:4px; font-size:1.55rem; }
+  .settings-head p{ margin-top:5px; color:var(--text-3); font-size:.82rem; }
+  .settings-layout{ display:grid; grid-template-columns:170px 1fr; gap:26px; margin-top:28px; }
+  .settings-tabs{ display:flex; flex-direction:column; gap:4px; }
+  .settings-tabs button{ display:flex; gap:9px; align-items:center; border:1px solid transparent; background:transparent; color:var(--text-3); text-align:left; padding:10px 11px; border-radius:10px; font-size:.8rem; font-weight:700; }
+  .settings-tabs button span{ width:17px; color:var(--text-3); text-align:center; }
+  .settings-tabs button:hover{ color:var(--text-1); background:rgba(255,255,255,.05); }
+  .settings-tabs button.is-active{ color:var(--text-1); background:rgba(255,82,106,.13); border-color:rgba(255,126,122,.22); box-shadow:0 0 22px rgba(255,82,106,.08); }
+  .settings-tabs button.is-active span{ color:var(--accent-3); }
+  .settings-panel{ display:none; animation:page-in .25s var(--ease); }
+  .settings-panel.is-active{ display:block; }
+  .settings-panel-title{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding-bottom:18px; border-bottom:1px solid var(--line-soft); }
+  .settings-panel h4{ color:var(--text-1); font-family:var(--font-body); font-size:1rem; font-weight:800; }
+  .settings-panel-title p{ color:var(--text-3); margin-top:5px; font-size:.78rem; }
+  .profile-avatar-large{ width:43px; height:43px; border-radius:13px; font-size:.72rem; }
+  .settings-field{ display:block; margin-top:18px; }
+  .settings-field>span,.setting-label{ display:block; color:var(--text-2); font-size:.75rem; font-weight:800; margin-bottom:7px; }
+  .settings-field input,.settings-field select{ width:100%; border:1px solid var(--line); color:var(--text-1); background:rgba(255,255,255,.045); border-radius:10px; padding:10px 12px; font:inherit; font-size:.82rem; outline:none; }
+  .settings-field input:focus,.settings-field select:focus{ border-color:rgba(255,145,132,.5); box-shadow:0 0 0 3px rgba(255,82,106,.10); }
+  .settings-field input:disabled{ opacity:.5; }
+  .settings-info-row{ display:flex; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid var(--line-soft); color:var(--text-3); font-size:.78rem; }
+  .settings-info-row strong{ color:var(--text-2); font-size:.76rem; text-align:right; }
+  .settings-danger{ margin-top:18px; border:0; background:transparent; color:#ff9d9d; font-size:.76rem; font-weight:700; padding:0; }
+  .subscription-card{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px; margin-top:18px; border:1px solid rgba(255,145,132,.22); border-radius:15px; background:linear-gradient(135deg,rgba(255,82,106,.12),rgba(255,255,255,.035)); }
+  .subscription-card h4{ margin-top:4px; }
+  .subscription-card p{ margin-top:5px; color:var(--text-3); font-size:.75rem; }
+  .subscription-card .eyebrow-plain{ margin:0; font-size:.66rem; color:var(--accent-3); }
+  .plan-status-dot{ width:9px; height:9px; border-radius:50%; background:#75d790; box-shadow:0 0 12px rgba(117,215,144,.8); }
+  .setting-group{ margin-top:20px; }
+  .theme-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
+  .theme-swatch{ border:1px solid var(--line); border-radius:11px; padding:7px; background:rgba(255,255,255,.03); color:var(--text-3); font-size:.68rem; }
+  .theme-swatch i{ display:block; height:43px; border-radius:7px; margin-bottom:6px; background:linear-gradient(145deg,#31363c,#050608 65%,#ff526a); }
+  .theme-swatch[data-theme="ocean"] i{ background:linear-gradient(145deg,#273f4d,#05090d 65%,#3ba4c8); }
+  .theme-swatch[data-theme="violet"] i{ background:linear-gradient(145deg,#3c3150,#09070e 65%,#a96cff); }
+  .theme-swatch[data-theme="moss"] i{ background:linear-gradient(145deg,#314739,#070b08 65%,#9ac56b); }
+  .theme-swatch.is-active{ border-color:rgba(255,145,132,.58); color:var(--text-1); box-shadow:0 0 18px rgba(255,82,106,.14); }
+  .range-row{ display:flex; align-items:center; gap:12px; }
+  .range-row input{ flex:1; accent-color:var(--accent-1); }
+  .range-row output{ min-width:38px; color:var(--text-2); font-size:.75rem; text-align:right; }
+  .toggle-row{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:19px; cursor:pointer; }
+  .toggle-row span strong,.toggle-row span small{ display:block; }
+  .toggle-row span strong{ color:var(--text-2); font-size:.79rem; }
+  .toggle-row span small{ color:var(--text-3); font-size:.7rem; margin-top:3px; }
+  .toggle-row input{ position:absolute; opacity:0; pointer-events:none; }
+  .toggle-row i{ width:38px; height:21px; padding:3px; border-radius:99px; background:rgba(255,255,255,.13); border:1px solid var(--line); transition:background .25s var(--ease); }
+  .toggle-row i::before{ content:""; display:block; width:13px; height:13px; border-radius:50%; background:var(--text-3); transition:transform .25s var(--ease),background .25s var(--ease); }
+  .toggle-row input:checked + i{ background:rgba(255,82,106,.45); border-color:rgba(255,145,132,.50); }
+  .toggle-row input:checked + i::before{ transform:translateX(16px); background:#fff; box-shadow:0 0 10px rgba(255,255,255,.7); }
+  [data-theme="ocean"]{ --accent-1:#42c8f5; --accent-2:#167ea4; --accent-3:#9ceaff; --accent-grad:linear-gradient(135deg,#a1efff,#42c8f5 34%,#167ea4 72%,#0b3d5b); }
+  [data-theme="violet"]{ --accent-1:#a96cff; --accent-2:#623ab4; --accent-3:#d9beff; --accent-grad:linear-gradient(135deg,#e4c7ff,#a96cff 34%,#623ab4 72%,#351d6c); }
+  [data-theme="moss"]{ --accent-1:#9ac56b; --accent-2:#4c7537; --accent-3:#d5f2a7; --accent-grad:linear-gradient(135deg,#e5ffc0,#9ac56b 34%,#4c7537 72%,#243b20); }
+  [data-theme="ocean"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(48,88,108,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(20,65,84,.48),transparent 72%),linear-gradient(135deg,#0f1b22 0%,#070c10 48%,#030506 100%); }
+  [data-theme="violet"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(77,57,104,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(48,35,75,.48),transparent 72%),linear-gradient(135deg,#17121e 0%,#0a080e 48%,#030305 100%); }
+  [data-theme="moss"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(57,86,55,.38),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(34,65,43,.44),transparent 72%),linear-gradient(135deg,#111b15 0%,#080d0a 48%,#030504 100%); }
+  @media (max-width:760px){ .settings-card{ padding:22px; border-radius:20px; } .settings-layout{ grid-template-columns:1fr; gap:16px; } .settings-tabs{ display:grid; grid-template-columns:repeat(2,1fr); } .settings-tabs button{ justify-content:center; } .chat-top-action{ display:none; } .subscription-card{ align-items:flex-start; flex-direction:column; } .theme-grid{ grid-template-columns:repeat(2,1fr); } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1434,23 +1535,27 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   <section class="page" id="page-chat">
     <div class="chat-app">
       <aside class="chat-sidebar" id="chatSidebar">
+        <div class="workspace-mark"><img src="assets/elorahub_logo.png" alt="elora"><div><strong>elora workspace</strong><span>Private thinking room</span></div></div>
         <button class="chat-new" id="newChatBtn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          New chat
+          New chat <span class="shortcut">⌘ K</span>
         </button>
         <div class="chat-history">
-          <div class="chat-history-label">Recent</div>
-          <button class="active-conv">Quarterly churn breakdown</button>
-          <button>Rewriting my bio</button>
-          <button>Trip plan: Lisbon, 4 days</button>
-          <button>Explaining a lease clause</button>
-          <button>Product name brainstorm</button>
+          <div class="chat-history-head"><div class="chat-history-label">Your chats</div><button class="sidebar-mini-btn" id="searchChatsBtn" aria-label="Search chats">⌕</button></div>
+          <button class="active-conv"><span class="history-icon">✦</span><span>Quarterly churn breakdown</span><small>now</small></button>
+          <button><span class="history-icon">↗</span><span>Rewriting my bio</span><small>2h</small></button>
+          <button><span class="history-icon">○</span><span>Trip plan: Lisbon, 4 days</span><small>yesterday</small></button>
+          <button><span class="history-icon">⌁</span><span>Explaining a lease clause</span><small>Mon</small></button>
+          <button><span class="history-icon">✧</span><span>Product name brainstorm</span><small>Sun</small></button>
         </div>
-        <div class="plan-meter">
-          <div class="plan-meter-top"><span>Free plan</span><span>UPGRADE</span></div>
-          <div class="meter-bar"><i></i></div>
-          <small>1 of 3 uploads used today</small>
-          <a data-nav="pricing">See what Private unlocks →</a>
+        <div class="sidebar-bottom">
+          <div class="plan-meter">
+            <div class="plan-meter-top"><span>Free plan</span><span>UPGRADE</span></div>
+            <div class="meter-bar"><i></i></div>
+            <small>1 of 3 uploads used today</small>
+            <a data-nav="pricing">See what Private unlocks →</a>
+          </div>
+          <div class="sidebar-user"><div class="sidebar-avatar">you</div><div><strong id="sidebarUserName">Guest workspace</strong><span id="sidebarUserMeta">Sign in to sync chats</span></div><button class="sidebar-mini-btn" id="openSettingsBtn" aria-label="Open settings">⚙</button></div>
         </div>
       </aside>
 
@@ -1460,9 +1565,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             <button class="icon-btn chat-mobile-toggle" id="sidebarToggle" aria-label="Toggle chat history">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span> elora Core <span class="sub">&nbsp;— reasoning mode</span></div>
+            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span><div><strong>elora</strong><span class="sub">Adaptive reasoning</span></div><span class="smart-pill">SMART</span></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
+            <button class="btn btn-ghost chat-top-action" id="openChatOptionsBtn" style="font-size:0.8rem;">Tune reply</button>
             <button class="btn btn-ghost" id="forgetMeBtn" style="font-size:0.8rem;" title="Clear what elora remembers about you across chats">Forget me</button>
             <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
           </div>
@@ -1496,13 +1602,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         </div>
 
         <div class="attach-row" id="attachRow" style="display:none;"></div>
-
-        <div class="model-picker" id="modelPicker">
-          <button class="model-chip is-active" data-model="groq" type="button">elora</button>
-          <button class="model-chip" data-model="gemini" type="button">elora Vision</button>
-          <button class="model-chip" data-model="claude" type="button" disabled>Claude<span class="soon">soon</span></button>
-          <button class="model-chip" data-model="gpt" type="button" disabled>GPT<span class="soon">soon</span></button>
-        </div>
 
         <div class="chat-inputbar">
           <div class="input-shell">
@@ -2089,6 +2188,55 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     <div id="checkoutLoading" style="text-align:center;padding:30px 0;color:var(--text-3);font-size:0.9rem;">Loading secure checkout…</div>
     <div id="checkoutStatus" class="checkout-status" role="status" aria-live="polite" style="display:none;"></div>
     <div id="checkoutContainer" class="checkout-container"></div>
+  </div>
+</div>
+
+<!-- ============ CHAT SETTINGS WORKSPACE ============ -->
+<div class="modal-overlay settings-overlay" id="settingsModal">
+  <div class="settings-card">
+    <button class="modal-close" id="settingsClose" aria-label="Close settings">&times;</button>
+    <div class="settings-head"><div class="settings-orb">✦</div><div><span class="kicker">Workspace controls</span><h3>Make elora feel like yours</h3><p>Change the atmosphere, answer style, and account details without leaving chat.</p></div></div>
+    <div class="settings-layout">
+      <nav class="settings-tabs" aria-label="Settings sections">
+        <button class="is-active" data-settings-tab="profile"><span>◉</span>Profile</button>
+        <button data-settings-tab="subscription"><span>◇</span>Subscription</button>
+        <button data-settings-tab="appearance"><span>◌</span>Appearance</button>
+        <button data-settings-tab="chat"><span>✦</span>Chat behavior</button>
+      </nav>
+      <div class="settings-panels">
+        <section class="settings-panel is-active" data-settings-panel="profile">
+          <div class="settings-panel-title"><div><h4>Your profile</h4><p>Keep your workspace identity and memory controls in one place.</p></div><div class="profile-avatar-large">you</div></div>
+          <label class="settings-field"><span>Display name</span><input id="settingsDisplayName" type="text" placeholder="Your name"></label>
+          <label class="settings-field"><span>Email</span><input id="settingsEmail" type="email" placeholder="Sign in to add an email" disabled></label>
+          <div class="settings-info-row"><span>Long-term memory</span><strong id="settingsMemoryState">Available when signed in</strong></div>
+          <button class="settings-danger" id="settingsForgetBtn">Forget everything elora remembers</button>
+        </section>
+        <section class="settings-panel" data-settings-panel="subscription">
+          <div class="settings-panel-title"><div><h4>Your plan</h4><p>See your current access and move up when you need more room.</p></div><span class="plan-status-dot"></span></div>
+          <div class="subscription-card"><div><span class="eyebrow-plain">Current workspace</span><h4 id="settingsPlanName">Free plan</h4><p id="settingsPlanCopy">Good for trying elora with limited daily messages.</p></div><button class="btn btn-primary" data-nav="pricing" id="settingsUpgradeBtn">View plans</button></div>
+          <div class="settings-info-row"><span>Billing &amp; receipts</span><strong>Managed securely by Paddle</strong></div>
+          <div class="settings-info-row"><span>Payment details</span><strong>Never stored by elorahub</strong></div>
+        </section>
+        <section class="settings-panel" data-settings-panel="appearance">
+          <div class="settings-panel-title"><div><h4>Appearance</h4><p>Pick a backdrop and accent that matches your headspace.</p></div></div>
+          <div class="setting-group"><span class="setting-label">Atmosphere</span><div class="theme-grid">
+            <button class="theme-swatch is-active" data-theme="ember"><i></i><span>Ember</span></button>
+            <button class="theme-swatch" data-theme="ocean"><i></i><span>Ocean</span></button>
+            <button class="theme-swatch" data-theme="violet"><i></i><span>Violet</span></button>
+            <button class="theme-swatch" data-theme="moss"><i></i><span>Moss</span></button>
+          </div></div>
+          <div class="setting-group"><span class="setting-label">Glow intensity</span><div class="range-row"><input id="glowRange" type="range" min="0" max="100" value="65"><output id="glowValue">65%</output></div></div>
+          <label class="toggle-row"><span><strong>Reduce motion</strong><small>Keep transitions subtle and still.</small></span><input id="reduceMotionToggle" type="checkbox"><i></i></label>
+        </section>
+        <section class="settings-panel" data-settings-panel="chat">
+          <div class="settings-panel-title"><div><h4>Chat behavior</h4><p>Give elora a clearer brief before it starts thinking.</p></div></div>
+          <label class="settings-field"><span>Answer style</span><select id="responseStyle"><option value="balanced">Balanced — clear and thoughtful</option><option value="concise">Concise — get to the point</option><option value="deep">Deep — unpack the reasoning</option></select></label>
+          <label class="settings-field"><span>Default tone</span><select id="responseTone"><option value="direct">Direct and useful</option><option value="warm">Warm and conversational</option><option value="technical">Technical and precise</option></select></label>
+          <label class="toggle-row"><span><strong>Show what elora is doing</strong><small>Display honest activity steps while a reply is prepared.</small></span><input id="activityToggle" type="checkbox" checked><i></i></label>
+          <label class="toggle-row"><span><strong>Use live web search when needed</strong><small>Let elora ground current questions with fresh sources.</small></span><input id="webSearchToggle" type="checkbox" checked><i></i></label>
+        </section>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2971,17 +3119,73 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   }
   function preSentence(arr){ return pick(arr); }
 
-  /* ---------------- Model picker (Groq / Gemini live; Claude / GPT coming soon) ---------------- */
+  /* ---------------- Workspace preferences + settings ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  document.querySelectorAll(".model-chip").forEach(function(chip){
-    chip.addEventListener("click", function(){
-      if(chip.disabled) return;
-      document.querySelectorAll(".model-chip").forEach(function(c){ c.classList.remove("is-active"); });
-      chip.classList.add("is-active");
-      selectedModel = chip.getAttribute("data-model");
-    });
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, theme:"ember", glow:65, reduceMotion:false };
+  try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
+  function saveChatPreferences(){ try { localStorage.setItem("elorahub_chat_preferences", JSON.stringify(chatPreferences)); } catch(e){} }
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", chatPreferences.theme || "ember");
+    document.documentElement.style.setProperty("--user-glow", (Number(chatPreferences.glow || 65) / 100).toFixed(2));
+    document.documentElement.classList.toggle("reduce-motion", !!chatPreferences.reduceMotion);
+    document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-theme") === chatPreferences.theme); });
+  }
+  applyTheme();
+
+  var settingsModal = document.getElementById("settingsModal");
+  function syncSettingsForm(){
+    var displayName = document.getElementById("settingsDisplayName");
+    var email = document.getElementById("settingsEmail");
+    var style = document.getElementById("responseStyle");
+    var tone = document.getElementById("responseTone");
+    var activity = document.getElementById("activityToggle");
+    var webSearch = document.getElementById("webSearchToggle");
+    var reduce = document.getElementById("reduceMotionToggle");
+    var glow = document.getElementById("glowRange");
+    if(displayName) displayName.value = (currentUser && currentUser.name) || "";
+    if(email){ email.value = (currentUser && currentUser.email) || "Sign in to sync your profile"; }
+    if(style) style.value = chatPreferences.style;
+    if(tone) tone.value = chatPreferences.tone;
+    if(activity) activity.checked = chatPreferences.activity !== false;
+    if(webSearch) webSearch.checked = chatPreferences.webSearch !== false;
+    if(reduce) reduce.checked = !!chatPreferences.reduceMotion;
+    if(glow){ glow.value = chatPreferences.glow; document.getElementById("glowValue").textContent = chatPreferences.glow + "%"; }
+    var memory = document.getElementById("settingsMemoryState");
+    if(memory) memory.textContent = currentUser ? "On for this account" : "Available when signed in";
+    var sidebarName = document.getElementById("sidebarUserName");
+    var sidebarMeta = document.getElementById("sidebarUserMeta");
+    if(sidebarName) sidebarName.textContent = (currentUser && (currentUser.name || currentUser.email)) || "Guest workspace";
+    if(sidebarMeta) sidebarMeta.textContent = currentUser ? "Synced workspace" : "Sign in to sync chats";
+  }
+  function openSettings(tab){
+    syncSettingsForm();
+    settingsModal.classList.add("is-open");
+    if(tab){ document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-settings-tab") === tab); }); document.querySelectorAll(".settings-panel").forEach(function(panel){ panel.classList.toggle("is-active", panel.getAttribute("data-settings-panel") === tab); }); }
+  }
+  function closeSettings(){ settingsModal.classList.remove("is-open"); }
+  document.getElementById("openSettingsBtn").addEventListener("click", function(){ openSettings("profile"); });
+  document.getElementById("openChatOptionsBtn").addEventListener("click", function(){ openSettings("chat"); });
+  document.getElementById("settingsClose").addEventListener("click", closeSettings);
+  settingsModal.addEventListener("click", function(e){ if(e.target === settingsModal) closeSettings(); });
+  document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.addEventListener("click", function(){ openSettings(btn.getAttribute("data-settings-tab")); }); });
+  document.querySelectorAll("[data-nav=pricing]").forEach(function(btn){ btn.addEventListener("click", closeSettings); });
+  document.getElementById("settingsDisplayName").addEventListener("input", function(){
+    if(!currentUser) currentUser = { name:"", email:null };
+    currentUser.name = this.value.trim();
+    try { localStorage.setItem("elorahub_display_name", currentUser.name); } catch(e){}
+    syncSettingsForm();
   });
+  document.getElementById("responseStyle").addEventListener("change", function(){ chatPreferences.style = this.value; saveChatPreferences(); });
+  document.getElementById("responseTone").addEventListener("change", function(){ chatPreferences.tone = this.value; saveChatPreferences(); });
+  document.getElementById("activityToggle").addEventListener("change", function(){ chatPreferences.activity = this.checked; saveChatPreferences(); });
+  document.getElementById("webSearchToggle").addEventListener("change", function(){ chatPreferences.webSearch = this.checked; saveChatPreferences(); });
+  document.getElementById("reduceMotionToggle").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
+  document.getElementById("glowRange").addEventListener("input", function(){ chatPreferences.glow = Number(this.value); document.getElementById("glowValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
+  document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.theme = btn.getAttribute("data-theme"); saveChatPreferences(); applyTheme(); }); });
+  document.getElementById("settingsUpgradeBtn").addEventListener("click", closeSettings);
+  document.getElementById("settingsForgetBtn").addEventListener("click", function(){ document.getElementById("forgetMeBtn").click(); });
+  document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); openSettings("chat"); } if(e.key === "Escape") closeSettings(); });
 
   async function getReply(text, fileEntries){
     var fileNames = fileEntries.map(function(e){ return e.name; });
@@ -3008,7 +3212,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         body: JSON.stringify({
           provider: selectedModel,
           messages: conversationHistory.concat([{ role: "user", content: enrichedText }]),
-          images: images
+          images: images,
+          preferences: { style:chatPreferences.style, tone:chatPreferences.tone, webSearch:chatPreferences.webSearch }
         })
       });
 
@@ -3060,7 +3265,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var typingRow = document.createElement("div");
     typingRow.className = "msg from-ai";
     typingRow.innerHTML = '<div class="avatar avatar-thinking"><img src="' + LOGO_SRC + '" alt="elora"></div>' +
-      '<div class="msg-body"><div class="typing-bubble"><span class="typing-label">elora is thinking</span><span class="typing-dots"><span></span><span></span><span></span></span></div></div>';
+      '<div class="msg-body"><div class="activity-tray"><div class="activity-card"><div class="activity-icon">⌁</div><div class="activity-copy"><strong class="typing-label">Reading your message</strong><span class="activity-detail">Looking for intent, context, and the useful next step.</span></div><span class="activity-pulse"></span></div></div></div>';
     chatThread.appendChild(typingRow);
     scrollToBottom();
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
@@ -3078,10 +3283,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         // each one is a real thing that happened server-side above,
         // not a decorative animation.
         var label = typingRow.querySelector(".typing-label");
+        var detail = typingRow.querySelector(".activity-detail");
+        var activityIcon = typingRow.querySelector(".activity-icon");
         var stepsToShow = (result.steps && result.steps.length > 1) ? result.steps : null;
+        var fallbackSteps = ["Reading your message", "Checking conversation context", "Reasoning through the best answer", "Writing a clear reply"];
+        var activityIcons = ["⌁", "◉", "✦", "↗"];
 
         function reveal(){
-          chatThread.removeChild(typingRow);
+          if(typingRow.parentNode){ typingRow.parentNode.removeChild(typingRow); }
           var thinkSeconds = (Date.now() - startTime) / 1000;
           var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
           conversationHistory.push({ role: "assistant", content: result.text });
@@ -3091,14 +3300,17 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           });
         }
 
-        if(!stepsToShow || !label){ reveal(); return; }
+        if(!chatPreferences.activity){ reveal(); return; }
+        if(!stepsToShow){ stepsToShow = fallbackSteps; }
 
         var i = 0;
         function nextStep(){
           if(i >= stepsToShow.length){ reveal(); return; }
           label.textContent = stepsToShow[i];
+          if(detail) detail.textContent = i === stepsToShow.length - 1 ? "Turning the useful parts into a response you can act on." : "Working through the details instead of guessing from the surface.";
+          if(activityIcon) activityIcon.textContent = activityIcons[i % activityIcons.length];
           i++;
-          setTimeout(nextStep, 420);
+          setTimeout(nextStep, 520);
         }
         nextStep();
       }, wait);
