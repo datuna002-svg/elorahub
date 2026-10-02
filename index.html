@@ -1361,6 +1361,87 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   [data-theme="violet"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(77,57,104,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(48,35,75,.48),transparent 72%),linear-gradient(135deg,#17121e 0%,#0a080e 48%,#030305 100%); }
   [data-theme="moss"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(57,86,55,.38),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(34,65,43,.44),transparent 72%),linear-gradient(135deg,#111b15 0%,#080d0a 48%,#030504 100%); }
   @media (max-width:760px){ .settings-card{ padding:22px; border-radius:20px; } .settings-layout{ grid-template-columns:1fr; gap:16px; } .settings-tabs{ display:grid; grid-template-columns:repeat(2,1fr); } .settings-tabs button{ justify-content:center; } .chat-top-action{ display:none; } .subscription-card{ align-items:flex-start; flex-direction:column; } .theme-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  /* Full-screen chat / response atelier */
+  body.chat-mode{ overflow:hidden; }
+  body.chat-mode .nav,body.chat-mode .mobile-menu,body.chat-mode .site-footer,body.chat-mode .site-banner{ display:none!important; }
+  body.chat-mode .app{ min-height:100vh; }
+  body.chat-mode #page-chat{ display:flex; min-height:100vh; height:100vh; padding:0; animation:none; }
+  body.chat-mode .chat-app{ width:100vw; height:100vh; min-height:100vh; border-radius:0; border:0; background:var(--chat-canvas); box-shadow:none; }
+  body.chat-mode .chat-main{ min-width:0; }
+  body.chat-mode .chat-sidebar{ border-radius:0; }
+  body.chat-mode .chat-topbar{ height:72px; padding:0 24px; background:color-mix(in srgb,var(--chat-canvas) 82%,transparent); border-bottom:1px solid var(--chat-line); }
+  body.chat-mode .chat-scroll{ padding:50px clamp(18px,7vw,110px) 170px; background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--accent-1) 8%,transparent),transparent 60%); }
+  body.chat-mode .chat-thread{ max-width:900px; gap:34px; padding:0; }
+  body.chat-mode .msg{ gap:16px; }
+  body.chat-mode .msg .avatar{ width:36px; height:36px; border-radius:12px; margin-top:3px; }
+  body.chat-mode .msg-body{ max-width:calc(100% - 54px); }
+  body.chat-mode .msg.from-ai .msg-body{ max-width:860px; }
+  body.chat-mode .msg-bubble{ font-size:var(--chat-text-size,1rem); line-height:1.72; }
+  body.chat-mode .msg.from-ai .msg-bubble{ padding:0; background:transparent; border:0; box-shadow:none; border-radius:0; color:var(--text-1); }
+  body.chat-mode .msg.from-ai .msg-bubble p:first-child{ margin-top:0; }
+  body.chat-mode .msg.from-ai .msg-bubble p{ max-width:78ch; }
+  body.chat-mode .msg.from-ai .msg-bubble code{ padding:3px 6px; border:1px solid var(--chat-line); background:color-mix(in srgb,var(--accent-1) 7%,var(--chat-canvas)); border-radius:6px; color:var(--accent-3); }
+  body.chat-mode .msg.from-ai .msg-bubble pre{ margin:16px 0; padding:17px 18px; border:1px solid var(--chat-line); background:color-mix(in srgb,var(--chat-canvas) 80%,#000); border-radius:14px; overflow:auto; box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 18px 40px rgba(0,0,0,.18); }
+  body.chat-mode .msg.from-ai .msg-bubble pre code{ padding:0; border:0; background:transparent; color:var(--text-2); }
+  body.chat-mode .msg.from-user{ align-items:flex-end; }
+  body.chat-mode .msg.from-user .msg-body{ max-width:min(700px,78%); }
+  body.chat-mode .msg.from-user .msg-bubble{ padding:14px 19px; border:1px solid color-mix(in srgb,var(--accent-1) 38%,transparent); border-radius:20px 20px 6px 20px; background:linear-gradient(135deg,color-mix(in srgb,var(--accent-1) 32%,var(--chat-panel)),color-mix(in srgb,var(--accent-2) 68%,var(--chat-canvas))); color:#fff; box-shadow:0 14px 38px color-mix(in srgb,var(--accent-1) 15%,transparent),inset 0 1px 0 rgba(255,255,255,.16); }
+  body.chat-mode .msg.from-user .avatar{ background:color-mix(in srgb,var(--accent-1) 18%,var(--chat-panel)); border:1px solid color-mix(in srgb,var(--accent-1) 30%,transparent); }
+  body.chat-mode .msg-meta{ margin-top:9px; color:var(--text-3); }
+  body.chat-mode .msg.from-ai .msg-meta{ justify-content:flex-start; }
+  body.chat-mode .thinking-tag{ color:var(--accent-3); font-size:.72rem; }
+  body.chat-mode .response-head{ display:flex; align-items:center; gap:9px; margin:0 0 13px; color:var(--text-3); font-size:.66rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; }
+  body.chat-mode .response-head i{ width:7px; height:7px; border-radius:50%; background:var(--accent-1); box-shadow:0 0 14px var(--accent-1); }
+  body.chat-mode .response-actions{ display:flex; gap:5px; margin-top:12px; opacity:.7; }
+  body.chat-mode .response-actions button{ border:1px solid transparent; color:var(--text-3); background:transparent; border-radius:7px; padding:5px 7px; font-size:.72rem; }
+  body.chat-mode .response-actions button:hover{ color:var(--accent-3); background:color-mix(in srgb,var(--accent-1) 9%,transparent); border-color:var(--chat-line); }
+  body.chat-mode .chat-suggestions{ max-width:900px; margin:0 auto 22px; padding:0; gap:10px; }
+  body.chat-mode .suggestion-chip{ border:1px solid var(--chat-line); background:linear-gradient(145deg,color-mix(in srgb,var(--chat-panel) 88%,transparent),transparent); border-radius:15px; padding:15px 17px; }
+  body.chat-mode .suggestion-chip:hover{ transform:translateY(-3px); border-color:color-mix(in srgb,var(--accent-1) 55%,transparent); background:color-mix(in srgb,var(--accent-1) 8%,var(--chat-panel)); box-shadow:0 15px 30px color-mix(in srgb,var(--accent-1) 10%,transparent); }
+  body.chat-mode .chat-inputbar{ padding:10px clamp(18px,7vw,110px) 22px; background:linear-gradient(180deg,transparent,var(--chat-canvas) 30%); border-top:0; }
+  body.chat-mode .composer-toolbar,body.chat-mode .input-shell{ max-width:900px; }
+  body.chat-mode .composer-toolbar{ display:flex; align-items:center; gap:7px; margin:0 auto 9px; overflow:auto; scrollbar-width:none; }
+  body.chat-mode .composer-toolbar::-webkit-scrollbar{ display:none; }
+  body.chat-mode .composer-label{ display:flex; align-items:center; gap:7px; margin-right:4px; color:var(--text-3); font-size:.68rem; font-weight:800; white-space:nowrap; text-transform:uppercase; letter-spacing:.09em; }
+  body.chat-mode .composer-label i{ width:6px; height:6px; border-radius:50%; background:var(--accent-1); box-shadow:0 0 10px var(--accent-1); }
+  body.chat-mode .composer-mode,body.chat-mode .composer-tool{ border:1px solid var(--chat-line); background:color-mix(in srgb,var(--chat-panel) 75%,transparent); color:var(--text-3); border-radius:9px; padding:7px 10px; font-size:.72rem; white-space:nowrap; transition:all .2s var(--ease); }
+  body.chat-mode .composer-mode span{ color:var(--accent-3); margin-right:4px; }
+  body.chat-mode .composer-mode:hover,body.chat-mode .composer-mode.is-active,body.chat-mode .composer-tool:hover{ color:var(--text-1); border-color:color-mix(in srgb,var(--accent-1) 54%,transparent); background:color-mix(in srgb,var(--accent-1) 11%,var(--chat-panel)); }
+  body.chat-mode .composer-tool{ margin-left:auto; letter-spacing:2px; }
+  body.chat-mode .input-shell{ background:color-mix(in srgb,var(--chat-panel) 91%,transparent); border:1px solid color-mix(in srgb,var(--accent-1) 20%,var(--chat-line)); border-radius:20px; box-shadow:0 20px 70px rgba(0,0,0,.34),0 0 35px color-mix(in srgb,var(--accent-1) 7%,transparent),inset 0 1px 0 rgba(255,255,255,.07); }
+  body.chat-mode .input-shell:focus-within{ border-color:color-mix(in srgb,var(--accent-1) 58%,transparent); box-shadow:0 22px 74px rgba(0,0,0,.4),0 0 0 4px color-mix(in srgb,var(--accent-1) 12%,transparent),0 0 35px color-mix(in srgb,var(--accent-1) 14%,transparent); }
+  body.chat-mode .icon-btn{ border:0; background:transparent; }
+  body.chat-mode .icon-btn:hover{ background:color-mix(in srgb,var(--accent-1) 10%,transparent); }
+  body.chat-mode .send-btn{ border:0; box-shadow:0 8px 24px color-mix(in srgb,var(--accent-1) 30%,transparent); }
+  body.chat-mode .input-foot{ color:color-mix(in srgb,var(--text-3) 80%,var(--accent-3)); }
+  .chat-account-actions{ display:flex; align-items:center; gap:7px; }
+  .chat-account-btn,.chat-icon-action{ border:1px solid var(--chat-line); background:color-mix(in srgb,var(--chat-panel) 75%,transparent); color:var(--text-2); border-radius:9px; padding:8px 11px; font-size:.72rem; font-weight:800; transition:all .2s var(--ease); }
+  .chat-account-btn:hover,.chat-icon-action:hover{ color:var(--text-1); border-color:color-mix(in srgb,var(--accent-1) 55%,transparent); background:color-mix(in srgb,var(--accent-1) 10%,var(--chat-panel)); }
+  .chat-account-btn.is-primary{ color:#fff; border-color:transparent; background:var(--accent-grad); box-shadow:0 7px 18px color-mix(in srgb,var(--accent-1) 24%,transparent); }
+  .chat-icon-action{ width:33px; height:33px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:.9rem; }
+  html[data-theme="ocean"]{ --accent-1:#4dd7ff; --accent-2:#126486; --accent-3:#b8f2ff; --accent-grad:linear-gradient(135deg,#b8f2ff 0%,#4dd7ff 34%,#126486 74%,#092b3a 100%); --chat-canvas:#061116; --chat-panel:#0e2028; --chat-line:rgba(111,220,250,.18); }
+  html[data-theme="violet"]{ --accent-1:#b27aff; --accent-2:#6337a5; --accent-3:#e1caff; --accent-grad:linear-gradient(135deg,#ead9ff 0%,#b27aff 34%,#6337a5 74%,#281342 100%); --chat-canvas:#0d0916; --chat-panel:#1c122b; --chat-line:rgba(196,153,255,.18); }
+  html[data-theme="moss"]{ --accent-1:#a6d86d; --accent-2:#4a7837; --accent-3:#e0f7b8; --accent-grad:linear-gradient(135deg,#f0ffd0 0%,#a6d86d 34%,#4a7837 74%,#1b321b 100%); --chat-canvas:#08110b; --chat-panel:#142218; --chat-line:rgba(173,224,119,.18); }
+  html[data-theme="ember"]{ --chat-canvas:#090b0e; --chat-panel:#151b20; --chat-line:rgba(218,230,238,.13); }
+  html[data-theme="ocean"] body,html[data-theme="violet"] body,html[data-theme="moss"] body{ background:var(--chat-canvas); }
+  html[data-theme="ocean"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(27,96,120,.48),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(15,71,94,.48),transparent 72%),linear-gradient(135deg,#0d222b 0%,#061116 48%,#020506 100%); }
+  html[data-theme="violet"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(91,56,126,.45),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(59,37,94,.48),transparent 72%),linear-gradient(135deg,#1c1328 0%,#0d0916 48%,#030205 100%); }
+  html[data-theme="moss"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(55,96,50,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(35,77,42,.45),transparent 72%),linear-gradient(135deg,#132118 0%,#08110b 48%,#020503 100%); }
+  html[data-theme="ocean"] .brand img,html[data-theme="violet"] .brand img,html[data-theme="moss"] .brand img{ filter:drop-shadow(0 0 18px color-mix(in srgb,var(--accent-1) 55%,transparent)); }
+  body.chat-mode .chat-history button.active-conv{ background:linear-gradient(90deg,color-mix(in srgb,var(--accent-1) 14%,transparent),rgba(255,255,255,.035)); border-left-color:var(--accent-1); box-shadow:0 0 24px color-mix(in srgb,var(--accent-1) 10%,transparent); }
+  body.chat-mode .plan-meter{ background:linear-gradient(145deg,color-mix(in srgb,var(--accent-1) 11%,transparent),rgba(255,255,255,.035)); border-color:color-mix(in srgb,var(--accent-1) 25%,transparent); box-shadow:0 0 30px color-mix(in srgb,var(--accent-1) 8%,transparent); }
+  body.chat-mode .smart-pill{ color:var(--accent-3); background:color-mix(in srgb,var(--accent-1) 10%,transparent); border-color:color-mix(in srgb,var(--accent-1) 30%,transparent); }
+  body.chat-mode .activity-card{ border-color:color-mix(in srgb,var(--accent-1) 28%,transparent); background:linear-gradient(90deg,color-mix(in srgb,var(--accent-1) 10%,transparent),rgba(255,255,255,.035)); box-shadow:0 0 28px color-mix(in srgb,var(--accent-1) 8%,transparent); }
+  body.chat-mode .activity-icon{ color:var(--accent-3); background:color-mix(in srgb,var(--accent-1) 14%,transparent); }
+  .settings-tabs button.is-active{ color:var(--text-1); background:color-mix(in srgb,var(--accent-1) 13%,transparent); border-color:color-mix(in srgb,var(--accent-1) 28%,transparent); box-shadow:0 0 22px color-mix(in srgb,var(--accent-1) 8%,transparent); }
+  .settings-danger{ color:var(--accent-3); }
+  html[data-theme="ocean"] .settings-card,html[data-theme="violet"] .settings-card,html[data-theme="moss"] .settings-card{ box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 48px color-mix(in srgb,var(--accent-1) 12%,transparent); }
+  html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{ animation-duration:.001ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.001ms!important; }
+  html.high-contrast body.chat-mode .msg.from-ai .msg-bubble{ color:#fff; }
+  html.high-contrast body.chat-mode .msg.from-user .msg-bubble{ border-color:var(--accent-3); }
+  html.high-contrast body.chat-mode .chat-sidebar,html.high-contrast body.chat-mode .chat-topbar{ border-color:color-mix(in srgb,var(--accent-3) 36%,transparent); }
+  @media (max-width:760px){ body.chat-mode .chat-topbar{ padding:0 13px; } body.chat-mode .chat-account-btn{ display:none; } body.chat-mode .chat-scroll{ padding:28px 15px 160px; } body.chat-mode .chat-thread{ gap:27px; } body.chat-mode .msg.from-user .msg-body,body.chat-mode .msg.from-ai .msg-body{ max-width:calc(100% - 45px); } body.chat-mode .chat-inputbar{ padding:8px 12px 16px; } body.chat-mode .composer-label{ display:none; } body.chat-mode .composer-tool{ margin-left:0; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1567,10 +1648,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             </button>
             <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span><div><strong>elora</strong><span class="sub">Adaptive reasoning</span></div><span class="smart-pill">SMART</span></div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <button class="btn btn-ghost chat-top-action" id="openChatOptionsBtn" style="font-size:0.8rem;">Tune reply</button>
-            <button class="btn btn-ghost" id="forgetMeBtn" style="font-size:0.8rem;" title="Clear what elora remembers about you across chats">Forget me</button>
-            <button class="btn btn-ghost" id="clearChatBtn" style="font-size:0.8rem;">Clear chat</button>
+          <div class="chat-account-actions">
+            <button class="chat-account-btn" id="chatSignInBtn">Sign in</button>
+            <button class="chat-account-btn is-primary" id="chatSignUpBtn">Join free</button>
+            <button class="chat-icon-action" id="openChatOptionsBtn" aria-label="Tune reply" title="Tune reply">✦</button>
+            <button class="chat-icon-action" id="forgetMeBtn" aria-label="Forget memory" title="Forget what elora remembers">⌫</button>
+            <button class="chat-icon-action" id="clearChatBtn" aria-label="Clear chat" title="Clear chat">↺</button>
           </div>
         </div>
 
@@ -1579,8 +1662,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             <div class="msg from-ai">
               <div class="avatar">e</div>
               <div class="msg-body">
-                <div class="msg-bubble">Hey — I'm elora. Ask me anything, paste in a file or a screenshot, or just think out loud. I'll take a few seconds to actually consider it before answering.</div>
+                <div class="response-head"><i></i><span>elora response</span></div>
+                <div class="msg-bubble">Hey — I'm elora. Bring me a question, a half-formed idea, a file, or a piece of code. I'll work through the useful part instead of giving you a polished-sounding non-answer.</div>
                 <div class="msg-meta">elora · just now</div>
+                <div class="response-actions"><button type="button" data-copy-message="1" data-copy-text="Hey — I'm elora. Bring me a question, a half-formed idea, a file, or a piece of code. I'll work through the useful part instead of giving you a polished-sounding non-answer.">Copy</button><button type="button" data-message-reaction="up">Helpful</button><button type="button" data-message-reaction="down">Not quite</button></div>
               </div>
             </div>
           </div>
@@ -1604,6 +1689,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         <div class="attach-row" id="attachRow" style="display:none;"></div>
 
         <div class="chat-inputbar">
+          <div class="composer-toolbar" aria-label="Chat modes">
+            <span class="composer-label"><i></i>Shape the reply</span>
+            <button class="composer-mode is-active" data-composer-style="balanced"><span>✦</span>Balanced</button>
+            <button class="composer-mode" data-composer-style="concise"><span>↯</span>Quick</button>
+            <button class="composer-mode" data-composer-style="deep"><span>◉</span>Deep dive</button>
+            <button class="composer-mode" data-composer-style="technical"><span>&lt;/&gt;</span>Code</button>
+            <button class="composer-tool" id="composerOptionsBtn" title="More composer settings">•••</button>
+          </div>
           <div class="input-shell">
             <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
             <button class="icon-btn" id="attachBtn" aria-label="Attach file or image" title="Attach file or image">
@@ -2202,6 +2295,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         <button data-settings-tab="subscription"><span>◇</span>Subscription</button>
         <button data-settings-tab="appearance"><span>◌</span>Appearance</button>
         <button data-settings-tab="chat"><span>✦</span>Chat behavior</button>
+        <button data-settings-tab="composer"><span>↗</span>Composer</button>
+        <button data-settings-tab="accessibility"><span>◌</span>Accessibility</button>
       </nav>
       <div class="settings-panels">
         <section class="settings-panel is-active" data-settings-panel="profile">
@@ -2230,10 +2325,23 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         </section>
         <section class="settings-panel" data-settings-panel="chat">
           <div class="settings-panel-title"><div><h4>Chat behavior</h4><p>Give elora a clearer brief before it starts thinking.</p></div></div>
-          <label class="settings-field"><span>Answer style</span><select id="responseStyle"><option value="balanced">Balanced — clear and thoughtful</option><option value="concise">Concise — get to the point</option><option value="deep">Deep — unpack the reasoning</option></select></label>
+          <label class="settings-field"><span>Answer style</span><select id="responseStyle"><option value="balanced">Balanced — clear and thoughtful</option><option value="concise">Concise — get to the point</option><option value="deep">Deep — unpack the reasoning</option><option value="technical">Technical — exact and structured</option></select></label>
           <label class="settings-field"><span>Default tone</span><select id="responseTone"><option value="direct">Direct and useful</option><option value="warm">Warm and conversational</option><option value="technical">Technical and precise</option></select></label>
           <label class="toggle-row"><span><strong>Show what elora is doing</strong><small>Display honest activity steps while a reply is prepared.</small></span><input id="activityToggle" type="checkbox" checked><i></i></label>
           <label class="toggle-row"><span><strong>Use live web search when needed</strong><small>Let elora ground current questions with fresh sources.</small></span><input id="webSearchToggle" type="checkbox" checked><i></i></label>
+        </section>
+        <section class="settings-panel" data-settings-panel="composer">
+          <div class="settings-panel-title"><div><h4>Composer</h4><p>Make the space below your messages work the way you think.</p></div></div>
+          <label class="settings-field"><span>Default composer mode</span><select id="composerModeSelect"><option value="balanced">Balanced</option><option value="concise">Quick</option><option value="deep">Deep dive</option><option value="technical">Code</option></select></label>
+          <label class="toggle-row"><span><strong>Send with Enter</strong><small>Use Shift + Enter when you want a new line.</small></span><input id="enterToSendToggle" type="checkbox" checked><i></i></label>
+          <label class="toggle-row"><span><strong>Keep prompt ideas visible</strong><small>Show the starting prompts when a chat is empty.</small></span><input id="suggestionsToggle" type="checkbox" checked><i></i></label>
+          <label class="toggle-row"><span><strong>Focus composer after reply</strong><small>Return your cursor to the message field automatically.</small></span><input id="autoFocusToggle" type="checkbox" checked><i></i></label>
+        </section>
+        <section class="settings-panel" data-settings-panel="accessibility">
+          <div class="settings-panel-title"><div><h4>Accessibility</h4><p>Adjust the reading experience without changing your content.</p></div></div>
+          <div class="setting-group"><span class="setting-label">Chat text size</span><div class="range-row"><input id="textScaleRange" type="range" min="90" max="120" value="100"><output id="textScaleValue">100%</output></div></div>
+          <label class="toggle-row"><span><strong>High contrast messages</strong><small>Increase separation between user and assistant content.</small></span><input id="contrastToggle" type="checkbox"><i></i></label>
+          <label class="toggle-row"><span><strong>Reduce motion</strong><small>Keep transitions subtle and still.</small></span><input id="reduceMotionToggleA11y" type="checkbox"><i></i></label>
         </section>
       </div>
     </div>
@@ -2784,7 +2892,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   chatInput.addEventListener("input", autoGrow);
 
   chatInput.addEventListener("keydown", function(e){
-    if(e.key === "Enter" && !e.shiftKey){
+    if(e.key === "Enter" && !e.shiftKey && chatPreferences.enterToSend !== false){
       e.preventDefault();
       sendMessage();
     }
@@ -2924,6 +3032,26 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     chatScroll.scrollTop = chatScroll.scrollHeight;
   }
 
+  function addResponseTools(body, sourceText){
+    var tools = document.createElement("div");
+    tools.className = "response-actions";
+    tools.innerHTML = '<button type="button" data-copy-message="1">Copy</button><button type="button" data-message-reaction="up">Helpful</button><button type="button" data-message-reaction="down">Not quite</button>';
+    tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
+    body.appendChild(tools);
+  }
+
+  document.addEventListener("click", function(e){
+    var copy = e.target.closest && e.target.closest("[data-copy-message]");
+    if(copy){
+      var value = copy.dataset.copyText || "";
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(value).then(function(){ showToast("Response copied to clipboard."); }); }
+      else { showToast("Select the response text to copy it."); }
+      return;
+    }
+    var reaction = e.target.closest && e.target.closest("[data-message-reaction]");
+    if(reaction){ reaction.classList.add("is-selected"); showToast(reaction.getAttribute("data-message-reaction") === "up" ? "Thanks — I'll keep that direction." : "Thanks — I'll use a different approach next time."); }
+  });
+
   function addMessage(role, html, meta){
     var msg = document.createElement("div");
     msg.className = "msg " + (role === "user" ? "from-user" : "from-ai") + " msg-enter";
@@ -2939,11 +3067,18 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var bubble = document.createElement("div");
     bubble.className = "msg-bubble";
     bubble.innerHTML = html;
+    if(role !== "user"){
+      var head = document.createElement("div");
+      head.className = "response-head";
+      head.innerHTML = "<i></i><span>elora response</span>";
+      body.appendChild(head);
+    }
     var metaEl = document.createElement("div");
     metaEl.className = "msg-meta";
     metaEl.innerHTML = meta || "";
     body.appendChild(bubble);
     body.appendChild(metaEl);
+    if(role !== "user") addResponseTools(body, bubble.textContent || "");
     msg.appendChild(avatar);
     msg.appendChild(body);
     chatThread.appendChild(msg);
@@ -2967,6 +3102,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     avatar.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora">';
     var body = document.createElement("div");
     body.className = "msg-body";
+    var head = document.createElement("div");
+    head.className = "response-head";
+    head.innerHTML = "<i></i><span>elora response</span>";
+    body.appendChild(head);
     var bubble = document.createElement("div");
     bubble.className = "msg-bubble";
     var caret = document.createElement("span");
@@ -3004,6 +3143,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         if(atEnd){
           clearInterval(timer);
           caret.remove();
+          addResponseTools(body, fullText);
           resolve(msg);
         }
       }, 20);
@@ -3099,11 +3239,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(/\b(explain|what is|what's|define|meaning of)\b/.test(lower)){
       return preSentence(preambles) + (topic ? " " + escapeHtml(topic).charAt(0).toUpperCase()+escapeHtml(topic).slice(1) + " is worth defining precisely before anything else, since a lot of confusion here usually comes from two people meaning slightly different things by it." : " I can explain this plainly, but tell me the level you want it at — quick intuition, or the full mechanics.") + " " + pick(followUps);
     }
-    if(/\b(vs|versus|compare|which (one|is better)|should i)\b/.test(lower)){
+    if(/\b(vs|versus|compare|which (one|is better))\b/.test(lower)){
       return preSentence(preambles) + " there isn't a universally right choice here — it comes down to which trade-off you'd regret less. " + (topic ? "Between the options involving " + escapeHtml(topic) + ", " : "") + "tell me what you're optimizing for (speed, cost, or certainty) and I'll actually commit to a recommendation instead of listing pros and cons at you.";
     }
-    if(/\b(code|bug|function|error|script|python|javascript|debug|exception|stack trace)\b/.test(lower)){
-      return preSentence(preambles) + " paste the actual code or error message and I'll trace through it line by line" + (topic ? ", paying close attention to anything touching " + escapeHtml(topic) : "") + " rather than guessing at the fix from a description.";
+    if(/\b(auto ?clipper|clipper script|200\s*cps|clips? per second)\b/.test(lower)){
+      return "I can help build that. I’m going to assume you mean a local automation script that triggers a click at a controlled rate, not something that bypasses a service’s rules. The useful first step is choosing the target — browser, Windows desktop, macOS, or a specific app — because the implementation and safe rate limits differ. Tell me the target and I’ll give you a complete starter with start/stop controls, a configurable CPS value, and a visible emergency stop.";
+    }
+    if(/\b(code|bug|function|error|script|python|javascript|debug|exception|stack trace|fetch|request|production|api)\b/.test(lower)){
+      return preSentence(preambles) + " the fastest useful path is to check the failure boundary first: capture the exact error, confirm the request or function is reached, then inspect inputs, timing, and the first failing line" + (topic ? " around " + escapeHtml(topic) : "") + ". If you paste the smallest failing snippet, I’ll turn that into a concrete fix instead of a generic checklist.";
     }
     if(/\b(idea|brainstorm|name for|suggest|options for)\b/.test(lower)){
       return preSentence(preambles) + " I'll skip the obvious first answers and give you genuinely different directions" + (topic ? " for " + escapeHtml(topic) : "") + " rather than five versions of the same idea. Want me to go ahead and list them now?";
@@ -3122,13 +3265,15 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   /* ---------------- Workspace preferences + settings ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, theme:"ember", glow:65, reduceMotion:false };
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, theme:"ember", glow:65, reduceMotion:false, enterToSend:true, suggestions:true, autoFocus:true, textScale:100, contrast:false };
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
   function saveChatPreferences(){ try { localStorage.setItem("elorahub_chat_preferences", JSON.stringify(chatPreferences)); } catch(e){} }
   function applyTheme(){
     document.documentElement.setAttribute("data-theme", chatPreferences.theme || "ember");
     document.documentElement.style.setProperty("--user-glow", (Number(chatPreferences.glow || 65) / 100).toFixed(2));
+    document.documentElement.style.setProperty("--chat-text-size", ((Number(chatPreferences.textScale || 100) / 100) + "rem"));
     document.documentElement.classList.toggle("reduce-motion", !!chatPreferences.reduceMotion);
+    document.documentElement.classList.toggle("high-contrast", !!chatPreferences.contrast);
     document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-theme") === chatPreferences.theme); });
   }
   applyTheme();
@@ -3142,7 +3287,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var activity = document.getElementById("activityToggle");
     var webSearch = document.getElementById("webSearchToggle");
     var reduce = document.getElementById("reduceMotionToggle");
+    var reduceA11y = document.getElementById("reduceMotionToggleA11y");
     var glow = document.getElementById("glowRange");
+    var composerMode = document.getElementById("composerModeSelect");
+    var enter = document.getElementById("enterToSendToggle");
+    var suggestions = document.getElementById("suggestionsToggle");
+    var autoFocus = document.getElementById("autoFocusToggle");
+    var contrast = document.getElementById("contrastToggle");
+    var textScale = document.getElementById("textScaleRange");
     if(displayName) displayName.value = (currentUser && currentUser.name) || "";
     if(email){ email.value = (currentUser && currentUser.email) || "Sign in to sync your profile"; }
     if(style) style.value = chatPreferences.style;
@@ -3150,7 +3302,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(activity) activity.checked = chatPreferences.activity !== false;
     if(webSearch) webSearch.checked = chatPreferences.webSearch !== false;
     if(reduce) reduce.checked = !!chatPreferences.reduceMotion;
+    if(reduceA11y) reduceA11y.checked = !!chatPreferences.reduceMotion;
     if(glow){ glow.value = chatPreferences.glow; document.getElementById("glowValue").textContent = chatPreferences.glow + "%"; }
+    if(composerMode) composerMode.value = chatPreferences.style;
+    if(enter) enter.checked = chatPreferences.enterToSend !== false;
+    if(suggestions) suggestions.checked = chatPreferences.suggestions !== false;
+    if(autoFocus) autoFocus.checked = chatPreferences.autoFocus !== false;
+    if(contrast) contrast.checked = !!chatPreferences.contrast;
+    if(textScale){ textScale.value = chatPreferences.textScale || 100; document.getElementById("textScaleValue").textContent = (chatPreferences.textScale || 100) + "%"; }
     var memory = document.getElementById("settingsMemoryState");
     if(memory) memory.textContent = currentUser ? "On for this account" : "Available when signed in";
     var sidebarName = document.getElementById("sidebarUserName");
@@ -3181,11 +3340,26 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   document.getElementById("activityToggle").addEventListener("change", function(){ chatPreferences.activity = this.checked; saveChatPreferences(); });
   document.getElementById("webSearchToggle").addEventListener("change", function(){ chatPreferences.webSearch = this.checked; saveChatPreferences(); });
   document.getElementById("reduceMotionToggle").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
+  document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; document.getElementById("reduceMotionToggle").checked = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("glowRange").addEventListener("input", function(){ chatPreferences.glow = Number(this.value); document.getElementById("glowValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
+  document.getElementById("composerModeSelect").addEventListener("change", function(){ chatPreferences.style = this.value; document.getElementById("responseStyle").value = this.value; saveChatPreferences(); syncComposerModes(); });
+  document.getElementById("enterToSendToggle").addEventListener("change", function(){ chatPreferences.enterToSend = this.checked; saveChatPreferences(); });
+  document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "grid" : "none"; saveChatPreferences(); });
+  document.getElementById("autoFocusToggle").addEventListener("change", function(){ chatPreferences.autoFocus = this.checked; saveChatPreferences(); });
+  document.getElementById("contrastToggle").addEventListener("change", function(){ chatPreferences.contrast = this.checked; saveChatPreferences(); applyTheme(); });
+  document.getElementById("textScaleRange").addEventListener("input", function(){ chatPreferences.textScale = Number(this.value); document.getElementById("textScaleValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
   document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.theme = btn.getAttribute("data-theme"); saveChatPreferences(); applyTheme(); }); });
   document.getElementById("settingsUpgradeBtn").addEventListener("click", closeSettings);
   document.getElementById("settingsForgetBtn").addEventListener("click", function(){ document.getElementById("forgetMeBtn").click(); });
   document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); openSettings("chat"); } if(e.key === "Escape") closeSettings(); });
+  document.getElementById("chatSignInBtn").addEventListener("click", function(){ document.getElementById("openSignIn").click(); });
+  document.getElementById("chatSignUpBtn").addEventListener("click", function(){ document.getElementById("openSignUp").click(); });
+  document.getElementById("composerOptionsBtn").addEventListener("click", function(){ openSettings("composer"); });
+  function syncComposerModes(){
+    document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-composer-style") === chatPreferences.style); });
+  }
+  document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.style = btn.getAttribute("data-composer-style"); var style = document.getElementById("responseStyle"); if(style) style.value = chatPreferences.style; var mode = document.getElementById("composerModeSelect"); if(mode) mode.value = chatPreferences.style; saveChatPreferences(); syncComposerModes(); }); });
+  syncComposerModes();
 
   async function getReply(text, fileEntries){
     var fileNames = fileEntries.map(function(e){ return e.name; });
