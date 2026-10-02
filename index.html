@@ -1442,6 +1442,77 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   html.high-contrast body.chat-mode .msg.from-user .msg-bubble{ border-color:var(--accent-3); }
   html.high-contrast body.chat-mode .chat-sidebar,html.high-contrast body.chat-mode .chat-topbar{ border-color:color-mix(in srgb,var(--accent-3) 36%,transparent); }
   @media (max-width:760px){ body.chat-mode .chat-topbar{ padding:0 13px; } body.chat-mode .chat-account-btn{ display:none; } body.chat-mode .chat-scroll{ padding:28px 15px 160px; } body.chat-mode .chat-thread{ gap:27px; } body.chat-mode .msg.from-user .msg-body,body.chat-mode .msg.from-ai .msg-body{ max-width:calc(100% - 45px); } body.chat-mode .chat-inputbar{ padding:8px 12px 16px; } body.chat-mode .composer-label{ display:none; } body.chat-mode .composer-tool{ margin-left:0; } }
+  /* ============================================================
+     V3 — MIDNIGHT BLUE / QUIET WORKSPACE
+     ============================================================ */
+  :root{ --chat-canvas:#070d15; --chat-panel:#0d1825; --chat-panel-2:#102033; --chat-line:rgba(126,169,196,.16); --accent-1:#72c4e7; --accent-2:#194a68; --accent-3:#b7e4f5; --accent-grad:linear-gradient(135deg,#1a4058,#0e2639); --shadow-glow:none; }
+  html[data-theme="ember"]{ --chat-canvas:#080d13; --chat-panel:#0e1721; --chat-panel-2:#122131; --chat-line:rgba(153,180,198,.15); --accent-1:#83b9d2; --accent-2:#23465e; --accent-3:#c2e1ed; --accent-grad:linear-gradient(135deg,#1c3b50,#102534); }
+  html[data-theme="ocean"]{ --chat-canvas:#050b14; --chat-panel:#091626; --chat-panel-2:#0c1d31; --chat-line:rgba(102,163,205,.18); --accent-1:#70c8f2; --accent-2:#123f61; --accent-3:#b9e5fb; --accent-grad:linear-gradient(135deg,#123653,#0a2138); }
+  body.chat-mode{ background:var(--chat-canvas); }
+  body.chat-mode .chat-app{ background:var(--chat-canvas); }
+  body.chat-mode .chat-sidebar{ background:color-mix(in srgb,var(--chat-canvas) 94%,var(--chat-panel)); border-right:1px solid var(--chat-line); backdrop-filter:none; }
+  body.chat-mode .chat-topbar{ background:var(--chat-canvas); border-bottom:1px solid var(--chat-line); backdrop-filter:none; }
+  body.chat-mode .chat-scroll{ background:linear-gradient(180deg,color-mix(in srgb,var(--chat-panel) 22%,transparent),transparent 52%); }
+  body.chat-mode .chat-status-dot,body.chat-mode .response-head i{ box-shadow:none; }
+  body.chat-mode .chat-status-dot{ background:var(--accent-1); }
+  body.chat-mode .response-head i{ background:var(--accent-1); }
+  body.chat-mode .response-head{ color:var(--accent-3); letter-spacing:.1em; }
+  body.chat-mode .thinking-tag{ color:var(--accent-3); }
+  body.chat-mode .msg.from-user .msg-bubble{ background:color-mix(in srgb,var(--accent-2) 72%,var(--chat-panel)); border:0; box-shadow:none; }
+  body.chat-mode .msg.from-user .avatar{ background:var(--chat-panel-2); border:0; }
+  body.chat-mode .msg.from-ai .msg-bubble pre{ box-shadow:none; background:color-mix(in srgb,var(--chat-panel) 70%,#000); }
+  body.chat-mode .composer-toolbar{ border:0; }
+  body.chat-mode .composer-mode,body.chat-mode .composer-tool{ border:0; background:color-mix(in srgb,var(--chat-panel) 72%,transparent); box-shadow:none; color:var(--text-3); }
+  body.chat-mode .composer-mode:hover,body.chat-mode .composer-mode.is-active,body.chat-mode .composer-tool:hover{ border:0; background:var(--chat-panel-2); box-shadow:none; color:var(--text-1); }
+  body.chat-mode .composer-mode span{ color:var(--accent-3); }
+  body.chat-mode .input-shell{ background:var(--chat-panel); border:1px solid var(--chat-line); border-radius:16px; box-shadow:none; }
+  body.chat-mode .input-shell:focus-within{ border-color:color-mix(in srgb,var(--accent-1) 58%,var(--chat-line)); box-shadow:none; }
+  body.chat-mode .send-btn{ background:var(--accent-grad); box-shadow:none; }
+  body.chat-mode .send-btn:hover:not(:disabled){ box-shadow:none; background:var(--chat-panel-2); }
+  body.chat-mode .chat-account-btn,body.chat-mode .chat-icon-action{ border:0; background:var(--chat-panel); box-shadow:none; }
+  body.chat-mode .chat-account-btn:hover,body.chat-mode .chat-icon-action:hover{ border:0; background:var(--chat-panel-2); }
+  body.chat-mode .chat-account-btn.is-primary{ background:var(--accent-grad); color:var(--text-1); }
+  body.chat-mode .smart-pill{ color:var(--accent-3); background:var(--chat-panel); border:0; }
+  body.chat-mode .workspace-mark img{ filter:none; }
+  body.chat-mode .avatar{ box-shadow:none; }
+  body.chat-mode .chat-history button.active-conv{ background:var(--chat-panel); border-left:2px solid var(--accent-1); box-shadow:none; }
+  body.chat-mode .plan-meter{ background:var(--chat-panel); border:1px solid var(--chat-line); box-shadow:none; }
+  body.chat-mode .plan-status-dot{ background:var(--accent-1); box-shadow:none; }
+  body.chat-mode .activity-card{ display:none; }
+  .activity-inline{ display:flex; align-items:center; gap:8px; min-height:22px; color:var(--text-3); font-size:.68rem; line-height:1.3; }
+  .activity-inline .activity-pulse{ width:5px; height:5px; background:var(--accent-1); box-shadow:none; animation:none; flex:none; }
+  .activity-inline .activity-icon{ display:none; }
+  .activity-inline .typing-label{ color:var(--accent-3); font-weight:700; }
+  .activity-inline .activity-detail{ color:var(--text-3); }
+  .history-lock{ padding:12px 9px 4px; color:var(--text-3); }
+  .history-lock strong,.history-lock span{ display:block; }
+  .history-lock strong{ color:var(--text-2); font-size:.73rem; }
+  .history-lock span{ margin-top:5px; font-size:.68rem; line-height:1.45; }
+  .history-lock>div{ display:flex; gap:6px; margin-top:10px; }
+  .history-auth-btn{ border:0; background:var(--chat-panel); color:var(--text-2); border-radius:7px; padding:7px 8px; font-size:.65rem; font-weight:700; }
+  .history-auth-btn.is-primary{ background:var(--accent-grad); color:var(--text-1); }
+  body.is-authenticated .history-lock{ display:none; }
+  body:not(.is-authenticated) #chatHistoryList{ display:none; }
+  body:not(.is-authenticated) #searchChatsBtn{ display:none; }
+  body:not(.is-authenticated) .plan-meter a{ color:var(--accent-3); }
+  .settings-card{ background:var(--chat-panel); border:1px solid var(--chat-line); border-radius:18px; box-shadow:none; backdrop-filter:none; }
+  .settings-orb{ background:var(--accent-grad); box-shadow:none; }
+  .settings-tabs button{ border:0; background:transparent; border-radius:8px; }
+  .settings-tabs button:hover,.settings-tabs button.is-active{ border:0; background:var(--chat-panel-2); box-shadow:none; }
+  .settings-tabs button.is-active span,.settings-head .kicker,.subscription-card .eyebrow-plain{ color:var(--accent-3); }
+  .settings-field input,.settings-field select{ background:var(--chat-canvas); border:1px solid var(--chat-line); border-radius:8px; }
+  .settings-field input:focus,.settings-field select:focus{ border-color:var(--accent-1); box-shadow:none; }
+  .subscription-card{ background:var(--chat-panel-2); border:0; border-radius:12px; }
+  .theme-grid{ grid-template-columns:repeat(2,1fr); }
+  .theme-swatch{ border:0; background:var(--chat-canvas); box-shadow:none; }
+  .theme-swatch.is-active{ border:1px solid var(--accent-1); box-shadow:none; }
+  .theme-swatch[data-theme="ember"] i{ background:linear-gradient(145deg,#1d2d3b,#070d15 70%,#6c9eb7); }
+  .theme-swatch[data-theme="ocean"] i{ background:linear-gradient(145deg,#123653,#050b14 70%,#70c8f2); }
+  .toggle-row input:checked + i{ background:var(--accent-2); border-color:var(--accent-1); }
+  .toggle-row input:checked + i::before{ box-shadow:none; }
+  .settings-danger{ color:var(--accent-3); }
+  .checkout-status.is-error{ color:var(--accent-3); background:var(--chat-panel); border-color:var(--chat-line); }
+  @media (max-width:760px){ .history-lock{ padding-right:2px; } body.chat-mode .chat-topbar{ padding:0 14px; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1622,12 +1693,15 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           New chat <span class="shortcut">⌘ K</span>
         </button>
         <div class="chat-history">
-          <div class="chat-history-head"><div class="chat-history-label">Your chats</div><button class="sidebar-mini-btn" id="searchChatsBtn" aria-label="Search chats">⌕</button></div>
-          <button class="active-conv"><span class="history-icon">✦</span><span>Quarterly churn breakdown</span><small>now</small></button>
-          <button><span class="history-icon">↗</span><span>Rewriting my bio</span><small>2h</small></button>
-          <button><span class="history-icon">○</span><span>Trip plan: Lisbon, 4 days</span><small>yesterday</small></button>
-          <button><span class="history-icon">⌁</span><span>Explaining a lease clause</span><small>Mon</small></button>
-          <button><span class="history-icon">✧</span><span>Product name brainstorm</span><small>Sun</small></button>
+          <div class="chat-history-head"><div class="chat-history-label">Your chats</div><button class="sidebar-mini-btn" id="searchChatsBtn" aria-label="Search chats" data-history-private="1">⌕</button></div>
+          <div class="history-lock" id="historyLock"><strong>Private chat history</strong><span>Sign in or create an account to save and revisit conversations.</span><div><button class="history-auth-btn" id="historySignInBtn">Sign in</button><button class="history-auth-btn is-primary" id="historySignUpBtn">Create account</button></div></div>
+          <div id="chatHistoryList">
+            <button class="active-conv" data-history-private="1"><span class="history-icon">✦</span><span>Quarterly churn breakdown</span><small>now</small></button>
+            <button data-history-private="1"><span class="history-icon">↗</span><span>Rewriting my bio</span><small>2h</small></button>
+            <button data-history-private="1"><span class="history-icon">○</span><span>Trip plan: Lisbon, 4 days</span><small>yesterday</small></button>
+            <button data-history-private="1"><span class="history-icon">⌁</span><span>Explaining a lease clause</span><small>Mon</small></button>
+            <button data-history-private="1"><span class="history-icon">✧</span><span>Product name brainstorm</span><small>Sun</small></button>
+          </div>
         </div>
         <div class="sidebar-bottom">
           <div class="plan-meter">
@@ -1690,12 +1764,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 
         <div class="chat-inputbar">
           <div class="composer-toolbar" aria-label="Chat modes">
-            <span class="composer-label"><i></i>Shape the reply</span>
+            <span class="composer-label"><i></i>Reply mode</span>
             <button class="composer-mode is-active" data-composer-style="balanced"><span>✦</span>Balanced</button>
             <button class="composer-mode" data-composer-style="concise"><span>↯</span>Quick</button>
             <button class="composer-mode" data-composer-style="deep"><span>◉</span>Deep dive</button>
             <button class="composer-mode" data-composer-style="technical"><span>&lt;/&gt;</span>Code</button>
-            <button class="composer-tool" id="composerOptionsBtn" title="More composer settings">•••</button>
+            <button class="composer-tool" id="composerOptionsBtn" title="Chat settings">⚙</button>
           </div>
           <div class="input-shell">
             <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
@@ -2314,13 +2388,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         </section>
         <section class="settings-panel" data-settings-panel="appearance">
           <div class="settings-panel-title"><div><h4>Appearance</h4><p>Pick a backdrop and accent that matches your headspace.</p></div></div>
-          <div class="setting-group"><span class="setting-label">Atmosphere</span><div class="theme-grid">
-            <button class="theme-swatch is-active" data-theme="ember"><i></i><span>Ember</span></button>
-            <button class="theme-swatch" data-theme="ocean"><i></i><span>Ocean</span></button>
-            <button class="theme-swatch" data-theme="violet"><i></i><span>Violet</span></button>
-            <button class="theme-swatch" data-theme="moss"><i></i><span>Moss</span></button>
+          <div class="setting-group"><span class="setting-label">Color direction</span><div class="theme-grid">
+            <button class="theme-swatch is-active" data-theme="ember"><i></i><span>Original</span></button>
+            <button class="theme-swatch" data-theme="ocean"><i></i><span>Midnight blue</span></button>
           </div></div>
-          <div class="setting-group"><span class="setting-label">Glow intensity</span><div class="range-row"><input id="glowRange" type="range" min="0" max="100" value="65"><output id="glowValue">65%</output></div></div>
           <label class="toggle-row"><span><strong>Reduce motion</strong><small>Keep transitions subtle and still.</small></span><input id="reduceMotionToggle" type="checkbox"><i></i></label>
         </section>
         <section class="settings-panel" data-settings-panel="chat">
@@ -2512,6 +2583,11 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 
   document.querySelectorAll(".checkout-btn").forEach(function(btn){
     btn.addEventListener("click", async function(){
+      if(!currentUser){
+        showToast("Sign in or create an account before choosing a paid plan.");
+        openModal("signin");
+        return;
+      }
       var plan = btn.getAttribute("data-plan");
       var originalText = btn.textContent;
       btn.textContent = "Loading checkout…";
@@ -2667,6 +2743,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var signUpBtn = document.getElementById("openSignUp");
     var existingChip = document.getElementById("userChip");
     if(existingChip){ existingChip.remove(); }
+    document.body.classList.toggle("is-authenticated", !!currentUser);
+    var privateHistory = document.getElementById("chatHistoryList");
+    if(!currentUser && privateHistory){ privateHistory.innerHTML = ""; }
 
     if(currentUser){
       signInBtn.style.display = "none";
@@ -2682,6 +2761,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         if(supabaseReady){ await supabaseClient.auth.signOut(); }
         else { setLocalSession(null); currentUser = null; currentSession = null; renderAuthState(); }
         showToast("Signed out.");
+        clearPrivateChatView();
         refreshOwnerConsole();
       });
     } else {
@@ -2884,6 +2964,16 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   var fileInput = document.getElementById("fileInput");
   var attachedFiles = [];
   var conversationHistory = []; // { role: "user" | "assistant", content: string } — sent to the real backend for context
+
+  function clearPrivateChatView(){
+    conversationHistory = [];
+    if(chatThread){
+      chatThread.innerHTML = "";
+      addMessage("ai", "You're in a private preview. Sign in or create an account to keep conversations in your workspace.", "elora · private preview");
+    }
+    if(chatInput){ chatInput.value = ""; autoGrow(); }
+    if(chatSuggestions){ chatSuggestions.style.display = "grid"; }
+  }
 
   function autoGrow(){
     chatInput.style.height = "auto";
@@ -3227,6 +3317,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         "Happy to help — say the word if something else comes up."
       ]);
     }
+    if(/\b(fetch|axios|request|api|production|timeout|hangs?)\b/.test(lower)){
+      return "Start with the failure boundary, not the UI: 1) add an explicit timeout with AbortController; 2) log the request URL, method, status, and elapsed time; 3) verify the production origin is allowed by CORS; 4) inspect DNS, TLS, proxy, and serverless function timeouts; 5) confirm the server sends a response on every error path. If you share the smallest failing request and its network/error output, I can turn this into a precise patch.";
+    }
+    if(/\b(build|create|develop|implement|automate|make me|generate)\b/.test(lower)){
+      return "I can build this in a working first slice. I’ll start by defining the smallest usable version, choose sensible defaults for anything unspecified, then provide the file structure, implementation, and run instructions. Tell me the target stack or paste the current project files; if you do not have a preference, I’ll choose a stable, maintainable default and explain the choice.";
+    }
     if(/\b(write|draft|compose|rewrite|edit|shorten|tighten)\b/.test(lower)){
       return preSentence(preambles) + " give me the raw text (or the file), and tell me the tone you want — sharper, warmer, more formal — and I'll rewrite it" + (topic ? " with a real focus on the " + escapeHtml(topic) + " part" : "") + " rather than a generic pass. " + pick(followUps);
     }
@@ -3267,10 +3363,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   var inputFoot = document.getElementById("inputFoot");
   var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, theme:"ember", glow:65, reduceMotion:false, enterToSend:true, suggestions:true, autoFocus:true, textScale:100, contrast:false };
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
+  if(["ember","ocean"].indexOf(chatPreferences.theme) === -1) chatPreferences.theme = "ocean";
+  chatPreferences.glow = 0;
   function saveChatPreferences(){ try { localStorage.setItem("elorahub_chat_preferences", JSON.stringify(chatPreferences)); } catch(e){} }
   function applyTheme(){
     document.documentElement.setAttribute("data-theme", chatPreferences.theme || "ember");
-    document.documentElement.style.setProperty("--user-glow", (Number(chatPreferences.glow || 65) / 100).toFixed(2));
+    document.documentElement.style.setProperty("--user-glow", "0");
     document.documentElement.style.setProperty("--chat-text-size", ((Number(chatPreferences.textScale || 100) / 100) + "rem"));
     document.documentElement.classList.toggle("reduce-motion", !!chatPreferences.reduceMotion);
     document.documentElement.classList.toggle("high-contrast", !!chatPreferences.contrast);
@@ -3325,6 +3423,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   function closeSettings(){ settingsModal.classList.remove("is-open"); }
   document.getElementById("openSettingsBtn").addEventListener("click", function(){ openSettings("profile"); });
   document.getElementById("openChatOptionsBtn").addEventListener("click", function(){ openSettings("chat"); });
+  document.getElementById("historySignInBtn").addEventListener("click", function(){ openModal("signin"); });
+  document.getElementById("historySignUpBtn").addEventListener("click", function(){ openModal("signup"); });
   document.getElementById("settingsClose").addEventListener("click", closeSettings);
   settingsModal.addEventListener("click", function(e){ if(e.target === settingsModal) closeSettings(); });
   document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.addEventListener("click", function(){ openSettings(btn.getAttribute("data-settings-tab")); }); });
@@ -3341,7 +3441,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   document.getElementById("webSearchToggle").addEventListener("change", function(){ chatPreferences.webSearch = this.checked; saveChatPreferences(); });
   document.getElementById("reduceMotionToggle").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; document.getElementById("reduceMotionToggle").checked = this.checked; saveChatPreferences(); applyTheme(); });
-  document.getElementById("glowRange").addEventListener("input", function(){ chatPreferences.glow = Number(this.value); document.getElementById("glowValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
   document.getElementById("composerModeSelect").addEventListener("change", function(){ chatPreferences.style = this.value; document.getElementById("responseStyle").value = this.value; saveChatPreferences(); syncComposerModes(); });
   document.getElementById("enterToSendToggle").addEventListener("change", function(){ chatPreferences.enterToSend = this.checked; saveChatPreferences(); });
   document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "grid" : "none"; saveChatPreferences(); });
@@ -3439,7 +3538,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var typingRow = document.createElement("div");
     typingRow.className = "msg from-ai";
     typingRow.innerHTML = '<div class="avatar avatar-thinking"><img src="' + LOGO_SRC + '" alt="elora"></div>' +
-      '<div class="msg-body"><div class="activity-tray"><div class="activity-card"><div class="activity-icon">⌁</div><div class="activity-copy"><strong class="typing-label">Reading your message</strong><span class="activity-detail">Looking for intent, context, and the useful next step.</span></div><span class="activity-pulse"></span></div></div></div>';
+      '<div class="msg-body"><div class="activity-inline"><span class="activity-pulse"></span><span class="typing-label">Thinking</span><span class="activity-detail">Working through the useful next step.</span></div></div>';
     chatThread.appendChild(typingRow);
     scrollToBottom();
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
