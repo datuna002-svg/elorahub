@@ -1335,13 +1335,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .subscription-card .eyebrow-plain{ margin:0; font-size:.66rem; color:var(--accent-3); }
   .plan-status-dot{ width:9px; height:9px; border-radius:50%; background:#75d790; box-shadow:0 0 12px rgba(117,215,144,.8); }
   .setting-group{ margin-top:20px; }
-  .theme-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:9px; }
-  .theme-swatch{ border:1px solid var(--line); border-radius:11px; padding:7px; background:rgba(255,255,255,.03); color:var(--text-3); font-size:.68rem; }
-  .theme-swatch i{ display:block; height:43px; border-radius:7px; margin-bottom:6px; background:linear-gradient(145deg,#31363c,#050608 65%,#ff526a); }
-  .theme-swatch[data-theme="ocean"] i{ background:linear-gradient(145deg,#273f4d,#05090d 65%,#3ba4c8); }
-  .theme-swatch[data-theme="violet"] i{ background:linear-gradient(145deg,#3c3150,#09070e 65%,#a96cff); }
-  .theme-swatch[data-theme="moss"] i{ background:linear-gradient(145deg,#314739,#070b08 65%,#9ac56b); }
-  .theme-swatch.is-active{ border-color:rgba(255,145,132,.58); color:var(--text-1); box-shadow:0 0 18px rgba(255,82,106,.14); }
   .range-row{ display:flex; align-items:center; gap:12px; }
   .range-row input{ flex:1; accent-color:var(--accent-1); }
   .range-row output{ min-width:38px; color:var(--text-2); font-size:.75rem; text-align:right; }
@@ -1354,12 +1347,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .toggle-row i::before{ content:""; display:block; width:13px; height:13px; border-radius:50%; background:var(--text-3); transition:transform .25s var(--ease),background .25s var(--ease); }
   .toggle-row input:checked + i{ background:rgba(255,82,106,.45); border-color:rgba(255,145,132,.50); }
   .toggle-row input:checked + i::before{ transform:translateX(16px); background:#fff; box-shadow:0 0 10px rgba(255,255,255,.7); }
-  [data-theme="ocean"]{ --accent-1:#42c8f5; --accent-2:#167ea4; --accent-3:#9ceaff; --accent-grad:linear-gradient(135deg,#a1efff,#42c8f5 34%,#167ea4 72%,#0b3d5b); }
-  [data-theme="violet"]{ --accent-1:#a96cff; --accent-2:#623ab4; --accent-3:#d9beff; --accent-grad:linear-gradient(135deg,#e4c7ff,#a96cff 34%,#623ab4 72%,#351d6c); }
-  [data-theme="moss"]{ --accent-1:#9ac56b; --accent-2:#4c7537; --accent-3:#d5f2a7; --accent-grad:linear-gradient(135deg,#e5ffc0,#9ac56b 34%,#4c7537 72%,#243b20); }
-  [data-theme="ocean"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(48,88,108,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(20,65,84,.48),transparent 72%),linear-gradient(135deg,#0f1b22 0%,#070c10 48%,#030506 100%); }
-  [data-theme="violet"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(77,57,104,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(48,35,75,.48),transparent 72%),linear-gradient(135deg,#17121e 0%,#0a080e 48%,#030305 100%); }
-  [data-theme="moss"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(57,86,55,.38),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(34,65,43,.44),transparent 72%),linear-gradient(135deg,#111b15 0%,#080d0a 48%,#030504 100%); }
   @media (max-width:760px){ .settings-card{ padding:22px; border-radius:20px; } .settings-layout{ grid-template-columns:1fr; gap:16px; } .settings-tabs{ display:grid; grid-template-columns:repeat(2,1fr); } .settings-tabs button{ justify-content:center; } .chat-top-action{ display:none; } .subscription-card{ align-items:flex-start; flex-direction:column; } .theme-grid{ grid-template-columns:repeat(2,1fr); } }
 
   /* Full-screen chat / response atelier */
@@ -1420,15 +1407,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .chat-account-btn:hover,.chat-icon-action:hover{ color:var(--text-1); border-color:color-mix(in srgb,var(--accent-1) 55%,transparent); background:color-mix(in srgb,var(--accent-1) 10%,var(--chat-panel)); }
   .chat-account-btn.is-primary{ color:#fff; border-color:transparent; background:var(--accent-grad); box-shadow:0 7px 18px color-mix(in srgb,var(--accent-1) 24%,transparent); }
   .chat-icon-action{ width:33px; height:33px; padding:0; display:inline-flex; align-items:center; justify-content:center; font-size:.9rem; }
-  html[data-theme="ocean"]{ --accent-1:#4dd7ff; --accent-2:#126486; --accent-3:#b8f2ff; --accent-grad:linear-gradient(135deg,#b8f2ff 0%,#4dd7ff 34%,#126486 74%,#092b3a 100%); --chat-canvas:#061116; --chat-panel:#0e2028; --chat-line:rgba(111,220,250,.18); }
-  html[data-theme="violet"]{ --accent-1:#b27aff; --accent-2:#6337a5; --accent-3:#e1caff; --accent-grad:linear-gradient(135deg,#ead9ff 0%,#b27aff 34%,#6337a5 74%,#281342 100%); --chat-canvas:#0d0916; --chat-panel:#1c122b; --chat-line:rgba(196,153,255,.18); }
-  html[data-theme="moss"]{ --accent-1:#a6d86d; --accent-2:#4a7837; --accent-3:#e0f7b8; --accent-grad:linear-gradient(135deg,#f0ffd0 0%,#a6d86d 34%,#4a7837 74%,#1b321b 100%); --chat-canvas:#08110b; --chat-panel:#142218; --chat-line:rgba(173,224,119,.18); }
-  html[data-theme="ember"]{ --chat-canvas:#090b0e; --chat-panel:#151b20; --chat-line:rgba(218,230,238,.13); }
-  html[data-theme="ocean"] body,html[data-theme="violet"] body,html[data-theme="moss"] body{ background:var(--chat-canvas); }
-  html[data-theme="ocean"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(27,96,120,.48),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(15,71,94,.48),transparent 72%),linear-gradient(135deg,#0d222b 0%,#061116 48%,#020506 100%); }
-  html[data-theme="violet"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(91,56,126,.45),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(59,37,94,.48),transparent 72%),linear-gradient(135deg,#1c1328 0%,#0d0916 48%,#030205 100%); }
-  html[data-theme="moss"] .atmosphere{ background:radial-gradient(ellipse 65% 55% at 8% 8%,rgba(55,96,50,.42),transparent 70%),radial-gradient(ellipse 55% 55% at 92% 18%,rgba(35,77,42,.45),transparent 72%),linear-gradient(135deg,#132118 0%,#08110b 48%,#020503 100%); }
-  html[data-theme="ocean"] .brand img,html[data-theme="violet"] .brand img,html[data-theme="moss"] .brand img{ filter:drop-shadow(0 0 18px color-mix(in srgb,var(--accent-1) 55%,transparent)); }
   body.chat-mode .chat-history button.active-conv{ background:linear-gradient(90deg,color-mix(in srgb,var(--accent-1) 14%,transparent),rgba(255,255,255,.035)); border-left-color:var(--accent-1); box-shadow:0 0 24px color-mix(in srgb,var(--accent-1) 10%,transparent); }
   body.chat-mode .plan-meter{ background:linear-gradient(145deg,color-mix(in srgb,var(--accent-1) 11%,transparent),rgba(255,255,255,.035)); border-color:color-mix(in srgb,var(--accent-1) 25%,transparent); box-shadow:0 0 30px color-mix(in srgb,var(--accent-1) 8%,transparent); }
   body.chat-mode .smart-pill{ color:var(--accent-3); background:color-mix(in srgb,var(--accent-1) 10%,transparent); border-color:color-mix(in srgb,var(--accent-1) 30%,transparent); }
@@ -1436,7 +1414,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   body.chat-mode .activity-icon{ color:var(--accent-3); background:color-mix(in srgb,var(--accent-1) 14%,transparent); }
   .settings-tabs button.is-active{ color:var(--text-1); background:color-mix(in srgb,var(--accent-1) 13%,transparent); border-color:color-mix(in srgb,var(--accent-1) 28%,transparent); box-shadow:0 0 22px color-mix(in srgb,var(--accent-1) 8%,transparent); }
   .settings-danger{ color:var(--accent-3); }
-  html[data-theme="ocean"] .settings-card,html[data-theme="violet"] .settings-card,html[data-theme="moss"] .settings-card{ box-shadow:0 40px 120px rgba(0,0,0,.75),0 0 48px color-mix(in srgb,var(--accent-1) 12%,transparent); }
   html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{ animation-duration:.001ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.001ms!important; }
   html.high-contrast body.chat-mode .msg.from-ai .msg-bubble{ color:#fff; }
   html.high-contrast body.chat-mode .msg.from-user .msg-bubble{ border-color:var(--accent-3); }
@@ -1445,9 +1422,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   /* ============================================================
      V3 — MIDNIGHT BLUE / QUIET WORKSPACE
      ============================================================ */
-  :root{ --chat-canvas:#070d15; --chat-panel:#0d1825; --chat-panel-2:#102033; --chat-line:rgba(126,169,196,.16); --accent-1:#72c4e7; --accent-2:#194a68; --accent-3:#b7e4f5; --accent-grad:linear-gradient(135deg,#1a4058,#0e2639); --shadow-glow:none; }
-  html[data-theme="ember"]{ --chat-canvas:#080d13; --chat-panel:#0e1721; --chat-panel-2:#122131; --chat-line:rgba(153,180,198,.15); --accent-1:#83b9d2; --accent-2:#23465e; --accent-3:#c2e1ed; --accent-grad:linear-gradient(135deg,#1c3b50,#102534); }
-  html[data-theme="ocean"]{ --chat-canvas:#050b14; --chat-panel:#091626; --chat-panel-2:#0c1d31; --chat-line:rgba(102,163,205,.18); --accent-1:#70c8f2; --accent-2:#123f61; --accent-3:#b9e5fb; --accent-grad:linear-gradient(135deg,#123653,#0a2138); }
+  :root{ --chat-canvas:#111213; --chat-panel:#191a1c; --chat-panel-2:#222427; --chat-line:rgba(208,211,215,.14); --accent-1:#aeb3b8; --accent-2:#41464c; --accent-3:#e0e2e4; --accent-grad:linear-gradient(135deg,#3a3e43,#24272b); --shadow-glow:none; }
+  html[data-theme="ember"]{ --chat-canvas:#111213; --chat-panel:#191a1c; --chat-panel-2:#222427; --chat-line:rgba(208,211,215,.14); --accent-1:#aeb3b8; --accent-2:#41464c; --accent-3:#e0e2e4; --accent-grad:linear-gradient(135deg,#3a3e43,#24272b); }
   body.chat-mode{ background:var(--chat-canvas); }
   body.chat-mode .chat-app{ background:var(--chat-canvas); }
   body.chat-mode .chat-sidebar{ background:color-mix(in srgb,var(--chat-canvas) 94%,var(--chat-panel)); border-right:1px solid var(--chat-line); backdrop-filter:none; }
@@ -1504,10 +1480,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .settings-field input:focus,.settings-field select:focus{ border-color:var(--accent-1); box-shadow:none; }
   .subscription-card{ background:var(--chat-panel-2); border:0; border-radius:12px; }
   .theme-grid{ grid-template-columns:repeat(2,1fr); }
-  .theme-swatch{ border:0; background:var(--chat-canvas); box-shadow:none; }
-  .theme-swatch.is-active{ border:1px solid var(--accent-1); box-shadow:none; }
-  .theme-swatch[data-theme="ember"] i{ background:linear-gradient(145deg,#1d2d3b,#070d15 70%,#6c9eb7); }
-  .theme-swatch[data-theme="ocean"] i{ background:linear-gradient(145deg,#123653,#050b14 70%,#70c8f2); }
   .toggle-row input:checked + i{ background:var(--accent-2); border-color:var(--accent-1); }
   .toggle-row input:checked + i::before{ box-shadow:none; }
   .settings-danger{ color:var(--accent-3); }
@@ -2367,7 +2339,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       <nav class="settings-tabs" aria-label="Settings sections">
         <button class="is-active" data-settings-tab="profile"><span>◉</span>Profile</button>
         <button data-settings-tab="subscription"><span>◇</span>Subscription</button>
-        <button data-settings-tab="appearance"><span>◌</span>Appearance</button>
         <button data-settings-tab="chat"><span>✦</span>Chat behavior</button>
         <button data-settings-tab="composer"><span>↗</span>Composer</button>
         <button data-settings-tab="accessibility"><span>◌</span>Accessibility</button>
@@ -2385,14 +2356,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div class="subscription-card"><div><span class="eyebrow-plain">Current workspace</span><h4 id="settingsPlanName">Free plan</h4><p id="settingsPlanCopy">Good for trying elora with limited daily messages.</p></div><button class="btn btn-primary" data-nav="pricing" id="settingsUpgradeBtn">View plans</button></div>
           <div class="settings-info-row"><span>Billing &amp; receipts</span><strong>Managed securely by Paddle</strong></div>
           <div class="settings-info-row"><span>Payment details</span><strong>Never stored by elorahub</strong></div>
-        </section>
-        <section class="settings-panel" data-settings-panel="appearance">
-          <div class="settings-panel-title"><div><h4>Appearance</h4><p>Pick a backdrop and accent that matches your headspace.</p></div></div>
-          <div class="setting-group"><span class="setting-label">Color direction</span><div class="theme-grid">
-            <button class="theme-swatch is-active" data-theme="ember"><i></i><span>Original</span></button>
-            <button class="theme-swatch" data-theme="ocean"><i></i><span>Midnight blue</span></button>
-          </div></div>
-          <label class="toggle-row"><span><strong>Reduce motion</strong><small>Keep transitions subtle and still.</small></span><input id="reduceMotionToggle" type="checkbox"><i></i></label>
         </section>
         <section class="settings-panel" data-settings-panel="chat">
           <div class="settings-panel-title"><div><h4>Chat behavior</h4><p>Give elora a clearer brief before it starts thinking.</p></div></div>
@@ -3321,7 +3284,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       return "Start with the failure boundary, not the UI: 1) add an explicit timeout with AbortController; 2) log the request URL, method, status, and elapsed time; 3) verify the production origin is allowed by CORS; 4) inspect DNS, TLS, proxy, and serverless function timeouts; 5) confirm the server sends a response on every error path. If you share the smallest failing request and its network/error output, I can turn this into a precise patch.";
     }
     if(/\b(build|create|develop|implement|automate|make me|generate)\b/.test(lower)){
-      return "I can build this in a working first slice. I’ll start by defining the smallest usable version, choose sensible defaults for anything unspecified, then provide the file structure, implementation, and run instructions. Tell me the target stack or paste the current project files; if you do not have a preference, I’ll choose a stable, maintainable default and explain the choice.";
+      return "The real elora model is required for this request because generating a complete implementation needs a server-side AI provider. The chat endpoint is wired to use the configured provider and will return the actual implementation once LLM_API_KEY or OPENAI_API_KEY is present in the deployment environment.";
     }
     if(/\b(write|draft|compose|rewrite|edit|shorten|tighten)\b/.test(lower)){
       return preSentence(preambles) + " give me the raw text (or the file), and tell me the tone you want — sharper, warmer, more formal — and I'll rewrite it" + (topic ? " with a real focus on the " + escapeHtml(topic) + " part" : "") + " rather than a generic pass. " + pick(followUps);
@@ -3361,18 +3324,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   /* ---------------- Workspace preferences + settings ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, theme:"ember", glow:65, reduceMotion:false, enterToSend:true, suggestions:true, autoFocus:true, textScale:100, contrast:false };
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, reduceMotion:false, enterToSend:true, suggestions:true, autoFocus:true, textScale:100, contrast:false };
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
-  if(["ember","ocean"].indexOf(chatPreferences.theme) === -1) chatPreferences.theme = "ocean";
-  chatPreferences.glow = 0;
   function saveChatPreferences(){ try { localStorage.setItem("elorahub_chat_preferences", JSON.stringify(chatPreferences)); } catch(e){} }
   function applyTheme(){
-    document.documentElement.setAttribute("data-theme", chatPreferences.theme || "ember");
-    document.documentElement.style.setProperty("--user-glow", "0");
+    document.documentElement.setAttribute("data-theme", "ember");
     document.documentElement.style.setProperty("--chat-text-size", ((Number(chatPreferences.textScale || 100) / 100) + "rem"));
     document.documentElement.classList.toggle("reduce-motion", !!chatPreferences.reduceMotion);
     document.documentElement.classList.toggle("high-contrast", !!chatPreferences.contrast);
-    document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-theme") === chatPreferences.theme); });
   }
   applyTheme();
 
@@ -3439,15 +3398,13 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   document.getElementById("responseTone").addEventListener("change", function(){ chatPreferences.tone = this.value; saveChatPreferences(); });
   document.getElementById("activityToggle").addEventListener("change", function(){ chatPreferences.activity = this.checked; saveChatPreferences(); });
   document.getElementById("webSearchToggle").addEventListener("change", function(){ chatPreferences.webSearch = this.checked; saveChatPreferences(); });
-  document.getElementById("reduceMotionToggle").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
-  document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; document.getElementById("reduceMotionToggle").checked = this.checked; saveChatPreferences(); applyTheme(); });
+  document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("composerModeSelect").addEventListener("change", function(){ chatPreferences.style = this.value; document.getElementById("responseStyle").value = this.value; saveChatPreferences(); syncComposerModes(); });
   document.getElementById("enterToSendToggle").addEventListener("change", function(){ chatPreferences.enterToSend = this.checked; saveChatPreferences(); });
   document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "grid" : "none"; saveChatPreferences(); });
   document.getElementById("autoFocusToggle").addEventListener("change", function(){ chatPreferences.autoFocus = this.checked; saveChatPreferences(); });
   document.getElementById("contrastToggle").addEventListener("change", function(){ chatPreferences.contrast = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("textScaleRange").addEventListener("input", function(){ chatPreferences.textScale = Number(this.value); document.getElementById("textScaleValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
-  document.querySelectorAll(".theme-swatch").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.theme = btn.getAttribute("data-theme"); saveChatPreferences(); applyTheme(); }); });
   document.getElementById("settingsUpgradeBtn").addEventListener("click", closeSettings);
   document.getElementById("settingsForgetBtn").addEventListener("click", function(){ document.getElementById("forgetMeBtn").click(); });
   document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); openSettings("chat"); } if(e.key === "Escape") closeSettings(); });
@@ -3494,7 +3451,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         var limitData = await res.json();
         return { text: limitData.message || "You've hit today's limit — upgrade for more.", real: false };
       }
-      if(!res.ok){ throw new Error("backend responded with " + res.status); }
+      if(!res.ok){
+        var failure = await res.json().catch(function(){ return {}; });
+        return { text: failure.message || "The elora AI service is unavailable. Add LLM_API_KEY or OPENAI_API_KEY to the deployment environment, redeploy, and try again.", real: false, serviceError: true };
+      }
 
       var data = await res.json();
       if(data.unlimited && inputFoot){
@@ -3504,9 +3464,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       }
       return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null };
     } catch(err){
-      // No backend deployed yet, or it's briefly unreachable — fall back to the
-      // local simulation so the chat still feels alive instead of breaking.
-      return { text: generateReply(text, fileNames), real: false };
+      return { text: "The elora AI service could not be reached. This chat needs its server-side model provider connected before it can generate a real answer.", real: false, serviceError: true };
     }
   }
 

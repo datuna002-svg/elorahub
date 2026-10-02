@@ -78,17 +78,18 @@ function buildProviderConfig(providerName, hasImages) {
       label: "Gemini",
     };
   }
-  const textModel = process.env.LLM_MODEL || "openai/gpt-oss-120b";
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  const textModel = process.env.LLM_MODEL || (hasOpenAI ? process.env.OPENAI_MODEL || "gpt-4o-mini" : "openai/gpt-oss-120b");
   // Vision model — used automatically whenever an image is attached.
   // Groq's exact vision model ID has changed before; if this 404s, check
   // console.groq.com/docs/vision for the current one and set
   // LLM_VISION_MODEL to override without touching code.
-  const visionModel = process.env.LLM_VISION_MODEL || "qwen/qwen3.8-27b";
+  const visionModel = process.env.LLM_VISION_MODEL || (hasOpenAI ? process.env.OPENAI_VISION_MODEL || textModel : "qwen/qwen3.8-27b");
   return {
-    endpointUrl: process.env.LLM_ENDPOINT_URL || "https://api.groq.com/openai/v1/chat/completions",
-    apiKey: process.env.LLM_API_KEY,
+    endpointUrl: process.env.LLM_ENDPOINT_URL || (hasOpenAI ? process.env.OPENAI_API_BASE || "https://api.openai.com/v1/chat/completions" : "https://api.groq.com/openai/v1/chat/completions"),
+    apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
     model: hasImages ? visionModel : textModel,
-    label: "Groq",
+    label: hasOpenAI && !process.env.LLM_API_KEY ? "OpenAI" : "Groq",
   };
 }
 
@@ -105,7 +106,7 @@ async function callProvider(providerName, hasImages, finalMessages, systemPrompt
       body: JSON.stringify({
         model: cfg.model,
         messages: [{ role: "system", content: systemPrompt || SYSTEM_PROMPT }, ...finalMessages],
-        max_tokens: maxTokens || 2048,
+        max_tokens: maxTokens || 4096,
         temperature: temperature != null ? temperature : 0.3,
       }),
     });
@@ -461,7 +462,7 @@ export default async function handler(req, res) {
   const primary = safeProvider;
   const fallbackName = primary === "gemini" ? "groq" : "gemini";
 
-  let result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt, 2048, 0.3);
+  let result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt, 4096, 0.3);
 
   if (!result.ok && result.configured && isTransient(result.status)) {
     await new Promise((r) => setTimeout(r, 600));
@@ -495,9 +496,14 @@ export default async function handler(req, res) {
       "chat",
       `Both providers failed. Last: ${result.label} returned ${result.status}: ${String(result.errBody).slice(0, 300)}`
     );
+    const providerMessage = result.status === 401 || result.status === 403
+      ? "The AI provider rejected its credentials. Add a valid LLM_API_KEY or OPENAI_API_KEY in the deployment environment and redeploy."
+      : result.status === 404
+        ? "The AI model or endpoint was not found. Check LLM_ENDPOINT_URL and LLM_MODEL in the deployment environment."
+        : "elora couldn't reach a configured AI provider just now. Check the provider key and deployment logs, then try again.";
     return res.status(502).json({
       error: "model_error",
-      message: "elora couldn't reach any model just now — it's under heavy load. Try again in a moment.",
+      message: providerMessage,
     });
   }
 
