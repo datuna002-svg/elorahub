@@ -1460,16 +1460,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .activity-inline .activity-icon{ display:none; }
   .activity-inline .typing-label{ color:var(--accent-3); font-weight:700; }
   .activity-inline .activity-detail{ color:var(--text-3); }
-  .history-lock{ padding:12px 9px 4px; color:var(--text-3); }
-  .history-lock strong,.history-lock span{ display:block; }
-  .history-lock strong{ color:var(--text-2); font-size:.73rem; }
-  .history-lock span{ margin-top:5px; font-size:.68rem; line-height:1.45; }
-  .history-lock>div{ display:flex; gap:6px; margin-top:10px; }
-  .history-auth-btn{ border:0; background:var(--chat-panel); color:var(--text-2); border-radius:7px; padding:7px 8px; font-size:.65rem; font-weight:700; }
-  .history-auth-btn.is-primary{ background:var(--accent-grad); color:var(--text-1); }
-  body.is-authenticated .history-lock{ display:none; }
-  body:not(.is-authenticated) #chatHistoryList{ display:none; }
-  body:not(.is-authenticated) #searchChatsBtn{ display:none; }
   body:not(.is-authenticated) .plan-meter a{ color:var(--accent-3); }
   .settings-card{ background:var(--chat-panel); border:1px solid var(--chat-line); border-radius:18px; box-shadow:none; backdrop-filter:none; }
   .settings-orb{ background:var(--accent-grad); box-shadow:none; }
@@ -1504,8 +1494,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   body.chat-mode .input-foot{ width:min(100%,900px); margin-inline:auto; line-height:1.45; }
   body.chat-mode .chat-icon-action,body.chat-mode .chat-mobile-toggle{ min-width:38px; min-height:38px; }
   body.chat-mode :is(button,a,[tabindex="0"]):focus-visible{ outline:2px solid var(--accent-3); outline-offset:3px; }
-  body.chat-mode .history-lock .history-auth-btn{ display:inline-flex; align-items:center; justify-content:center; width:max-content; min-height:32px; padding:7px 9px; flex:none; font-size:.72rem; white-space:nowrap; overflow:visible; text-overflow:clip; }
-  body.chat-mode .history-lock>div{ flex-wrap:wrap; }
   .sidebar-scrim{ display:none; }
   @media (max-width:980px){
     body.chat-mode .chat-sidebar{ top:0; bottom:0; width:min(84vw,320px); height:100dvh; padding-top:max(20px,env(safe-area-inset-top)); z-index:151; }
@@ -1536,6 +1524,48 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     body.chat-mode .smart-pill{ display:none; }
   }
   @media (prefers-reduced-motion:reduce){ body.chat-mode .sidebar-scrim{ transition:none; } }
+  /* EloraHub-native workspace: familiar chat patterns, original brand expression. */
+  body.chat-mode .chat-sidebar{ background:#111113; border-right-color:rgba(255,255,255,.08); }
+  body.chat-mode .workspace-mark{ padding:1px 7px 20px; }
+  body.chat-mode .workspace-mark img{ border-radius:11px; }
+  body.chat-mode .chat-new{ min-height:46px; padding:11px 12px; border-radius:11px; background:#242225; background-image:none; animation:none; border:1px solid rgba(255,103,112,.26); box-shadow:none; color:var(--text-1); }
+  body.chat-mode .chat-new:hover{ filter:none; background:#2b282b; border-color:rgba(255,103,112,.48); }
+  body.chat-mode .chat-search{ display:flex; align-items:center; gap:9px; min-height:40px; margin-top:12px; padding:0 11px; border:1px solid rgba(255,255,255,.09); border-radius:10px; background:rgba(255,255,255,.025); color:var(--text-3); }
+  body.chat-mode .chat-search:focus-within{ border-color:rgba(255,103,112,.55); box-shadow:0 0 0 3px rgba(255,103,112,.09); }
+  body.chat-mode .chat-search svg{ width:15px; height:15px; flex:none; }
+  body.chat-mode .chat-search input{ width:100%; min-width:0; border:0; outline:0; background:transparent; color:var(--text-1); font:inherit; font-size:.78rem; }
+  body.chat-mode .chat-search input::placeholder{ color:var(--text-3); }
+  body.chat-mode .chat-history{ margin-top:25px; gap:7px; }
+  body.chat-mode .chat-history-head{ padding:0 7px; margin-bottom:2px; }
+  body.chat-mode .chat-history-label{ color:var(--text-2); font-size:.68rem; letter-spacing:.1em; }
+  body.chat-mode .history-scope{ color:var(--text-3); font-size:.58rem; letter-spacing:.08em; }
+  body.chat-mode .history-empty{ margin:8px 7px; color:var(--text-3); font-size:.75rem; line-height:1.55; }
+  body.chat-mode #chatHistoryList{ display:flex; flex-direction:column; gap:4px; }
+  body:not(.is-authenticated) #chatHistoryList{ display:flex; }
+  body.chat-mode #chatHistoryList .chat-session-item{ min-height:40px; padding:8px 9px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--text-2); }
+  body.chat-mode #chatHistoryList .chat-session-item:hover{ background:rgba(255,255,255,.045); }
+  body.chat-mode #chatHistoryList .chat-session-item.active-conv{ border-color:rgba(255,103,112,.12); border-left:2px solid var(--accent-1); border-radius:8px; background:rgba(255,103,112,.075); color:var(--text-1); }
+  body.chat-mode .session-mark{ display:grid; place-items:center; width:17px; height:17px; border-radius:6px; background:rgba(255,103,112,.11); color:#ff8a90; font-size:.65rem; font-weight:800; }
+  body.chat-mode .session-title{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  body.chat-mode .chat-topbar{ min-height:68px; border-bottom-color:rgba(255,255,255,.075); }
+  body.chat-mode .chat-model,body.chat-mode .chat-model>div{ min-width:0; }
+  body.chat-mode #conversationTitle{ display:block; max-width:min(42vw,520px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.95rem; }
+  body.chat-mode .chat-model .sub{ color:var(--text-3); font-size:.67rem; }
+  body.chat-mode .msg.from-user .msg-bubble{ border:1px solid rgba(255,103,112,.12); background:#282528; box-shadow:none; }
+  body.chat-mode .activity-inline{ width:fit-content; max-width:100%; min-height:30px; gap:9px; padding:5px 11px; border:1px solid rgba(255,103,112,.15); border-radius:999px; background:rgba(255,103,112,.045); }
+  body.chat-mode .activity-inline .activity-pulse{ width:7px; height:7px; border-radius:50%; background:#ff7b84; box-shadow:0 0 0 4px rgba(255,103,112,.11); animation:pulse-dot 1.6s ease-in-out infinite; }
+  body.chat-mode .activity-inline .typing-label{ color:var(--text-1); font-size:.74rem; }
+  body.chat-mode .activity-inline .activity-detail{ color:var(--text-3); font-size:.68rem; }
+  body.chat-mode .chat-inputbar{ background:linear-gradient(180deg,transparent,rgba(13,13,15,.96) 24%); }
+  body.chat-mode .input-shell{ border-color:rgba(255,255,255,.12); box-shadow:0 10px 32px rgba(0,0,0,.18); }
+  body.chat-mode .input-shell:focus-within{ border-color:rgba(255,103,112,.48); box-shadow:0 0 0 3px rgba(255,103,112,.08),0 10px 32px rgba(0,0,0,.18); }
+  @media (max-width:600px){
+    body.chat-mode .chat-search{ margin-top:10px; }
+    body.chat-mode .chat-topbar{ min-height:62px; }
+    body.chat-mode #conversationTitle{ max-width:42vw; font-size:.86rem; }
+    body.chat-mode .chat-model .sub{ font-size:.62rem; }
+    body.chat-mode .activity-inline .activity-detail{ display:none; }
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1710,21 +1740,19 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   <section class="page" id="page-chat">
     <div class="chat-app">
       <aside class="chat-sidebar" id="chatSidebar">
-        <div class="workspace-mark"><img src="assets/elorahub_logo.png" alt="elora"><div><strong>elora workspace</strong><span>Private thinking room</span></div></div>
+        <div class="workspace-mark"><img src="assets/elorahub_logo.png" alt="elora"><div><strong>elora workspace</strong><span>Your quiet space to think</span></div></div>
         <button class="chat-new" id="newChatBtn" aria-keyshortcuts="Control+K Meta+K">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
           New chat <span class="shortcut">Ctrl / ⌘ K</span>
         </button>
+        <label class="chat-search" for="chatSearchInput">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+          <input id="chatSearchInput" type="search" placeholder="Search recent chats" aria-label="Search recent chats in this tab">
+        </label>
         <div class="chat-history">
-          <div class="chat-history-head"><div class="chat-history-label">Your chats</div><button class="sidebar-mini-btn" id="searchChatsBtn" aria-label="Search chats" data-history-private="1">⌕</button></div>
-          <div class="history-lock" id="historyLock"><strong>Private chat history</strong><span>Sign in or create an account to save and revisit conversations.</span><div><button class="history-auth-btn" id="historySignInBtn">Sign in</button><button class="history-auth-btn is-primary" id="historySignUpBtn">Create account</button></div></div>
-          <div id="chatHistoryList">
-            <button class="active-conv" data-history-private="1"><span class="history-icon">✦</span><span>Quarterly churn breakdown</span><small>now</small></button>
-            <button data-history-private="1"><span class="history-icon">↗</span><span>Rewriting my bio</span><small>2h</small></button>
-            <button data-history-private="1"><span class="history-icon">○</span><span>Trip plan: Lisbon, 4 days</span><small>yesterday</small></button>
-            <button data-history-private="1"><span class="history-icon">⌁</span><span>Explaining a lease clause</span><small>Mon</small></button>
-            <button data-history-private="1"><span class="history-icon">✧</span><span>Product name brainstorm</span><small>Sun</small></button>
-          </div>
+          <div class="chat-history-head"><div class="chat-history-label">Recent</div><span class="history-scope">THIS TAB</span></div>
+          <p class="history-empty" id="chatHistoryEmpty">Your recent conversations will appear here. They stay in this tab and aren't saved after you leave.</p>
+          <div id="chatHistoryList" role="group" aria-label="Recent conversations"></div>
         </div>
         <div class="sidebar-bottom">
           <div class="plan-meter">
@@ -1744,7 +1772,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
             <button class="icon-btn chat-mobile-toggle" id="sidebarToggle" aria-label="Open chat history" aria-controls="chatSidebar" aria-expanded="false">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span><div><strong>elora</strong><span class="sub">Adaptive reasoning</span></div><span class="smart-pill">SMART</span></div>
+            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span><div><strong id="conversationTitle">New conversation</strong><span class="sub">elora · Adaptive reasoning</span></div><span class="smart-pill">SMART</span></div>
           </div>
           <div class="chat-account-actions">
             <button class="chat-account-btn" id="chatSignInBtn">Sign in</button>
@@ -2759,8 +2787,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     var existingChip = document.getElementById("userChip");
     if(existingChip){ existingChip.remove(); }
     document.body.classList.toggle("is-authenticated", !!currentUser);
-    var privateHistory = document.getElementById("chatHistoryList");
-    if(!currentUser && privateHistory){ privateHistory.innerHTML = ""; }
 
     if(currentUser){
       signInBtn.style.display = "none";
@@ -2979,12 +3005,66 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   var fileInput = document.getElementById("fileInput");
   var attachedFiles = [];
   var conversationHistory = []; // { role: "user" | "assistant", content: string } — sent to the real backend for context
+  var chatHistoryList = document.getElementById("chatHistoryList");
+  var chatHistoryEmpty = document.getElementById("chatHistoryEmpty");
+  var chatSearchInput = document.getElementById("chatSearchInput");
+  var conversationTitleEl = document.getElementById("conversationTitle");
+  var chatSessions = [];
+  var nextConversationId = 1;
+  var replyPending = false;
+  function createConversation(){ return { id:nextConversationId++, title:"New conversation", started:false, history:[], threadHtml:"", updatedAt:Date.now() }; }
+  var activeConversation = createConversation();
+
+  function updateConversationTitle(){
+    if(conversationTitleEl) conversationTitleEl.textContent = activeConversation ? activeConversation.title : "New conversation";
+  }
+  function conversationAge(date){
+    var seconds = Math.max(0, Math.floor((Date.now() - date) / 1000));
+    if(seconds < 60) return "now";
+    if(seconds < 3600) return Math.floor(seconds / 60) + "m";
+    if(seconds < 86400) return Math.floor(seconds / 3600) + "h";
+    return Math.floor(seconds / 86400) + "d";
+  }
+  function renderConversationList(){
+    if(!chatHistoryList) return;
+    var query = chatSearchInput ? chatSearchInput.value.trim().toLowerCase() : "";
+    var matches = chatSessions.filter(function(session){ return !query || session.title.toLowerCase().includes(query); });
+    chatHistoryList.textContent = "";
+    matches.forEach(function(session){
+      var item = document.createElement("button");
+      item.type = "button";
+      item.className = "chat-session-item" + (activeConversation && session.id === activeConversation.id ? " active-conv" : "");
+      item.dataset.chatSession = String(session.id);
+      item.title = session.title;
+      item.disabled = replyPending;
+      if(activeConversation && session.id === activeConversation.id) item.setAttribute("aria-current", "page");
+      var mark = document.createElement("span"); mark.className = "session-mark"; mark.setAttribute("aria-hidden", "true"); mark.textContent = "e";
+      var title = document.createElement("span"); title.className = "session-title"; title.textContent = session.title;
+      var age = document.createElement("small"); age.textContent = conversationAge(session.updatedAt);
+      item.append(mark, title, age);
+      chatHistoryList.appendChild(item);
+    });
+    if(chatHistoryEmpty){
+      chatHistoryEmpty.hidden = matches.length > 0;
+      if(!chatSessions.length) chatHistoryEmpty.textContent = "Your recent conversations will appear here. They stay in this tab and aren't saved after you leave.";
+      else if(!matches.length) chatHistoryEmpty.textContent = "No recent conversations match that search.";
+    }
+  }
+  if(chatSearchInput) chatSearchInput.addEventListener("input", renderConversationList);
 
   function clearPrivateChatView(){
     conversationHistory = [];
+    chatSessions = [];
+    activeConversation = createConversation();
+    replyPending = false;
+    attachedFiles = [];
+    if(attachRow) renderAttachments();
+    if(chatSearchInput) chatSearchInput.value = "";
+    updateConversationTitle();
+    renderConversationList();
     if(chatThread){
       chatThread.innerHTML = "";
-      addMessage("ai", "You're in a private preview. Sign in or create an account to keep conversations in your workspace.", "elora · private preview");
+      addMessage("ai", "You've been signed out. Recent chats were removed from this tab.", "elora · just now");
     }
     if(chatInput){ chatInput.value = ""; autoGrow(); }
     if(chatSuggestions){ chatSuggestions.style.display = "grid"; }
@@ -3434,8 +3514,6 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   function closeSettings(){ settingsModal.classList.remove("is-open"); }
   document.getElementById("openSettingsBtn").addEventListener("click", function(){ openSettings("profile"); });
   document.getElementById("openChatOptionsBtn").addEventListener("click", function(){ openSettings("chat"); });
-  document.getElementById("historySignInBtn").addEventListener("click", function(){ openModal("signin"); });
-  document.getElementById("historySignUpBtn").addEventListener("click", function(){ openModal("signup"); });
   document.getElementById("settingsClose").addEventListener("click", closeSettings);
   settingsModal.addEventListener("click", function(e){ if(e.target === settingsModal) closeSettings(); });
   document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.addEventListener("click", function(){ openSettings(btn.getAttribute("data-settings-tab")); }); });
@@ -3527,6 +3605,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   }
 
   function sendMessage(){
+    if(replyPending) return;
     var text = chatInput.value.trim();
     if(!text && attachedFiles.length === 0) return;
 
@@ -3544,19 +3623,21 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     }
     addMessage("user", userHtml, "You · just now");
     conversationHistory.push({ role: "user", content: text });
+    beginActiveConversation(text, filesForReply);
     chatInput.value = "";
     autoGrow();
     attachedFiles = [];
     renderAttachments();
     chatSuggestions.style.display = "none";
-    sendBtn.disabled = true;
+    setReplyPending(true);
 
     var typingRow = document.createElement("div");
     typingRow.className = "msg from-ai";
     typingRow.innerHTML = '<div class="avatar avatar-thinking"><img src="' + LOGO_SRC + '" alt="elora"></div>' +
-      '<div class="msg-body"><div class="activity-inline"><span class="activity-pulse"></span><span class="typing-label">Thinking</span><span class="activity-detail">Working through the useful next step.</span></div></div>';
+      '<div class="msg-body"><div class="activity-inline" role="status" aria-live="polite"><span class="activity-pulse"></span><span class="typing-label">Thinking</span><span class="activity-detail">Working through the useful next step.</span></div></div>';
     chatThread.appendChild(typingRow);
     scrollToBottom();
+    saveActiveConversation();
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
 
     var startTime = Date.now();
@@ -3585,7 +3666,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           conversationHistory.push({ role: "assistant", content: result.text });
           addMessageTyped(result.text, tag, result.real).then(function(){
             if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
-            sendBtn.disabled = false;
+            saveActiveConversation();
+            setReplyPending(false);
           });
         }
 
@@ -3606,7 +3688,76 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     });
   }
 
-  function resetConversation(message){
+  function beginActiveConversation(text, files){
+    if(!activeConversation) activeConversation = createConversation();
+    if(!activeConversation.started){
+      var firstLine = String(text || "").replace(/\s+/g, " ").trim();
+      if(!firstLine && files && files.length) firstLine = "Review " + files[0].name;
+      if(!firstLine) firstLine = "New conversation";
+      activeConversation.title = firstLine.length > 46 ? firstLine.slice(0, 43).trimEnd() + "…" : firstLine;
+      activeConversation.started = true;
+      updateConversationTitle();
+    }
+  }
+
+  function saveActiveConversation(){
+    if(!activeConversation || !activeConversation.started) return;
+    activeConversation.history = conversationHistory.map(function(item){ return { role:item.role, content:item.content }; });
+    activeConversation.threadHtml = chatThread.innerHTML;
+    activeConversation.updatedAt = Date.now();
+    chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
+    chatSessions.unshift(activeConversation);
+    if(chatSessions.length > 16) chatSessions.length = 16;
+    updateConversationTitle();
+    renderConversationList();
+  }
+
+  function setReplyPending(pending){
+    replyPending = !!pending;
+    sendBtn.disabled = replyPending;
+    var newChatBtn = document.getElementById("newChatBtn");
+    var clearBtn = document.getElementById("clearChatBtn");
+    var signOutBtn = document.getElementById("signOutBtn");
+    if(newChatBtn) newChatBtn.disabled = replyPending;
+    if(clearBtn) clearBtn.disabled = replyPending;
+    if(signOutBtn) signOutBtn.disabled = replyPending;
+    renderConversationList();
+  }
+
+  function openSavedConversation(id){
+    if(replyPending) return;
+    var target = chatSessions.find(function(session){ return session.id === id; });
+    if(!target) return;
+    if(activeConversation && activeConversation.id === target.id){ setSidebarOpen(false); return; }
+    saveActiveConversation();
+    activeConversation = target;
+    conversationHistory = target.history.map(function(item){ return { role:item.role, content:item.content }; });
+    attachedFiles = [];
+    renderAttachments();
+    chatInput.value = "";
+    autoGrow();
+    chatThread.innerHTML = target.threadHtml;
+    chatSuggestions.style.display = conversationHistory.length === 0 && chatPreferences.suggestions !== false ? "grid" : "none";
+    updateConversationTitle();
+    renderConversationList();
+    scrollToBottom();
+    setSidebarOpen(false);
+  }
+  if(chatHistoryList){
+    chatHistoryList.addEventListener("click", function(e){
+      var item = e.target.closest && e.target.closest("[data-chat-session]");
+      if(item) openSavedConversation(Number(item.dataset.chatSession));
+    });
+  }
+
+  function resetConversation(message, removeActive){
+    if(replyPending) return;
+    if(removeActive && activeConversation){
+      chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
+    } else {
+      saveActiveConversation();
+    }
+    activeConversation = createConversation();
     conversationHistory = [];
     attachedFiles = [];
     renderAttachments();
@@ -3615,6 +3766,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     chatThread.innerHTML = "";
     addMessage("ai", message, "elora · just now");
     chatSuggestions.style.display = chatPreferences.suggestions === false ? "none" : "grid";
+    if(chatStatusDot) chatStatusDot.classList.remove("is-active");
+    updateConversationTitle();
+    renderConversationList();
   }
   document.getElementById("newChatBtn").addEventListener("click", function(){
     resetConversation("New conversation started. What are we working on?");
@@ -3622,7 +3776,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(window.innerWidth > 760){ chatInput.focus(); }
   });
   document.getElementById("clearChatBtn").addEventListener("click", function(){
-    resetConversation("Cleared. I'm ready whenever you are.");
+    resetConversation("Cleared. I'm ready whenever you are.", true);
     if(window.innerWidth > 760){ chatInput.focus(); }
   });
   var forgetMeBtn = document.getElementById("forgetMeBtn");
@@ -3681,7 +3835,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       if(sidebarToggle) sidebarToggle.focus();
     }
   });
-  document.querySelectorAll(".chat-history button, .plan-meter a").forEach(function(b){
+  document.querySelectorAll(".plan-meter a").forEach(function(b){
     b.addEventListener("click", function(){ setSidebarOpen(false); });
   });
   setSidebarOpen(false);
