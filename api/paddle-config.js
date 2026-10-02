@@ -22,8 +22,13 @@ export default async function handler(req, res) {
     "premium-yearly": process.env.PADDLE_PRICE_PREMIUM_YEARLY || null,
   };
 
+  const missing = Object.entries(priceIds)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
   return res.status(200).json({
-    configured: Boolean(clientToken),
+    configured: Boolean(clientToken) && missing.length === 0,
+    missing,
     clientToken,
     environment,
     priceIds,

@@ -1188,6 +1188,78 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   .nav-actions #openSignIn{ display:none; }
   .stat-row{ grid-template-columns:1fr; }
 }
+  /* ============================================================
+     ELORAHUB / NIGHT GLASS REFRESH
+     A calmer charcoal canvas with one electric coral signature.
+     ============================================================ */
+  :root{
+    --black:#050608;
+    --charcoal:#0c0f12;
+    --charcoal-2:#12161a;
+    --panel:#171c21;
+    --panel-2:#1d242b;
+    --line:rgba(218,230,238,.11);
+    --line-soft:rgba(218,230,238,.065);
+    --text-1:#f5f7f8;
+    --text-2:#b4bec6;
+    --text-3:#77838c;
+    --accent-1:#ff5d6c;
+    --accent-2:#b51f45;
+    --accent-3:#ff927d;
+    --accent-grad:linear-gradient(135deg,#ff8a78 0%,#ff526a 34%,#c32950 72%,#731b3d 100%);
+    --shadow-glow:0 18px 60px rgba(255,82,106,.18);
+  }
+  body{ background:#050608; }
+  .atmosphere{ background:
+    radial-gradient(ellipse 65% 55% at 8% 8%,rgba(73,82,92,.42),transparent 70%),
+    radial-gradient(ellipse 55% 55% at 92% 18%,rgba(33,41,49,.52),transparent 72%),
+    radial-gradient(ellipse 60% 50% at 50% 100%,rgba(24,29,35,.48),transparent 75%),
+    linear-gradient(135deg,#111519 0%,#080a0d 48%,#030405 100%); }
+  .atmosphere::before{ content:""; position:absolute; inset:-12%; background:radial-gradient(circle at 50% 35%,transparent 24%,rgba(0,0,0,.42) 78%); filter:blur(28px); }
+  .atmosphere::after{ opacity:.22; mix-blend-mode:screen; }
+  .blur-orb{ opacity:.11!important; filter:blur(24px); mix-blend-mode:screen; }
+  .nav{ background:rgba(5,7,9,.66); border-bottom-color:rgba(218,230,238,.10); box-shadow:0 12px 42px rgba(0,0,0,.16); }
+  .brand img{ filter:drop-shadow(0 0 18px rgba(255,91,108,.58)); }
+  .btn,.nav-burger,.icon-btn{ border-color:rgba(218,230,238,.14); background:rgba(255,255,255,.045); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); }
+  .btn:hover,.icon-btn:hover,.nav-burger:hover{ border-color:rgba(255,145,132,.42); background:rgba(255,255,255,.075); box-shadow:0 8px 26px rgba(0,0,0,.24),0 0 20px rgba(255,82,106,.10); }
+  .btn-primary,.chat-new,.send-btn{ background:var(--accent-grad); box-shadow:0 9px 28px rgba(255,82,106,.28),inset 0 1px 0 rgba(255,215,203,.42); }
+  .btn-primary:hover,.chat-new:hover,.send-btn:hover:not(:disabled){ box-shadow:0 12px 38px rgba(255,82,106,.42),0 0 22px rgba(255,116,112,.22),inset 0 1px 0 rgba(255,230,220,.55); }
+  .nav-links,.pricing-switch,.owner-tabs{ background:rgba(255,255,255,.035); border-color:rgba(218,230,238,.12); box-shadow:0 10px 30px rgba(0,0,0,.18); }
+  .nav-links button.is-active,.owner-tabs button.is-active{ box-shadow:0 5px 22px rgba(255,82,106,.28); }
+  .section-head h2,.hero-copy h1,.doc-header h1{ text-shadow:0 0 34px rgba(210,221,230,.08); }
+  .process-card,.value-card,.stat-box,.plan,.teaser-strip,.callout{ background:linear-gradient(145deg,rgba(28,35,41,.72),rgba(9,12,15,.66)); border-color:rgba(218,230,238,.11); box-shadow:0 18px 50px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.035); backdrop-filter:blur(14px); }
+  .process-card:hover,.value-card:hover,.stat-box:hover,.plan:hover{ border-color:rgba(255,130,125,.35); box-shadow:0 24px 60px rgba(0,0,0,.30),0 0 32px rgba(255,82,106,.10); }
+  .feature-grid{ background:rgba(218,230,238,.10); box-shadow:0 20px 58px rgba(0,0,0,.24); }
+  .feature-cell{ background:rgba(10,14,17,.78); transition:background .35s var(--ease),transform .35s var(--ease),box-shadow .35s var(--ease); }
+  .feature-cell:hover{ background:rgba(27,34,40,.86); box-shadow:inset 0 0 0 1px rgba(255,130,125,.18),0 0 28px rgba(255,82,106,.08); }
+  .feature-icon{ background:linear-gradient(145deg,rgba(255,93,108,.25),rgba(47,57,66,.30)); border-color:rgba(255,145,132,.30); box-shadow:0 0 22px rgba(255,82,106,.12); }
+  .chat-app{ background:linear-gradient(120deg,rgba(13,17,21,.54),rgba(4,6,8,.45)); }
+  .chat-sidebar{ background:rgba(8,11,14,.58); border-right-color:rgba(218,230,238,.10); backdrop-filter:blur(18px); }
+  .chat-history button.active-conv{ background:linear-gradient(90deg,rgba(255,82,106,.18),rgba(255,255,255,.04)); border-left:2px solid var(--accent-1); box-shadow:0 0 24px rgba(255,82,106,.08); }
+  .plan-meter{ background:linear-gradient(145deg,rgba(255,82,106,.12),rgba(255,255,255,.035)); border-color:rgba(255,130,125,.20); box-shadow:0 0 30px rgba(255,82,106,.08); }
+  .chat-topbar{ background:rgba(6,9,11,.44); border-bottom-color:rgba(218,230,238,.09); backdrop-filter:blur(14px); }
+  .chat-scroll{ background:radial-gradient(ellipse at 50% 0%,rgba(41,50,59,.20),transparent 65%); }
+  .msg.from-ai .msg-bubble,.typing-bubble{ background:linear-gradient(145deg,rgba(28,35,41,.88),rgba(11,15,18,.86)); border-color:rgba(218,230,238,.11); box-shadow:0 14px 38px rgba(0,0,0,.18); }
+  .msg.from-user .msg-bubble{ background:linear-gradient(145deg,rgba(178,39,72,.93),rgba(91,25,52,.92)); border-color:rgba(255,155,141,.28); box-shadow:0 12px 30px rgba(116,22,52,.24); }
+  .avatar{ box-shadow:0 0 0 1px rgba(255,255,255,.10),0 0 18px rgba(255,82,106,.16); }
+  .chat-inputbar{ background:linear-gradient(180deg,transparent,rgba(3,5,7,.78)); }
+  .input-shell{ background:rgba(20,26,31,.78); border-color:rgba(218,230,238,.16); box-shadow:0 16px 50px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter:blur(18px); }
+  .input-shell:focus-within{ border-color:rgba(255,145,132,.52); box-shadow:0 18px 60px rgba(0,0,0,.35),0 0 0 4px rgba(255,82,106,.12),0 0 26px rgba(255,82,106,.13); }
+  .suggestion-chip,.model-chip{ background:rgba(255,255,255,.035); border-color:rgba(218,230,238,.12); transition:transform .25s var(--ease),border-color .25s var(--ease),background .25s var(--ease),box-shadow .25s var(--ease); }
+  .suggestion-chip:hover,.model-chip:hover:not(:disabled){ transform:translateY(-2px); border-color:rgba(255,145,132,.40); background:rgba(255,82,106,.08); box-shadow:0 10px 25px rgba(0,0,0,.22),0 0 22px rgba(255,82,106,.10); }
+  .model-chip.is-active{ background:rgba(255,82,106,.14); box-shadow:0 0 20px rgba(255,82,106,.12); }
+  .pricing-switch button.is-active{ background:rgba(255,82,106,.17); box-shadow:0 0 20px rgba(255,82,106,.12); }
+  .plan.premium{ border-color:rgba(255,126,122,.38); box-shadow:0 30px 70px rgba(0,0,0,.40),0 0 36px rgba(255,82,106,.12); }
+  .plan-badge{ background:rgba(255,82,106,.16); border-color:rgba(255,145,132,.38); box-shadow:0 0 18px rgba(255,82,106,.14); }
+  .modal-card{ background:linear-gradient(145deg,rgba(28,35,41,.97),rgba(7,10,13,.98)); border-color:rgba(218,230,238,.16); box-shadow:0 40px 110px rgba(0,0,0,.70),0 0 40px rgba(255,82,106,.10); backdrop-filter:blur(20px); }
+  .checkout-container{ min-height:120px; border-radius:14px; overflow:hidden; background:rgba(255,255,255,.025); }
+  .checkout-status{ margin:0 0 14px; padding:12px 14px; border-radius:12px; color:var(--text-2); background:rgba(255,255,255,.045); border:1px solid var(--line); font-size:.82rem; line-height:1.45; }
+  .checkout-status.is-error{ color:#ffd2d0; background:rgba(255,82,106,.10); border-color:rgba(255,126,122,.30); }
+  .checkout-status.is-sandbox{ color:#ffe6ad; background:rgba(245,195,68,.08); border-color:rgba(245,195,68,.24); }
+  .reveal{ transition-duration:.9s; }
+  @keyframes ambient-breathe{ 0%,100%{ box-shadow:0 0 0 rgba(255,82,106,0); } 50%{ box-shadow:0 0 32px rgba(255,82,106,.12); } }
+  .hero-visual .chat-mock,.teaser-strip,.plan.premium{ animation:ambient-breathe 5s ease-in-out infinite; }
+  @media (prefers-reduced-motion:reduce){ .hero-visual .chat-mock,.teaser-strip,.plan.premium{ animation:none; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -2015,6 +2087,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       <p>Card, Apple Pay, Google Pay — handled securely by Paddle, without leaving elorahub.</p>
     </div>
     <div id="checkoutLoading" style="text-align:center;padding:30px 0;color:var(--text-3);font-size:0.9rem;">Loading secure checkout…</div>
+    <div id="checkoutStatus" class="checkout-status" role="status" aria-live="polite" style="display:none;"></div>
     <div id="checkoutContainer" class="checkout-container"></div>
   </div>
 </div>
@@ -2124,42 +2197,59 @@ body.chat-mode{ overflow:hidden; height:100vh; }
      there. */
   var paddleConfig = null;
   var paddleReady = false;
+  var paddleInitPromise = null;
 
   async function ensurePaddleReady(){
-    if(paddleReady) return paddleConfig && paddleConfig.configured;
-    try {
-      var res = await fetch("/api/paddle-config");
-      paddleConfig = await res.json();
-    } catch(e){
-      paddleConfig = { configured: false };
-    }
-    if(paddleConfig.configured && window.Paddle){
-      window.Paddle.Environment.set(paddleConfig.environment === "sandbox" ? "sandbox" : "production");
-      window.Paddle.Initialize({
-        token: paddleConfig.clientToken,
-        checkout: {
-          settings: {
-            displayMode: "inline",
-            frameTarget: "checkout-container",
-            frameInitialHeight: "450",
-            frameStyle: "width:100%; min-width:312px; background-color:transparent; border:none;"
-          }
-        }
-      });
-    }
-    paddleReady = true;
-    return paddleConfig.configured && !!window.Paddle;
+    if(paddleInitPromise) return paddleInitPromise;
+    paddleInitPromise = (async function(){
+      try {
+        var res = await fetch("/api/paddle-config", { headers:{"Accept":"application/json"} });
+        var body = await res.json();
+        paddleConfig = body && typeof body === "object" ? body : { configured:false, reason:"invalid_response" };
+      } catch(e){
+        paddleConfig = { configured:false, reason:"network_error" };
+      }
+      var required = ["private-monthly","private-yearly","premium-monthly","premium-yearly"];
+      var missing = required.filter(function(key){ return !paddleConfig.priceIds || !paddleConfig.priceIds[key]; });
+      if(!paddleConfig.configured || missing.length || !window.Paddle){
+        paddleConfig.missing = missing;
+        paddleReady = false;
+        return false;
+      }
+      try {
+        window.Paddle.Environment.set(paddleConfig.environment === "sandbox" ? "sandbox" : "production");
+        window.Paddle.Initialize({
+          token: paddleConfig.clientToken,
+          checkout: { settings: { displayMode:"inline", frameTarget:"checkout-container", frameInitialHeight:"450", frameStyle:"width:100%; min-width:312px; background-color:transparent; border:none;" } }
+        });
+        paddleReady = true;
+        return true;
+      } catch(e){
+        paddleReady = false;
+        paddleConfig.reason = "initialization_error";
+        return false;
+      }
+    })();
+    return paddleInitPromise;
   }
 
   var checkoutModal = document.getElementById("checkoutModal");
   var checkoutLoading = document.getElementById("checkoutLoading");
+  var checkoutStatus = document.getElementById("checkoutStatus");
   var checkoutContainer = document.getElementById("checkoutContainer");
+
+  function setCheckoutStatus(message, kind){
+    checkoutStatus.textContent = message || "";
+    checkoutStatus.className = "checkout-status" + (kind ? " is-" + kind : "");
+    checkoutStatus.style.display = message ? "block" : "none";
+  }
 
   function closeCheckoutModal(){
     checkoutModal.classList.remove("is-open");
     document.body.style.overflow = "";
     checkoutContainer.innerHTML = "";
     checkoutLoading.style.display = "block";
+    setCheckoutStatus("");
   }
   document.getElementById("checkoutModalClose").addEventListener("click", closeCheckoutModal);
   checkoutModal.addEventListener("click", function(e){ if(e.target === checkoutModal){ closeCheckoutModal(); } });
@@ -2176,26 +2266,39 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       btn.disabled = false;
 
       if(!ok){
-        showToast("Payments aren't connected yet — see PADDLE-SETUP.md to finish setup.");
+        var missingText = paddleConfig && paddleConfig.missing && paddleConfig.missing.length ? "Missing Paddle prices: " + paddleConfig.missing.join(", ") + "." : "Paddle is not configured or the checkout script could not load.";
+        showToast("Payments aren't ready yet.");
+        setCheckoutStatus(missingText + " Add the values in your deployment environment, then redeploy.", "error");
+        checkoutModal.classList.add("is-open");
         return;
       }
 
       var key = plan + "-" + currentBillingCycle;
       var priceId = paddleConfig.priceIds[key];
       if(!priceId){
-        showToast("This plan isn't set up in Paddle yet — see PADDLE-SETUP.md.");
+        showToast("This billing option is not configured yet.");
+        checkoutModal.classList.add("is-open");
+        setCheckoutStatus("This billing option is not configured in Paddle yet. Choose another cycle or finish the price setup.", "error");
         return;
       }
 
       checkoutModal.classList.add("is-open");
       document.body.style.overflow = "hidden";
       checkoutLoading.style.display = "block";
+      checkoutContainer.innerHTML = "";
+      setCheckoutStatus(paddleConfig.environment === "sandbox" ? "Sandbox checkout — use a Paddle test card. No real charge will be made." : "Secure checkout powered by Paddle.", paddleConfig.environment === "sandbox" ? "sandbox" : "");
 
-      window.Paddle.Checkout.open({
-        items: [{ priceId: priceId, quantity: 1 }],
-        customer: currentUser && currentUser.email ? { email: currentUser.email } : undefined,
-        settings: { frameTarget: "checkout-container" }
-      });
+      try {
+        window.Paddle.Checkout.open({
+          items: [{ priceId: priceId, quantity: 1 }],
+          customer: currentUser && currentUser.email ? { email: currentUser.email } : undefined,
+          settings: { frameTarget: "checkout-container" }
+        });
+      } catch(e){
+        checkoutLoading.style.display = "none";
+        setCheckoutStatus("Paddle could not open this checkout. Check the client token, environment, and price ID, then try again.", "error");
+        return;
+      }
       // Paddle's inline frame replaces the loading text once it mounts.
       setTimeout(function(){ checkoutLoading.style.display = "none"; }, 800);
     });
