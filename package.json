@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Serverless backend for elorahub — calls a self-hosted, code-focused open-weight model.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4"
   }

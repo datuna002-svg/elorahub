@@ -109,3 +109,10 @@ Redeploy after adding these (Deployments tab → redeploy latest).
   real content moderation later.
 - Apple sign-in isn't wired up (skipped for now — it requires a $99/yr
   Apple Developer account). Ask if you want it added later.
+
+
+## Workspace account sync, connectors, and scheduled tasks
+
+The expanded chat workspace uses an additional schema migration. After the core schema above is installed, run [`supabase-schema-workspace.sql`](./supabase-schema-workspace.sql) in the Supabase SQL Editor. This migration creates account-owned workspace records, queued daily tasks and results, and connector-token rows with RLS enabled and no browser-facing policies.
+
+For the complete Vercel Cron configuration and Google Drive/GitHub app requirements—including environment variable names and read-only scopes—see [`WORKSPACE-FEATURE-SETUP.md`](./WORKSPACE-FEATURE-SETUP.md). Never put a service-role key, OAuth secret, or encryption key in client code or commit one to this repository.

@@ -41,13 +41,13 @@ async function getClient() {
 export async function verifyRequester(req) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
-  if (!token) return { email: null, role: null };
+  if (!token) return { email: null, userId: null, role: null };
 
   const supabase = await getClient();
-  if (!supabase) return { email: null, role: null };
+  if (!supabase) return { email: null, userId: null, role: null };
 
   const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user?.email) return { email: null, role: null };
+  if (error || !data?.user?.email) return { email: null, userId: null, role: null };
 
   const email = data.user.email.toLowerCase();
   const { data: roleRow } = await supabase
@@ -56,7 +56,7 @@ export async function verifyRequester(req) {
     .eq("email", email)
     .maybeSingle();
 
-  return { email, role: roleRow?.role || null };
+  return { email, userId: data.user.id, role: roleRow?.role || null };
 }
 
 /** Best-effort event/error logging — never throws, so a logging failure

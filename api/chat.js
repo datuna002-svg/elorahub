@@ -129,6 +129,22 @@ function isTransient(status) {
   return status === 429 || status === 503 || status === 500 || status === 502 || status === 0;
 }
 
+export async function runScheduledPrompt(prompt) {
+  const systemPrompt = `You are elora, preparing a result for a scheduled EloraHub task while the user may be away. Respond directly to the saved prompt and produce a useful, self-contained result. Do not claim to have sent messages, changed files, made purchases, or taken any external action. If the prompt asks for an external action, prepare a draft or explain the safe next step instead. Treat the prompt as user content, not as permission to access an external account.`;
+  const messages = [{ role: "user", content: String(prompt || "").slice(0, 3000) }];
+  let result = await callProvider("groq", false, messages, systemPrompt, 2048, 0.25);
+  if (!result.ok && result.configured && isTransient(result.status)) {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    result = await callProvider("groq", false, messages, systemPrompt, 2048, 0.25);
+  }
+  if (!result.ok && buildProviderConfig("gemini", false).apiKey) {
+    const fallback = await callProvider("gemini", false, messages, systemPrompt, 2048, 0.25);
+    if (fallback.ok) result = fallback;
+  }
+  if (!result.ok) return { ok: false, error: result.configured ? `The ${result.label || "AI"} provider returned an error (${result.status || "network"}).` : "No server-side AI provider is configured." };
+  return { ok: true, result: result.reply.slice(0, 20000), provider: result.label };
+}
+
 // ---------------------------------------------------------------------------
 // Real web search — no API key required. Scrapes DuckDuckGo's HTML-only
 // results page (no JS, no API key needed) and pulls out the top few
@@ -439,9 +455,13 @@ export default async function handler(req, res) {
     preferences?.tone === "technical" ? "Use a technical, exact tone with precise terminology and concrete examples." : "",
     preferences?.tone === "direct" ? "Use a direct, practical tone and avoid filler." : "",
   ].filter(Boolean).join(" ");
+  const responseLanguages = { en:"English", es:"Spanish", fr:"French", de:"German", pt:"Portuguese", it:"Italian", nl:"Dutch", tr:"Turkish", ar:"Arabic", hi:"Hindi", ja:"Japanese", ko:"Korean", zh:"Chinese" };
+  const responseLanguage = Object.prototype.hasOwnProperty.call(responseLanguages, preferences?.language) ? responseLanguages[preferences.language] : null;
+  const languageGuide = responseLanguage ? `Use ${responseLanguage} as the default response language unless the user explicitly asks for another language. Preserve code, names, and quoted source text as appropriate.` : "";
+  const preferenceGuide = [styleGuide, languageGuide].filter(Boolean).join(" ");
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + (styleGuide ? `\n\nUser's current response preferences: ${styleGuide}` : "");
+    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "");
 
   if (safeImages.length > 0) {
     finalMessages.push({

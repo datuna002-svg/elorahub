@@ -1,0 +1,13 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/scheduled-tasks",
+      "schedule": "5 0 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron/scheduled-tasks.js": {
+      "maxDuration": 60
+    }
+  }
+}
