@@ -1566,6 +1566,90 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     body.chat-mode .chat-model .sub{ font-size:.62rem; }
     body.chat-mode .activity-inline .activity-detail{ display:none; }
   }
+  /* Elora conversation studio: a calm canvas, a real empty state, and a compact dock. */
+  body.chat-mode #page-chat .chat-main{ background:radial-gradient(ellipse at 54% 42%,rgba(255,103,112,.035),transparent 48%),#0c0c0e; }
+  body.chat-mode .chat-topbar{ min-height:72px; padding:10px clamp(14px,3vw,36px); gap:16px; background:rgba(15,15,17,.96); }
+  body.chat-mode .chat-account-actions{ gap:7px; }
+  body.chat-mode .chat-share-btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 13px; border:1px solid rgba(255,103,112,.22); border-radius:10px; background:rgba(255,103,112,.08); color:var(--text-1); font:600 .75rem var(--font-body); transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+  body.chat-mode .chat-share-btn:hover{ background:rgba(255,103,112,.14); border-color:rgba(255,103,112,.4); transform:translateY(-1px); }
+  body.chat-mode .chat-share-btn svg{ width:15px; height:15px; }
+  body.chat-mode .chat-scroll{ display:flex; flex-direction:column; padding:0 clamp(12px,3vw,34px); }
+  body.chat-mode .chat-thread{ width:min(100%,980px); max-width:980px; flex:1 0 auto; margin:0 auto; padding:36px clamp(12px,4.5vw,66px) 32px; gap:34px; }
+  body.chat-mode #chatThread:has(.chat-welcome){ justify-content:center; }
+  body.chat-mode .chat-welcome{ width:min(100%,700px); margin:auto; padding:clamp(24px,4vw,44px); border:1px solid rgba(255,255,255,.075); border-left:2px solid rgba(255,103,112,.78); border-radius:4px 22px 22px 4px; background:linear-gradient(118deg,rgba(255,255,255,.035),rgba(255,255,255,.012) 58%,rgba(255,103,112,.025)); box-shadow:0 28px 72px rgba(0,0,0,.16); }
+  body.chat-mode .welcome-mark{ width:46px; height:46px; display:grid; place-items:center; margin-bottom:24px; border:1px solid rgba(255,103,112,.2); border-radius:15px; background:rgba(255,103,112,.075); }
+  body.chat-mode .welcome-mark img{ width:30px; height:30px; object-fit:contain; }
+  body.chat-mode .welcome-kicker{ color:#ff858d; font-size:.65rem; font-weight:750; letter-spacing:.15em; }
+  body.chat-mode .chat-welcome h1{ max-width:14ch; margin:12px 0 10px; color:var(--text-1); font-size:clamp(2rem,4.3vw,3.3rem); line-height:1.04; letter-spacing:-.045em; }
+  body.chat-mode .chat-welcome p{ max-width:52ch; margin:0; color:var(--text-2); font-size:clamp(.9rem,1.3vw,1.02rem); line-height:1.7; }
+  body.chat-mode .msg{ width:100%; max-width:100%; gap:13px; align-items:flex-start; }
+  body.chat-mode .msg.from-user{ align-self:flex-end; width:fit-content; max-width:min(76%,720px); flex-direction:row-reverse; }
+  body.chat-mode .msg .avatar{ width:30px; height:30px; border-radius:50%; }
+  body.chat-mode .msg-body{ max-width:min(100%,78ch); }
+  body.chat-mode .msg.from-user .msg-body{ max-width:100%; margin-left:0; }
+  body.chat-mode .msg.from-user .msg-bubble{ padding:13px 17px; border:1px solid rgba(255,103,112,.15); border-radius:18px 18px 5px 18px; background:linear-gradient(145deg,#292629,#201e20); color:var(--text-1); }
+  body.chat-mode .msg.from-ai .msg-bubble{ padding:0; border:0; border-radius:0; background:none; box-shadow:none; color:#e6e4e5; font-size:.99rem; line-height:1.78; }
+  body.chat-mode .msg.from-ai .response-head{ margin-bottom:11px; }
+  body.chat-mode .msg.from-ai .msg-meta{ margin-top:10px; }
+  body.chat-mode .chat-suggestions{ width:min(100%,980px); margin:0 auto; padding:8px clamp(12px,4.5vw,66px) 12px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+  body.chat-mode .chat-suggestions::-webkit-scrollbar{ display:none; }
+  body.chat-mode .suggestion-chip{ flex:0 0 auto; min-height:34px; padding:7px 12px; border:1px solid rgba(255,255,255,.09); border-radius:999px; background:rgba(255,255,255,.025); color:var(--text-2); font-size:.72rem; line-height:1.2; white-space:nowrap; }
+  body.chat-mode .suggestion-chip:hover{ border-color:rgba(255,103,112,.35); background:rgba(255,103,112,.07); color:var(--text-1); }
+  body.chat-mode .chat-inputbar{ padding:13px clamp(12px,3vw,36px) max(13px,env(safe-area-inset-bottom)); border-top:1px solid rgba(255,255,255,.065); background:rgba(13,13,15,.94); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+  body.chat-mode .input-shell{ width:min(100%,940px); min-height:66px; margin:0 auto; padding:10px 11px 10px 13px; gap:10px; border:1px solid rgba(255,255,255,.11); border-radius:19px; background:#19191b; box-shadow:0 12px 42px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.025); }
+  body.chat-mode .input-shell:focus-within{ border-color:rgba(255,103,112,.45); box-shadow:0 0 0 3px rgba(255,103,112,.07),0 12px 42px rgba(0,0,0,.24); transform:none; }
+  body.chat-mode #chatInput{ min-height:42px; padding:10px 4px; line-height:1.55; }
+  body.chat-mode .input-shell .icon-btn{ width:37px; height:37px; border:0; background:transparent; }
+  body.chat-mode .input-shell .icon-btn:hover{ background:rgba(255,255,255,.06); }
+  body.chat-mode .send-btn{ width:39px; height:39px; border-radius:14px; animation:none; box-shadow:0 4px 13px rgba(255,36,64,.24); }
+  body.chat-mode .composer-toolbar{ position:relative; z-index:20; width:min(100%,940px); min-height:34px; margin:7px auto 0; padding:0 3px; display:flex; align-items:center; gap:8px; overflow:visible; }
+  body.chat-mode .mode-picker{ position:relative; z-index:21; }
+  body.chat-mode .mode-trigger{ display:inline-flex; align-items:center; gap:8px; min-height:31px; padding:4px 9px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--text-2); font:600 .71rem var(--font-body); }
+  body.chat-mode .mode-trigger:hover,body.chat-mode .mode-trigger[aria-expanded="true"]{ border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.045); color:var(--text-1); }
+  body.chat-mode .mode-trigger-mark{ color:#ff8b92; }
+  body.chat-mode .mode-trigger svg{ width:13px; height:13px; color:var(--text-3); }
+  body.chat-mode .mode-menu[hidden]{ display:none !important; }
+  body.chat-mode .mode-menu{ position:absolute; z-index:170; left:0; bottom:calc(100% + 9px); width:256px; padding:6px; border:1px solid rgba(255,255,255,.1); border-radius:14px; background:#1b1a1c; box-shadow:0 18px 48px rgba(0,0,0,.5); }
+  body.chat-mode .mode-menu button{ width:100%; display:flex; align-items:center; gap:10px; padding:9px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--text-2); text-align:left; }
+  body.chat-mode .mode-menu button:hover,body.chat-mode .mode-menu button.is-active{ border-color:rgba(255,103,112,.14); background:rgba(255,103,112,.08); color:var(--text-1); }
+  body.chat-mode .mode-option-mark{ width:21px; flex:none; color:#ff858d; text-align:center; font-size:.8rem; }
+  body.chat-mode .mode-option-copy{ display:grid; gap:2px; flex:1; }
+  body.chat-mode .mode-option-copy b{ font-size:.73rem; }
+  body.chat-mode .mode-option-copy small{ color:var(--text-3); font-size:.65rem; }
+  body.chat-mode .mode-check{ opacity:0; color:#ff858d; }
+  body.chat-mode .mode-menu button.is-active .mode-check{ opacity:1; }
+  body.chat-mode .composer-tool{ width:31px; height:31px; display:grid; place-items:center; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--text-3); }
+  body.chat-mode .composer-tool:hover{ border-color:rgba(255,255,255,.08); background:rgba(255,255,255,.045); color:var(--text-1); }
+  body.chat-mode .composer-tool svg{ width:15px; height:15px; }
+  body.chat-mode .composer-hint{ flex:1; overflow:hidden; color:var(--text-3); font-size:.65rem; text-align:right; text-overflow:ellipsis; white-space:nowrap; }
+  body.chat-mode .input-foot{ width:auto; max-width:none; margin:0; }
+  @media (max-width:700px){
+    body.chat-mode .chat-topbar{ min-height:61px; padding:8px 10px; gap:6px; }
+    body.chat-mode .chat-model{ gap:5px; }
+    body.chat-mode #conversationTitle{ max-width:28vw; font-size:.79rem; }
+    body.chat-mode .chat-model .sub,body.chat-mode .smart-pill{ display:none; }
+    body.chat-mode .chat-account-actions{ gap:4px; }
+    body.chat-mode #openChatOptionsBtn,body.chat-mode #forgetMeBtn{ display:none; }
+    body.chat-mode .chat-share-btn{ width:34px; min-width:34px; min-height:34px; padding:0; font-size:0; }
+    body.chat-mode .chat-share-btn svg{ width:16px; height:16px; }
+    body.chat-mode .chat-account-btn{ min-height:32px; padding:5px 7px; font-size:.65rem; }
+    body.chat-mode .chat-scroll{ padding-inline:6px; }
+    body.chat-mode .chat-thread{ padding:20px 10px 22px; gap:27px; }
+    body.chat-mode .chat-welcome{ width:100%; padding:23px 20px; }
+    body.chat-mode .welcome-mark{ width:40px; height:40px; margin-bottom:19px; }
+    body.chat-mode .welcome-mark img{ width:26px; height:26px; }
+    body.chat-mode .chat-welcome h1{ font-size:clamp(1.85rem,8vw,2.45rem); }
+    body.chat-mode .msg.from-user{ max-width:88%; }
+    body.chat-mode .chat-suggestions{ gap:6px; padding:7px 14px 10px; }
+    body.chat-mode .suggestion-chip{ min-height:32px; padding:7px 10px; font-size:.68rem; }
+    body.chat-mode .chat-inputbar{ padding:9px 10px max(10px,env(safe-area-inset-bottom)); }
+    body.chat-mode .input-shell{ min-height:58px; gap:5px; padding:7px; border-radius:16px; }
+    body.chat-mode .input-shell .icon-btn{ width:32px; height:34px; }
+    body.chat-mode #chatInput{ min-height:38px; padding:8px 2px; font-size:16px; }
+    body.chat-mode .send-btn{ width:35px; height:35px; }
+    body.chat-mode .composer-toolbar{ margin-top:5px; }
+    body.chat-mode .composer-hint{ font-size:.59rem; }
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1777,6 +1861,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
           <div class="chat-account-actions">
             <button class="chat-account-btn" id="chatSignInBtn">Sign in</button>
             <button class="chat-account-btn is-primary" id="chatSignUpBtn">Join free</button>
+            <button class="chat-share-btn" id="shareChatBtn" type="button" aria-label="Share conversation" title="Share conversation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.6 6.8-4.2M8.6 13.4l6.8 4.2"/></svg><span>Share</span>
+            </button>
             <button class="chat-icon-action" id="openChatOptionsBtn" aria-label="Tune reply" title="Tune reply">✦</button>
             <button class="chat-icon-action" id="forgetMeBtn" aria-label="Forget memory" title="Forget what elora remembers">⌫</button>
             <button class="chat-icon-action" id="clearChatBtn" aria-label="Clear chat" title="Clear chat">↺</button>
@@ -1785,44 +1872,25 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 
         <div class="chat-scroll" id="chatScroll">
           <div class="chat-thread" id="chatThread" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
-            <div class="msg from-ai">
-              <div class="avatar">e</div>
-              <div class="msg-body">
-                <div class="response-head"><i></i><span>elora response</span></div>
-                <div class="msg-bubble">Hey — I'm elora. Bring me a question, a half-formed idea, a file, or a piece of code. I'll work through the useful part instead of giving you a polished-sounding non-answer.</div>
-                <div class="msg-meta">elora · just now</div>
-                <div class="response-actions"><button type="button" data-copy-message="1" data-copy-text="Hey — I'm elora. Bring me a question, a half-formed idea, a file, or a piece of code. I'll work through the useful part instead of giving you a polished-sounding non-answer.">Copy</button><button type="button" data-message-reaction="up">Helpful</button><button type="button" data-message-reaction="down">Not quite</button></div>
-              </div>
-            </div>
+            <section class="chat-welcome" id="chatWelcome" aria-labelledby="welcomeTitle">
+              <div class="welcome-mark"><img src="assets/elorahub_logo.png" alt=""></div>
+              <span class="welcome-kicker">ELORA · YOUR THINKING SPACE</span>
+              <h1 id="welcomeTitle">Let's get to the useful part.</h1>
+              <p>Bring the rough question, the half-formed idea, or the file you haven't had time to untangle.</p>
+            </section>
           </div>
         </div>
 
         <div class="chat-suggestions" id="chatSuggestions">
-          <button class="suggestion-chip" data-fill="Look at this messy paragraph and rewrite it so it actually sounds like me.">
-            <b>Rewrite something</b>Tighten up a paragraph without losing my voice
-          </button>
-          <button class="suggestion-chip" data-fill="Walk me through the trade-offs before I make a decision I can't easily undo.">
-            <b>Think through a decision</b>Weigh the real trade-offs with me
-          </button>
-          <button class="suggestion-chip" data-fill="Here's a file I need explained in plain language — what matters most in it?">
-            <b>Explain a file</b>Upload a PDF, sheet, or image
-          </button>
-          <button class="suggestion-chip" data-fill="Give me five genuinely different name ideas for a project, not five versions of the same one.">
-            <b>Brainstorm, for real</b>Push past the obvious first ideas
-          </button>
+          <button class="suggestion-chip" data-fill="Look at this messy paragraph and rewrite it so it actually sounds like me.">Rewrite a draft</button>
+          <button class="suggestion-chip" data-fill="Walk me through the trade-offs before I make a decision I can't easily undo.">Think through a choice</button>
+          <button class="suggestion-chip" data-fill="Here's a file I need explained in plain language — what matters most in it?">Explain a file</button>
+          <button class="suggestion-chip" data-fill="Give me five genuinely different name ideas for a project, not five versions of the same one.">Find a fresh angle</button>
         </div>
 
         <div class="attach-row" id="attachRow" style="display:none;"></div>
 
         <div class="chat-inputbar">
-          <div class="composer-toolbar" aria-label="Chat modes">
-            <span class="composer-label"><i></i>Reply mode</span>
-            <button class="composer-mode is-active" data-composer-style="balanced"><span>✦</span>Balanced</button>
-            <button class="composer-mode" data-composer-style="concise"><span>↯</span>Quick</button>
-            <button class="composer-mode" data-composer-style="deep"><span>◉</span>Deep dive</button>
-            <button class="composer-mode" data-composer-style="technical"><span>&lt;/&gt;</span>Code</button>
-            <button class="composer-tool" id="composerOptionsBtn" title="Chat settings">⚙</button>
-          </div>
           <div class="input-shell">
             <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
             <button class="icon-btn" id="attachBtn" aria-label="Attach file or image" title="Attach file or image">
@@ -1833,7 +1901,22 @@ body.chat-mode{ overflow:hidden; height:100vh; }
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
             </button>
           </div>
-          <div class="input-foot" id="inputFoot">Enter sends · Shift + Enter adds a line. Replies take a few seconds; Free includes 3 file/image uploads per day.</div>
+          <div class="composer-toolbar" role="toolbar" aria-label="Reply mode and settings">
+            <div class="mode-picker">
+              <button class="mode-trigger" id="modePickerTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="modePickerMenu">
+                <span class="mode-trigger-mark" aria-hidden="true">✦</span><span id="modePickerLabel">Balanced</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+              </button>
+              <div class="mode-menu" id="modePickerMenu" role="menu" aria-label="Choose a reply mode" hidden>
+                <button type="button" role="menuitemradio" aria-checked="true" data-composer-style="balanced"><span class="mode-option-mark">✦</span><span class="mode-option-copy"><b>Balanced</b><small>Clear and considered</small></span><span class="mode-check">✓</span></button>
+                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="concise"><span class="mode-option-mark">↯</span><span class="mode-option-copy"><b>Quick</b><small>Short and direct</small></span><span class="mode-check">✓</span></button>
+                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="deep"><span class="mode-option-mark">◉</span><span class="mode-option-copy"><b>Deep dive</b><small>More context and nuance</small></span><span class="mode-check">✓</span></button>
+                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="technical"><span class="mode-option-mark">&lt;/&gt;</span><span class="mode-option-copy"><b>Code</b><small>Technical, with examples</small></span><span class="mode-check">✓</span></button>
+              </div>
+            </div>
+            <button class="composer-tool" id="composerOptionsBtn" type="button" title="Reply settings" aria-label="Open reply settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 0 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2.9Z"/></svg></button>
+            <span class="composer-hint" id="inputFoot">Enter sends · Shift + Enter for a new line</span>
+          </div>
         </div>
       </div>
     </div>
@@ -3009,6 +3092,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   var chatHistoryEmpty = document.getElementById("chatHistoryEmpty");
   var chatSearchInput = document.getElementById("chatSearchInput");
   var conversationTitleEl = document.getElementById("conversationTitle");
+  var chatWelcomeTemplate = document.getElementById("chatWelcome");
   var chatSessions = [];
   var nextConversationId = 1;
   var replyPending = false;
@@ -3051,6 +3135,11 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     }
   }
   if(chatSearchInput) chatSearchInput.addEventListener("input", renderConversationList);
+  function renderChatWelcome(){
+    if(!chatThread || !chatWelcomeTemplate) return;
+    chatThread.innerHTML = "";
+    chatThread.appendChild(chatWelcomeTemplate.cloneNode(true));
+  }
 
   function clearPrivateChatView(){
     conversationHistory = [];
@@ -3062,12 +3151,9 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(chatSearchInput) chatSearchInput.value = "";
     updateConversationTitle();
     renderConversationList();
-    if(chatThread){
-      chatThread.innerHTML = "";
-      addMessage("ai", "You've been signed out. Recent chats were removed from this tab.", "elora · just now");
-    }
+    renderChatWelcome();
     if(chatInput){ chatInput.value = ""; autoGrow(); }
-    if(chatSuggestions){ chatSuggestions.style.display = "grid"; }
+    if(chatSuggestions){ chatSuggestions.style.display = "flex"; }
   }
 
   function autoGrow(){
@@ -3531,20 +3617,84 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("composerModeSelect").addEventListener("change", function(){ chatPreferences.style = this.value; document.getElementById("responseStyle").value = this.value; saveChatPreferences(); syncComposerModes(); });
   document.getElementById("enterToSendToggle").addEventListener("change", function(){ chatPreferences.enterToSend = this.checked; saveChatPreferences(); });
-  document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "grid" : "none"; saveChatPreferences(); });
+  document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "flex" : "none"; saveChatPreferences(); });
   document.getElementById("autoFocusToggle").addEventListener("change", function(){ chatPreferences.autoFocus = this.checked; saveChatPreferences(); });
   document.getElementById("contrastToggle").addEventListener("change", function(){ chatPreferences.contrast = this.checked; saveChatPreferences(); applyTheme(); });
   document.getElementById("textScaleRange").addEventListener("input", function(){ chatPreferences.textScale = Number(this.value); document.getElementById("textScaleValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
   document.getElementById("settingsUpgradeBtn").addEventListener("click", closeSettings);
   document.getElementById("settingsForgetBtn").addEventListener("click", function(){ document.getElementById("forgetMeBtn").click(); });
-  document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); document.getElementById("newChatBtn").click(); } if(e.key === "Escape") closeSettings(); });
+  document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); document.getElementById("newChatBtn").click(); } if(e.key === "Escape"){ closeSettings(); closeModeMenu(true); } });
   document.getElementById("chatSignInBtn").addEventListener("click", function(){ document.getElementById("openSignIn").click(); });
   document.getElementById("chatSignUpBtn").addEventListener("click", function(){ document.getElementById("openSignUp").click(); });
+  document.getElementById("shareChatBtn").addEventListener("click", shareConversation);
   document.getElementById("composerOptionsBtn").addEventListener("click", function(){ openSettings("composer"); });
-  function syncComposerModes(){
-    document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-composer-style") === chatPreferences.style); });
+  function conversationTranscript(){
+    return Array.from(document.querySelectorAll("#chatThread .msg")).map(function(msg){
+      var bubble = msg.querySelector(".msg-bubble");
+      var text = bubble ? bubble.innerText.trim() : "";
+      if(!text) return "";
+      return (msg.classList.contains("from-user") ? "You" : "elora") + ":\n" + text;
+    }).filter(Boolean).join("\n\n");
   }
-  document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.style = btn.getAttribute("data-composer-style"); var style = document.getElementById("responseStyle"); if(style) style.value = chatPreferences.style; var mode = document.getElementById("composerModeSelect"); if(mode) mode.value = chatPreferences.style; saveChatPreferences(); syncComposerModes(); }); });
+  async function shareConversation(){
+    var transcript = conversationTranscript();
+    if(!activeConversation || !activeConversation.started || !transcript){ showToast("Send a message first, then you can share the conversation."); return; }
+    if(typeof navigator.share === "function"){
+      try { await navigator.share({ title:activeConversation.title || "Elora conversation", text:transcript }); return; }
+      catch(error){ if(error && error.name === "AbortError") return; }
+    }
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(transcript);
+      else throw new Error("Clipboard API unavailable");
+      showToast("Conversation copied. Paste it wherever you want to share it.");
+    } catch(error){
+      var copyField = document.createElement("textarea");
+      copyField.value = transcript; copyField.setAttribute("readonly", ""); copyField.style.position = "fixed"; copyField.style.opacity = "0";
+      document.body.appendChild(copyField); copyField.select();
+      var copied = document.execCommand("copy"); copyField.remove();
+      showToast(copied ? "Conversation copied. Paste it wherever you want to share it." : "Couldn't copy this conversation in your browser.");
+    }
+  }
+  function closeModeMenu(restoreFocus){
+    var menu = document.getElementById("modePickerMenu");
+    var trigger = document.getElementById("modePickerTrigger");
+    var wasOpen = !!(menu && !menu.hidden);
+    if(menu) menu.hidden = true;
+    if(trigger){ trigger.setAttribute("aria-expanded", "false"); if(restoreFocus && wasOpen) trigger.focus(); }
+  }
+  var modePickerTrigger = document.getElementById("modePickerTrigger");
+  var modePickerMenu = document.getElementById("modePickerMenu");
+  if(modePickerTrigger && modePickerMenu){
+    modePickerTrigger.addEventListener("click", function(){
+      var opening = modePickerMenu.hidden;
+      modePickerMenu.hidden = !opening;
+      modePickerTrigger.setAttribute("aria-expanded", String(opening));
+    });
+    modePickerTrigger.addEventListener("keydown", function(e){
+      if(e.key === "ArrowDown"){ e.preventDefault(); modePickerMenu.hidden = false; modePickerTrigger.setAttribute("aria-expanded", "true"); var first = modePickerMenu.querySelector("[data-composer-style]"); if(first) first.focus(); }
+    });
+    modePickerMenu.addEventListener("keydown", function(e){
+      if(e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      var options = Array.from(modePickerMenu.querySelectorAll("[data-composer-style]"));
+      var index = options.indexOf(document.activeElement);
+      var step = e.key === "ArrowDown" ? 1 : -1;
+      e.preventDefault();
+      if(options.length) options[(index + step + options.length) % options.length].focus();
+    });
+    document.addEventListener("click", function(e){ if(!e.target.closest(".mode-picker")) closeModeMenu(false); });
+  }
+  function syncComposerModes(){
+    var labels = { balanced:"Balanced", concise:"Quick", deep:"Deep dive", technical:"Code" };
+    var style = labels[chatPreferences.style] ? chatPreferences.style : "balanced";
+    document.querySelectorAll("[data-composer-style]").forEach(function(btn){
+      var selected = btn.getAttribute("data-composer-style") === style;
+      btn.classList.toggle("is-active", selected);
+      btn.setAttribute("aria-checked", String(selected));
+    });
+    var label = document.getElementById("modePickerLabel");
+    if(label) label.textContent = labels[style];
+  }
+  document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.style = btn.getAttribute("data-composer-style"); var style = document.getElementById("responseStyle"); if(style) style.value = chatPreferences.style; var mode = document.getElementById("composerModeSelect"); if(mode) mode.value = chatPreferences.style; saveChatPreferences(); syncComposerModes(); closeModeMenu(false); if(chatInput) chatInput.focus(); }); });
   syncComposerModes();
 
   async function getReply(text, fileEntries){
@@ -3621,6 +3771,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
         }).join("") +
         '</div>';
     }
+    var welcomePanel = document.getElementById("chatWelcome");
+    if(welcomePanel) welcomePanel.remove();
     addMessage("user", userHtml, "You · just now");
     conversationHistory.push({ role: "user", content: text });
     beginActiveConversation(text, filesForReply);
@@ -3737,7 +3889,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     chatInput.value = "";
     autoGrow();
     chatThread.innerHTML = target.threadHtml;
-    chatSuggestions.style.display = conversationHistory.length === 0 && chatPreferences.suggestions !== false ? "grid" : "none";
+    chatSuggestions.style.display = conversationHistory.length === 0 && chatPreferences.suggestions !== false ? "flex" : "none";
     updateConversationTitle();
     renderConversationList();
     scrollToBottom();
@@ -3764,11 +3916,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     chatInput.value = "";
     autoGrow();
     chatThread.innerHTML = "";
-    addMessage("ai", message, "elora · just now");
-    chatSuggestions.style.display = chatPreferences.suggestions === false ? "none" : "grid";
+    renderChatWelcome();
+    chatSuggestions.style.display = chatPreferences.suggestions === false ? "none" : "flex";
     if(chatStatusDot) chatStatusDot.classList.remove("is-active");
     updateConversationTitle();
     renderConversationList();
+    if(message) showToast(message);
   }
   document.getElementById("newChatBtn").addEventListener("click", function(){
     resetConversation("New conversation started. What are we working on?");
