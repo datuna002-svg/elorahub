@@ -44,6 +44,14 @@ async function resolveCustomerEmail(customerId) {
   }
 }
 
+// The elorahub account email passed into checkout as custom data — the
+// most reliable link between a subscription and the signed-in account,
+// even if the buyer types a different email inside Paddle's form.
+function customDataEmail(obj) {
+  const v = obj && obj.custom_data && typeof obj.custom_data === "object" ? obj.custom_data.elorahub_email : null;
+  return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? v.slice(0, 254) : null;
+}
+
 // Writes (or refills) a user's plan + credits in the subscriptions
 // table, based on a Paddle subscription object. Never throws — a
 // database hiccup here shouldn't fail the webhook response to Paddle.
@@ -52,7 +60,7 @@ async function upsertSubscription(sub) {
   const plan = PRICE_PLAN[priceId];
   if (!plan) return; // unrecognized price — nothing to record
 
-  const email = await resolveCustomerEmail(sub.customer_id);
+  const email = customDataEmail(sub) || (await resolveCustomerEmail(sub.customer_id));
   if (!email) return;
 
   try {
@@ -73,7 +81,7 @@ async function upsertSubscription(sub) {
 }
 
 async function downgradeToFree(sub) {
-  const email = await resolveCustomerEmail(sub.customer_id);
+  const email = customDataEmail(sub) || (await resolveCustomerEmail(sub.customer_id));
   if (!email) return;
   try {
     const supabase = await getSupabaseClient();

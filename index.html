@@ -5380,7 +5380,19 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
         window.Paddle.Environment.set(paddleConfig.environment === "sandbox" ? "sandbox" : "production");
         window.Paddle.Initialize({
           token: paddleConfig.clientToken,
-          checkout: { settings: { displayMode:"inline", frameTarget:"checkout-container", frameInitialHeight:"450", frameStyle:"width:100%; min-width:312px; background-color:transparent; border:none;" } }
+          checkout: { settings: { displayMode:"inline", frameTarget:"checkout-container", frameInitialHeight:"450", frameStyle:"width:100%; min-width:312px; background-color:transparent; border:none;" } },
+          eventCallback: function(event){
+            var name = event && (event.name || event.type) || "";
+            if(/checkout\.error/.test(name) || (event && event.error)){
+              var code = String((event.error && (event.error.code || event.error.type)) || (event.data && event.data.error && event.data.error.code) || "");
+              setCheckoutStatus(/not_enabled|checkout_url|domain/i.test(code)
+                ? "Payments are being switched on for elorahub right now — please try again a little later. Questions? elorahubonline@gmail.com"
+                : "Paddle couldn't open the checkout just now. Try again in a moment, or email elorahubonline@gmail.com.", "error");
+            } else if(/checkout\.completed/.test(name)){
+              setCheckoutStatus("Payment received — thank you! Your plan will update in a few seconds.", "");
+              setTimeout(function(){ try { window.dispatchEvent(new CustomEvent("elorahub:auth-state")); } catch(e){} }, 4000);
+            }
+          }
         });
         paddleReady = true;
         return true;
@@ -5457,6 +5469,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
         window.Paddle.Checkout.open({
           items: [{ priceId: priceId, quantity: 1 }],
           customer: currentUser && currentUser.email ? { email: currentUser.email } : undefined,
+          customData: currentUser && currentUser.email ? { elorahub_email: currentUser.email } : undefined,
           settings: { frameTarget: "checkout-container" }
         });
       } catch(e){
