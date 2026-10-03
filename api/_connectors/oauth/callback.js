@@ -1,4 +1,5 @@
-import { verifyOAuthState, connectorRedirectUri, storeConnector, getSupabaseClient, createInstallationToken, SITE_ORIGIN } from "../../_lib/connectors.js";
+import { verifyOAuthState, connectorRedirectUri, storeConnector, createInstallationToken, SITE_ORIGIN } from "../../_lib/connectors.js";
+import { getSupabaseClient } from "../../_lib/supabaseAdmin.js";
 
 function redirectResult(res, value) {
   return res.redirect(302, `${SITE_ORIGIN}/?connector=${encodeURIComponent(value)}#chat`);

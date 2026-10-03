@@ -5,7 +5,7 @@ import { encryptSecret, decryptSecret, createOAuthState, verifyOAuthState } from
 import { verifyRequester } from "../api/_lib/supabaseAdmin.js";
 import workspaceHandler from "../api/workspace.js";
 import cronHandler from "../api/cron/scheduled-tasks.js";
-import connectorStartHandler from "../api/connectors/[provider]/start.js";
+import connectorRouter from "../api/connectors/[provider]/[action].js";
 
 function responseMock(){
   return {
@@ -66,7 +66,7 @@ test("daily task cron requires a configured bearer secret",async()=>{
 
 test("connector OAuth initiation requires a signed-in account",async()=>{
   const res=responseMock();
-  await connectorStartHandler({method:"POST",query:{provider:"google"},headers:{}},res);
+  await connectorRouter({method:"POST",query:{provider:"google",action:"start"},headers:{}},res);
   assert.equal(res.statusCode,401);
   assert.equal(res.body.error,"authentication_required");
 });
