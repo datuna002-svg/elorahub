@@ -3158,6 +3158,246 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
 .xv-ch i b{ position:absolute; inset:0; transform-origin:left; transform:scaleX(0); background:#e0434f; }
 @media (max-width:980px){ .xv{ grid-template-columns:1fr; } .xv-chapters{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:560px){ .xv-chapters{ grid-template-columns:1fr; } .xv-big{ width:64px; height:64px; margin:-32px 0 0 -32px; } .xv-url{ display:none; } }
+
+/* compact Chat / Code switch in the sidebar's top corner */
+.ec-modes.ec-modes-mini{ display:flex; gap:2px; padding:2px; margin:0; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-bg); }
+.ec-side-head{ gap:6px!important; }
+.ec-side-head .ec-dots{ gap:6px; padding:0 2px 0 4px; }
+.ec-side-head .ec-brand{ gap:7px; padding:4px 4px; }
+.ec-side-head #sidebarCollapseBtn{ width:28px; height:28px; }
+.ec-modes-mini .ec-mode-tab{ width:27px; height:26px; padding:0; border-radius:7px; color:var(--ec-text-3); position:relative; }
+.ec-modes-mini .ec-mode-tab .ec-i{ width:15px; height:15px; }
+.ec-modes-mini .ec-mode-tab:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ec-modes-mini .ec-mode-tab.is-active{ color:var(--ec-text); background:var(--ec-raised-2); box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px var(--ec-line-2),0 2px 6px rgba(0,0,0,.35); }
+.ec-modes-mini .ec-mode-tab.is-active::after{ content:""; position:absolute; left:30%; right:30%; bottom:2px; height:1.5px; border-radius:2px; background:#e0434f; box-shadow:0 0 6px rgba(224,67,79,.8); }
+.ec-side-head .ec-brand span{ font-size:16px; }
+
+/* ============================================================
+   TRANSITIONS — every view swap fades in from a soft blur
+   ============================================================ */
+@keyframes ec-swap-in{ from{ opacity:0; filter:blur(8px); transform:translateY(8px) scale(.994); } to{ opacity:1; filter:none; transform:none; } }
+.is-swap-in{ animation:ec-swap-in .42s cubic-bezier(.2,.8,.2,1) both; }
+.es-panel.is-active{ animation:ec-swap-in .34s cubic-bezier(.2,.8,.2,1) both; }
+html.reduce-motion .is-swap-in,html.reduce-motion .es-panel.is-active{ animation:none!important; }
+
+/* ============================================================
+   BROWSER PANEL — tabs, address bar, live / reader view
+   ============================================================ */
+.ec-top-icon .ec-i{ width:17px; height:17px; }
+.ec-top-icon.is-on{ color:var(--ec-text); background:var(--ec-active); }
+.ec-browser{ position:relative; width:clamp(380px,42vw,720px); flex:none; display:flex; flex-direction:column; height:100%; background:var(--ec-side); font-family:var(--ec-font); color:var(--ec-text); animation:ec-slide .34s cubic-bezier(.2,.8,.2,1) both; }
+.ec-browser.is-wide{ width:min(62vw,1100px); }
+.ecb-tabs{ display:flex; align-items:center; gap:4px; height:46px; padding:6px 8px 0; }
+.ecb-tablist{ display:flex; gap:4px; min-width:0; overflow-x:auto; scrollbar-width:none; }
+.ecb-tablist::-webkit-scrollbar{ display:none; }
+.ecb-tab{ display:flex; align-items:center; gap:7px; max-width:190px; height:32px; padding:0 6px 0 11px; border:1px solid transparent; border-radius:9px; background:transparent; color:var(--ec-text-2); font:550 12.5px var(--ec-font); cursor:pointer; white-space:nowrap; animation:ec-in .22s ease both; }
+.ecb-tab span{ overflow:hidden; text-overflow:ellipsis; }
+.ecb-tab .ec-i{ width:14px; height:14px; flex:none; }
+.ecb-tab:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ecb-tab.is-active{ border-color:var(--ec-line-2); background:var(--ec-raised); color:var(--ec-text); box-shadow:0 2px 8px rgba(0,0,0,.25); }
+.ecb-tab-x{ display:grid; place-items:center; width:20px; height:20px; flex:none; border:0; border-radius:5px; background:transparent; color:var(--ec-text-3); cursor:pointer; }
+.ecb-tab-x:hover{ background:var(--ec-active); color:var(--ec-text); }
+.ecb-tab-x .ec-i{ width:12px; height:12px; }
+.ecb-tab.is-loading .ec-i:first-child{ animation:ec-spin 1s linear infinite; }
+.ecb-spacer{ flex:1; }
+.ecb-icon{ width:32px; height:32px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ec-text-2); cursor:pointer; }
+.ecb-icon:hover:not(:disabled){ background:var(--ec-hover); color:var(--ec-text); }
+.ecb-icon:disabled{ opacity:.35; cursor:default; }
+.ecb-icon .ec-i{ width:16px; height:16px; }
+.ecb-bar{ display:flex; align-items:center; gap:4px; padding:8px 10px; border-bottom:1px solid var(--ec-line); }
+.ecb-url{ position:relative; flex:1; min-width:0; margin:0 0 0 4px; }
+.ecb-url input{ width:100%; height:36px; padding:0 12px 0 34px; border:1px solid var(--ec-line-2); border-radius:10px; background:var(--ec-bg); color:var(--ec-text); font:14px var(--ec-font); outline:none; transition:border-color .15s,box-shadow .15s; }
+.ecb-url input:focus{ border-color:rgba(224,67,79,.6); box-shadow:0 0 0 3px rgba(197,48,62,.16); }
+.ecb-lock{ position:absolute; left:11px; top:50%; width:15px!important; height:15px!important; transform:translateY(-50%); color:var(--ec-text-3); pointer-events:none; }
+.ecb-lock.is-secure{ color:#5fe07a; }
+.ecb-mode{ display:flex; gap:2px; padding:2px; margin-left:4px; border:1px solid var(--ec-line); border-radius:9px; }
+.ecb-mode button{ height:28px; padding:0 9px; border:0; border-radius:7px; background:transparent; color:var(--ec-text-3); font:600 12px var(--ec-font); cursor:pointer; }
+.ecb-mode button.is-active{ background:var(--ec-raised-2); color:var(--ec-text); }
+.ecb-view{ position:relative; flex:1; min-height:0; overflow:auto; background:var(--ec-bg); }
+.ecb-view iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
+.ecb-empty{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; text-align:center; color:var(--ec-text-2); }
+.ecb-empty-orb{ position:relative; width:64px; height:64px; margin-bottom:6px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--ec-line-2); background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.14),transparent 60%),var(--ec-raised); }
+.ecb-empty-orb .ec-i{ width:26px; height:26px; color:var(--ec-text); }
+.ecb-empty-orb::after{ content:""; position:absolute; inset:-7px; border-radius:50%; border:1px dashed rgba(255,255,255,.14); animation:hx-spin 14s linear infinite; }
+.ecb-empty h3{ margin:0; color:var(--ec-text); font:650 17px var(--ec-font); }
+.ecb-empty p{ margin:0; max-width:330px; font-size:13.5px; line-height:1.55; }
+.ecb-suggest{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:10px; }
+.ecb-suggest button{ height:30px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:999px; background:transparent; color:var(--ec-text-2); font:13px var(--ec-font); cursor:pointer; }
+.ecb-suggest button:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ecb-loading{ padding:26px 24px; }
+.ecb-loading p{ margin:0 0 16px; color:var(--ec-text-3); font-size:13px; }
+.ecb-sk{ height:12px; margin:10px 0; border-radius:6px; background:linear-gradient(90deg,var(--ec-hover) 0%,rgba(255,255,255,.1) 40%,var(--ec-hover) 80%); background-size:220% 100%; animation:ec-shimmer 1.2s linear infinite; }
+.ecb-reader{ max-width:720px; margin:0 auto; padding:24px 26px 40px; font:15px/1.7 var(--ec-chat-font); color:var(--ec-text); }
+.ecb-site{ display:flex; align-items:center; gap:8px; color:var(--ec-text-3); font:600 12px var(--ec-font); letter-spacing:.02em; }
+.ecb-reader h1{ margin:8px 0 6px; font:650 24px/1.25 var(--ec-font); letter-spacing:-.01em; }
+.ecb-desc{ margin:0 0 16px; color:var(--ec-text-2); }
+.ecb-hero{ width:100%; max-height:280px; object-fit:cover; margin:6px 0 18px; border-radius:12px; border:1px solid var(--ec-line); }
+.ecb-reader h2{ margin:1.4em 0 .4em; font:650 18px/1.3 var(--ec-font); }
+.ecb-reader h3{ margin:1.2em 0 .35em; font:650 16px/1.35 var(--ec-font); }
+.ecb-reader p{ margin:0 0 .9em; }
+.ecb-reader ul{ margin:0 0 .9em; padding-left:1.3em; list-style:disc; }
+.ecb-reader li{ margin:.25em 0; }
+.ecb-reader pre{ margin:0 0 1em; padding:12px 14px; overflow:auto; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-code); font:12.5px/1.55 var(--ec-mono); white-space:pre-wrap; }
+.ecb-reader blockquote{ margin:0 0 1em; padding-left:14px; border-left:3px solid rgba(197,48,62,.5); color:var(--ec-text-2); }
+.ecb-links{ margin-top:26px; padding-top:16px; border-top:1px solid var(--ec-line); }
+.ecb-links summary{ color:var(--ec-text-2); font:600 13px var(--ec-font); cursor:pointer; }
+.ecb-links ul{ list-style:none; padding:0; margin:10px 0 0; display:grid; gap:2px; }
+.ecb-link{ display:block; width:100%; padding:7px 10px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:13.5px/1.4 var(--ec-font); text-align:left; cursor:pointer; }
+.ecb-link small{ display:block; color:var(--ec-text-3); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ecb-link:hover{ background:var(--ec-hover); }
+.ecb-results{ max-width:720px; margin:0 auto; padding:18px 22px 40px; }
+.ecb-results h2{ margin:0 0 14px; color:var(--ec-text-2); font:600 13px var(--ec-font); }
+.ecb-result{ display:block; width:100%; margin-bottom:6px; padding:12px 14px; border:1px solid transparent; border-radius:12px; background:transparent; text-align:left; cursor:pointer; font-family:var(--ec-font); }
+.ecb-result:hover{ border-color:var(--ec-line); background:var(--ec-hover); }
+.ecb-result small{ color:#5fe07a; font-size:12px; }
+.ecb-result strong{ display:block; margin:2px 0 3px; color:var(--ec-text); font-size:15px; font-weight:600; }
+.ecb-result span{ color:var(--ec-text-2); font-size:13.5px; line-height:1.5; }
+.ecb-error{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:30px; text-align:center; color:var(--ec-text-2); }
+.ecb-error strong{ color:var(--ec-text); font-size:16px; }
+.ecb-note{ position:absolute; left:10px; right:10px; bottom:10px; z-index:2; display:flex; align-items:center; gap:10px; padding:8px 10px 8px 14px; border:1px solid var(--ec-line-2); border-radius:12px; background:rgba(14,14,14,.94); color:var(--ec-text-2); font:12.5px var(--ec-font); box-shadow:0 10px 30px rgba(0,0,0,.4); }
+.ecb-note button{ margin-left:auto; height:28px; padding:0 10px; border:1px solid var(--ec-line-2); border-radius:8px; background:transparent; color:var(--ec-text); font:600 12px var(--ec-font); cursor:pointer; white-space:nowrap; }
+.ecb-note .ecb-note-x{ margin-left:0; width:28px; padding:0; border:0; }
+.ecb-foot{ display:flex; align-items:center; gap:6px; padding:8px 10px; border-top:1px solid var(--ec-line); overflow-x:auto; }
+.ecb-act{ display:inline-flex; align-items:center; gap:6px; flex:none; height:32px; padding:0 11px; border:1px solid var(--ec-line-2); border-radius:9px; background:transparent; color:var(--ec-text-2); font:600 12.5px var(--ec-font); text-decoration:none; cursor:pointer; }
+.ecb-act:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ecb-act .ec-i{ width:14px; height:14px; }
+.ecb-act-main{ border-color:rgba(224,67,79,.5); background:linear-gradient(180deg,rgba(197,48,62,.24),rgba(120,20,30,.18)); color:#ffd0d4; }
+.ecb-preview-bar{ display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--ec-line); background:var(--ec-raised); color:var(--ec-text-2); font:12.5px var(--ec-font); }
+.ecb-preview-bar strong{ color:var(--ec-text); }
+.ecb-preview-wrap{ position:absolute; inset:0; display:flex; flex-direction:column; }
+.ecb-preview-wrap iframe{ position:relative; flex:1; }
+@media (max-width:1100px){
+  .ec-browser,.ec-browser.is-wide{ position:fixed; z-index:72; top:0; right:0; bottom:0; width:min(560px,100vw); box-shadow:-24px 0 60px rgba(0,0,0,.55); border-left:1px solid var(--ec-line); }
+}
+
+/* ============================================================
+   PLANS VIEW — choose a plan and pay without leaving the chat
+   ============================================================ */
+.ec-plans{ position:fixed; inset:0; z-index:90; display:grid; place-items:center; padding:18px; font-family:var(--ec-font); }
+.ec-plans[hidden]{ display:none!important; }
+.ecp-scrim{ position:absolute; inset:0; background:rgba(0,0,0,.66); animation:ec-fade .25s ease both; }
+html[data-ec-theme="light"] .ecp-scrim{ background:rgba(20,20,20,.35); }
+.ecp-card{ position:relative; width:min(1080px,100%); max-height:calc(100dvh - 36px); overflow:auto; border:1px solid rgba(255,255,255,.12); border-radius:26px; color:var(--ec-text);
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(197,48,62,.16),transparent 60%),linear-gradient(180deg,#1b1b1b,#0e0e0e);
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 0 0 6px rgba(48,48,48,.3),0 0 0 13px rgba(36,36,36,.16),0 0 0 21px rgba(28,28,28,.08),0 40px 100px rgba(0,0,0,.7);
+  animation:ecp-in .45s cubic-bezier(.2,.8,.2,1) both; }
+html[data-ec-theme="light"] .ecp-card{ background:var(--ec-raised); border-color:var(--ec-line-2); box-shadow:0 30px 80px rgba(0,0,0,.2); }
+@keyframes ecp-in{ from{ opacity:0; transform:translateY(16px) scale(.98); filter:blur(6px); } }
+.ecp-close{ position:absolute; top:14px; right:14px; z-index:3; width:36px; height:36px; display:grid; place-items:center; border:1px solid var(--ec-line-2); border-radius:50%; background:var(--ec-raised); color:var(--ec-text-2); cursor:pointer; }
+.ecp-close:hover{ color:var(--ec-text); }
+.ecp-step{ padding:34px 34px 26px; }
+.ecp-head{ text-align:center; }
+.ecp-kicker{ display:inline-flex; align-items:center; gap:7px; color:var(--ec-text-3); font:700 11.5px var(--ec-font); letter-spacing:.1em; text-transform:uppercase; }
+.ecp-kicker i{ width:6px; height:6px; border-radius:50%; background:#e0434f; box-shadow:0 0 8px #e0434f; }
+.ecp-head h2{ margin:10px 0 8px; font:500 clamp(26px,3.6vw,38px)/1.1 var(--ec-serif); letter-spacing:-.01em; }
+.ecp-head p{ margin:0 auto; max-width:520px; color:var(--ec-text-2); font-size:15px; }
+.ecp-cycle{ position:relative; display:inline-flex; margin-top:20px; padding:4px; border:1px solid var(--ec-line-2); border-radius:999px; background:var(--ec-bg); }
+.ecp-cycle button{ position:relative; z-index:1; height:34px; padding:0 18px; border:0; border-radius:999px; background:transparent; color:var(--ec-text-2); font:600 13.5px var(--ec-font); cursor:pointer; transition:color .2s; }
+.ecp-cycle button.is-active{ color:#fff; }
+.ecp-cycle em{ font-style:normal; color:#ff8a93; }
+.ecp-cycle-pill{ position:absolute; top:4px; left:4px; height:34px; border-radius:999px; background:linear-gradient(180deg,#3a3a3a,#1c1c1c); box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 14px rgba(0,0,0,.4); transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1); }
+html[data-ec-theme="light"] .ecp-cycle button.is-active{ color:#fff; }
+.ecp-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:28px; }
+.ecp-plan{ position:relative; display:flex; flex-direction:column; padding:22px 20px 20px; border:1px solid var(--ec-line-2); border-radius:20px; background:linear-gradient(170deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); animation:ecp-rise .5s cubic-bezier(.2,.8,.2,1) both; transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .3s; }
+.ecp-plan:nth-child(2){ animation-delay:.06s; } .ecp-plan:nth-child(3){ animation-delay:.12s; }
+@keyframes ecp-rise{ from{ opacity:0; transform:translateY(18px); } }
+.ecp-plan:hover{ transform:translateY(-4px); border-color:rgba(255,255,255,.22); box-shadow:0 18px 40px rgba(0,0,0,.35); }
+.ecp-plan.is-featured{ border-color:rgba(224,67,79,.55); background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(197,48,62,.2),transparent 70%),linear-gradient(170deg,rgba(255,255,255,.05),rgba(255,255,255,.01)); box-shadow:0 0 0 4px rgba(197,48,62,.08),0 20px 50px rgba(0,0,0,.35); }
+.ecp-badge{ position:absolute; top:-11px; left:20px; padding:3px 10px; border-radius:999px; background:linear-gradient(135deg,#e0434f,#8e1b26); color:#fff; font:700 10.5px var(--ec-font); letter-spacing:.08em; box-shadow:0 4px 14px rgba(197,48,62,.45); }
+.ecp-badge.is-current{ background:linear-gradient(135deg,#2e2e2e,#1a1a1a); border:1px solid var(--ec-line-2); box-shadow:none; }
+.ecp-plan h3{ margin:4px 0 4px; font:650 19px var(--ec-font); }
+.ecp-plan .ecp-tag{ margin:0; min-height:40px; color:var(--ec-text-2); font-size:13.5px; line-height:1.45; }
+.ecp-price{ display:flex; align-items:baseline; gap:6px; margin:16px 0 2px; }
+.ecp-price strong{ font:600 38px/1 var(--ec-serif); letter-spacing:-.02em; }
+.ecp-price span{ color:var(--ec-text-3); font-size:13.5px; }
+.ecp-billed{ min-height:18px; margin:0 0 16px; color:var(--ec-text-3); font-size:12.5px; }
+.ecp-btn{ height:42px; padding:0 16px; border:1px solid var(--ec-line-2); border-radius:12px; background:var(--ec-raised-2); color:var(--ec-text); font:650 14px var(--ec-font); cursor:pointer; transition:transform .15s,background .2s,box-shadow .2s; }
+.ecp-btn:hover:not(:disabled){ background:var(--ec-active); }
+.ecp-btn:active:not(:disabled){ transform:scale(.97); }
+.ecp-btn:disabled{ opacity:.55; cursor:default; }
+.ecp-btn-main{ border-color:transparent; background:linear-gradient(135deg,#e0434f,#a3202c 60%,#7a1424); color:#fff; box-shadow:0 8px 24px rgba(197,48,62,.35),inset 0 1px 0 rgba(255,255,255,.25); }
+.ecp-btn-main:hover:not(:disabled){ background:linear-gradient(135deg,#ec5562,#b0252f 60%,#86172a); box-shadow:0 10px 30px rgba(197,48,62,.5); }
+.ecp-list{ display:grid; gap:9px; margin:18px 0 0; padding:16px 0 0; border-top:1px solid var(--ec-line); list-style:none; }
+.ecp-list li{ position:relative; padding-left:24px; color:var(--ec-text-2); font-size:13.5px; line-height:1.45; }
+.ecp-list li::before{ content:""; position:absolute; left:0; top:2px; width:15px; height:15px; border-radius:50%; background:rgba(197,48,62,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a85' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/10px no-repeat; }
+.ecp-list li.is-dim{ opacity:.55; }
+.ecp-list li.is-dim::before{ background:rgba(255,255,255,.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7 7 17'/%3E%3C/svg%3E") center/9px no-repeat; }
+.ecp-foot{ display:flex; align-items:center; justify-content:center; gap:7px; flex-wrap:wrap; margin:22px 0 0; color:var(--ec-text-3); font-size:12.5px; text-align:center; }
+.ecp-foot .ec-i{ width:14px; height:14px; }
+.ecp-foot a{ color:var(--ec-text-2); }
+.ecp-pay{ display:grid; grid-template-columns:320px minmax(0,1fr); gap:26px; animation:ec-swap-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.ecp-pay[hidden]{ display:none!important; }
+.ecp-order{ padding:22px; border:1px solid var(--ec-line-2); border-radius:20px; background:linear-gradient(170deg,rgba(255,255,255,.04),rgba(255,255,255,.01)); align-self:start; }
+.ecp-back{ display:flex; align-items:center; gap:6px; margin-bottom:18px; padding:0; border:0; background:none; color:var(--ec-text-2); font:600 13px var(--ec-font); cursor:pointer; }
+.ecp-back:hover{ color:var(--ec-text); }
+.ecp-back .ec-i{ width:15px; height:15px; }
+.ecp-order h3{ margin:8px 0 4px; font:650 22px var(--ec-font); }
+.ecp-order-price{ display:flex; align-items:baseline; gap:6px; }
+.ecp-order-price strong{ font:600 34px/1.1 var(--ec-serif); }
+.ecp-order-price span{ color:var(--ec-text-3); font-size:13.5px; }
+.ecp-order-note{ margin:2px 0 0; color:var(--ec-text-3); font-size:12.5px; }
+.ecp-order-list{ display:grid; gap:8px; margin:16px 0; padding:14px 0 0; border-top:1px solid var(--ec-line); list-style:none; }
+.ecp-order-list li{ position:relative; padding-left:22px; color:var(--ec-text-2); font-size:13px; }
+.ecp-order-list li::before{ content:""; position:absolute; left:0; top:2px; width:14px; height:14px; border-radius:50%; background:#c5303e url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/9px no-repeat; }
+.ecp-order-cycle{ display:flex; gap:4px; padding:3px; border:1px solid var(--ec-line); border-radius:10px; }
+.ecp-order-cycle button{ flex:1; height:30px; border:0; border-radius:7px; background:transparent; color:var(--ec-text-2); font:600 12.5px var(--ec-font); cursor:pointer; }
+.ecp-order-cycle button.is-active{ background:var(--ec-raised-2); color:var(--ec-text); }
+.ecp-order-fine{ margin:14px 0 0; color:var(--ec-text-3); font-size:12px; line-height:1.5; }
+.ecp-checkout{ min-height:460px; display:flex; flex-direction:column; gap:12px; }
+.ecp-status{ display:none; padding:12px 14px; border:1px solid var(--ec-line-2); border-radius:12px; background:var(--ec-hover); color:var(--ec-text-2); font-size:13.5px; line-height:1.5; }
+.ecp-status.is-on{ display:block; animation:ec-in .25s ease both; }
+.ecp-status.is-error{ border-color:rgba(239,90,95,.45); background:rgba(239,90,95,.08); color:#ffb3b6; }
+.ecp-status.is-ok{ border-color:rgba(58,209,90,.4); background:rgba(58,209,90,.08); color:#a6f0b5; }
+.ecp-frame{ flex:1; min-height:440px; border-radius:16px; }
+.ecp-loading{ display:grid; gap:12px; padding:22px; border:1px solid var(--ec-line); border-radius:16px; }
+.ecp-signin{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; min-height:420px; padding:30px; border:1px dashed var(--ec-line-2); border-radius:18px; text-align:center; }
+.ecp-signin[hidden]{ display:none!important; }
+.ecp-signin-icon{ width:54px; height:54px; display:grid; place-items:center; border-radius:50%; background:var(--ec-raised-2); }
+.ecp-signin h3{ margin:4px 0 0; font:650 19px var(--ec-font); }
+.ecp-signin p{ margin:0; max-width:340px; color:var(--ec-text-2); font-size:14px; line-height:1.5; }
+.ecp-signin-actions{ display:flex; gap:8px; margin-top:8px; }
+@media (max-width:860px){ .ecp-grid{ grid-template-columns:1fr; } .ecp-pay{ grid-template-columns:1fr; } .ecp-step{ padding:26px 18px 20px; } .ecp-plan .ecp-tag{ min-height:0; } }
+
+/* sidebar upgrade pill */
+.ec-upgrade-pill{ display:flex; align-items:center; gap:10px; width:calc(100% - 4px); margin:0 2px 8px; padding:10px 12px; border:1px solid rgba(224,67,79,.35); border-radius:14px; background:radial-gradient(ellipse 80% 120% at 0% 0%,rgba(197,48,62,.22),transparent 60%),var(--ec-raised); color:var(--ec-text); text-align:left; cursor:pointer; font-family:var(--ec-font); transition:transform .2s,border-color .2s,box-shadow .2s; }
+.ec-upgrade-pill[hidden]{ display:none!important; }
+.ec-upgrade-pill:hover{ transform:translateY(-1px); border-color:rgba(224,67,79,.6); box-shadow:0 8px 22px rgba(197,48,62,.18); }
+.ec-upgrade-ico{ width:30px; height:30px; flex:none; display:grid; place-items:center; border-radius:9px; background:linear-gradient(135deg,#e0434f,#7a1424); color:#fff; box-shadow:0 4px 12px rgba(197,48,62,.4); }
+.ec-upgrade-ico .ec-i{ width:16px; height:16px; }
+.ec-upgrade-pill strong{ display:block; font-size:13px; font-weight:650; }
+.ec-upgrade-pill small{ display:block; color:var(--ec-text-3); font-size:11.5px; }
+.ec-upgrade-go{ width:15px!important; height:15px!important; margin-left:auto; color:var(--ec-text-3); }
+.ec-limit-cta{ margin-top:10px; }
+
+/* ============================================================
+   CODE POWERS — preview websites, run JS / Python, zip files
+   ============================================================ */
+.ec-code-head{ gap:4px; }
+.ec-code-head .ec-code-label{ margin-right:auto; }
+.ec-code-run,.ec-code-preview{ display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 9px; border:1px solid var(--ec-line-2); border-radius:7px; background:transparent; color:var(--ec-text-2); font:600 12px var(--ec-font); cursor:pointer; }
+.ec-code-run:hover,.ec-code-preview:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ec-code-run .ec-i,.ec-code-preview .ec-i{ width:12px; height:12px; }
+.ec-code-preview{ border-color:rgba(224,67,79,.45); color:#ffb3b9; }
+.ec-run-out{ margin:0; padding:10px 14px; border-top:1px solid var(--ec-line); background:#080808; color:#d6d6d6; font:12.5px/1.55 var(--ec-mono); white-space:pre-wrap; word-break:break-word; max-height:260px; overflow:auto; }
+.ec-run-out .is-err{ color:#ff8a8f; }
+.ec-run-out .is-info{ color:var(--ec-text-3); }
+html[data-ec-theme="light"] .ec-run-out{ background:#f4f4f2; color:#222; }
+.ec-files-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:2px; }
+.ec-files-btn{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border:1px solid var(--ec-line-2); border-radius:10px; background:var(--ec-raised); color:var(--ec-text); font:600 13px var(--ec-font); cursor:pointer; }
+.ec-files-btn:hover{ background:var(--ec-hover); }
+.ec-files-btn .ec-i{ width:15px; height:15px; }
+.ec-files-btn.is-main{ border-color:rgba(224,67,79,.5); background:linear-gradient(180deg,rgba(197,48,62,.26),rgba(120,20,30,.2)); color:#ffd0d4; }
+
+/* home lens: alive */
+.hx-orb-stage{ transform:perspective(900px) rotateX(var(--hx-rx,0deg)) rotateY(var(--hx-ry,0deg)); transition:transform .5s cubic-bezier(.2,.8,.2,1); transform-style:preserve-3d; }
+.hx-glass-spot{ position:absolute; left:var(--hx-gx,50%); top:var(--hx-gy,30%); width:46%; height:40%; border-radius:50%; transform:translate(-50%,-50%); background:radial-gradient(ellipse at center,rgba(255,255,255,.32),rgba(255,255,255,.08) 45%,transparent 70%); pointer-events:none; transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),opacity .4s; opacity:.0; }
+.hx-orb-stage.is-hover .hx-glass-spot{ opacity:1; }
+.hx-chip{ transition:border-color .35s,box-shadow .35s,color .35s,opacity .35s; }
+.hx-chip.is-lit{ border-color:rgba(224,67,79,.65); color:#fff; box-shadow:0 0 0 4px rgba(197,48,62,.18),0 0 24px rgba(224,67,79,.35),0 10px 24px rgba(0,0,0,.45); }
+.hx-orb-label span.hx-orb-word{ display:inline-block; animation:ec-step-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.hx-orb-burst{ position:absolute; left:50%; top:50%; width:260px; height:190px; margin:-95px 0 0 -130px; border-radius:50%; border:2px solid rgba(255,255,255,.55); pointer-events:none; animation:hx-burst .7s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes hx-burst{ from{ opacity:.9; transform:scale(.7); } to{ opacity:0; transform:scale(1.45); } }
+html.reduce-motion .hx-orb-stage{ transform:none!important; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -3222,6 +3462,15 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
       <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4V20a.5.5 0 0 1-.5.5h-11A.5.5 0 0 1 6 20z"/><path d="M14 3.5V8h4"/></symbol>
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
       <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+      <symbol id="i-forward" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></symbol>
+      <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5.5v13l11-6.5z"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-zip" viewBox="0 0 24 24"><path d="M7.5 3.5H14l4.5 4.5v11.5a1 1 0 0 1-1 1h-10a1.5 1.5 0 0 1-1.5-1.5V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M11 3.5v2m0 2v2m0 2v2m-1 0h2v3h-2z"/></symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24"><path d="M4 8l4 4 4-7 4 7 4-4-1.5 10h-13z"/></symbol>
+      <symbol id="i-chats" viewBox="0 0 24 24"><path d="M15.5 9.5V6a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v5.5a2 2 0 0 0 2 2H6v2.6l3-2.6"/><path d="M10.5 11.5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4.5a2 2 0 0 1-2 2h-1v2.5L15 18h-2.5a2 2 0 0 1-2-2z"/></symbol>
       <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H14v-5.5h-4v5.5H5.5A1.5 1.5 0 0 1 4 19z"/></symbol>
       <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
       <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.5 3.5h5M10 3.5v5.2L5 18a1.8 1.8 0 0 0 1.6 2.5h10.8A1.8 1.8 0 0 0 19 18l-5-9.3V3.5"/><path d="M7.4 14h9.2"/></symbol>
@@ -3513,12 +3762,11 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
             <button type="button" class="ec-dot ec-dot-full" data-window-dot="full" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 6.5V3h3.5M7 3.5V7H3.5"/></svg></button>
           </div>
           <button type="button" class="ec-brand" data-nav="home" title="elorahub home"><img src="assets/elorahub_logo.png" alt=""><span>elora</span></button>
+          <div class="ec-modes ec-modes-mini" role="tablist" aria-label="Workspace mode">
+            <button type="button" role="tab" class="ec-mode-tab is-active" aria-selected="true" data-workspace-mode="chat" aria-label="Chat" title="Chat"><svg class="ec-i"><use href="#i-chats"/></svg></button>
+            <button type="button" role="tab" class="ec-mode-tab" aria-selected="false" data-workspace-mode="code" aria-label="Code" title="Code"><svg class="ec-i"><use href="#i-code"/></svg></button>
+          </div>
           <button type="button" class="ec-iconbtn" id="sidebarCollapseBtn" aria-label="Close sidebar" title="Close sidebar"><svg class="ec-i"><use href="#i-panel"/></svg></button>
-        </div>
-
-        <div class="ec-modes" role="tablist" aria-label="Workspace mode">
-          <button type="button" role="tab" class="ec-mode-tab is-active" aria-selected="true" data-workspace-mode="chat"><svg class="ec-i"><use href="#i-chat"/></svg>Chat</button>
-          <button type="button" role="tab" class="ec-mode-tab" aria-selected="false" data-workspace-mode="code"><svg class="ec-i"><use href="#i-code"/></svg>Code</button>
         </div>
 
         <label class="ec-search" for="chatSearchInput">
@@ -3560,6 +3808,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
           </div>
         </div>
 
+        <button type="button" class="ec-upgrade-pill" id="sidebarUpgrade" hidden><span class="ec-upgrade-ico"><svg class="ec-i"><use href="#i-crown"/></svg></span><span><strong id="sidebarUpgradeTitle">Upgrade to Premium</strong><small id="sidebarUpgradeSub">Unlimited messages and uploads</small></span><svg class="ec-i ec-upgrade-go"><use href="#i-forward"/></svg></button>
         <div class="ec-side-foot ec-account-wrap">
           <div class="ec-pop ec-pop-account" id="accountMenu" role="menu" hidden>
             <div class="ec-pop-identity"><span id="accountMenuEmail">Not signed in</span><strong id="accountMenuName" hidden>Guest</strong><small id="accountSyncState"></small></div>
@@ -3600,11 +3849,12 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
             <button type="button" class="ec-btn ec-btn-ghost ec-auth" id="chatSignInBtn">Log in</button>
             <button type="button" class="ec-btn ec-btn-solid ec-auth" id="chatSignUpBtn">Sign up</button>
             <button type="button" class="ec-btn ec-btn-ghost ec-progress-btn" id="taskPanelBtn" hidden title="Show task progress"><svg class="ec-i"><use href="#i-check-list"/></svg><span>Progress</span></button>
+            <button type="button" class="ec-iconbtn ec-top-icon" id="browserToggleBtn" aria-label="Open the browser" title="Browser"><svg class="ec-i"><use href="#i-globe"/></svg></button>
             <button type="button" class="ec-btn ec-btn-outline ec-share" id="shareChatBtn"><svg class="ec-i"><use href="#i-share"/></svg><span>Share</span></button>
           </div>
         </header>
 
-        <div class="ec-stage">
+        <div class="ec-stage" id="chatStage">
           <div class="ec-scroll" id="chatScroll">
             <div class="ec-thread" id="chatThread" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
               <section class="ec-welcome" id="chatWelcome" aria-labelledby="welcomeTitle">
@@ -3631,6 +3881,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
                     <button type="button" role="menuitem" data-workspace-view="skills"><svg class="ec-i"><use href="#i-book"/></svg>Prompt library</button>
                     <button type="button" role="menuitem" data-workspace-view="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Connectors</button>
                     <button type="button" role="menuitem" data-workspace-action="research"><svg class="ec-i"><use href="#i-globe"/></svg>Research<span class="ec-pop-meta" id="researchAttachState">On</span></button>
+                    <button type="button" role="menuitem" id="browserMenuItem"><svg class="ec-i"><use href="#i-globe"/></svg>Open the browser</button>
                     <button type="button" role="menuitem" id="taskMenuItem"><svg class="ec-i"><use href="#i-bolt"/></svg>Run as a task<span class="ec-pop-meta" id="taskMenuState">Off</span></button>
                     <button type="button" role="menuitem" id="composerOptionsBtn"><svg class="ec-i"><use href="#i-sliders"/></svg>Reply settings</button>
                   </div>
@@ -3687,6 +3938,68 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
         </div>
       </aside>
       <button class="ec-progress-scrim" id="taskPanelScrim" type="button" aria-label="Close progress" tabindex="-1"></button>
+
+      <aside class="ec-browser" id="browserPanel" aria-label="Browser" hidden>
+        <div class="ecb-tabs">
+          <div class="ecb-tablist" id="browserTabs" role="tablist" aria-label="Browser tabs"></div>
+          <button type="button" class="ecb-icon" id="browserNewTab" aria-label="New tab" title="New tab"><svg class="ec-i"><use href="#i-plus"/></svg></button>
+          <span class="ecb-spacer"></span>
+          <button type="button" class="ecb-icon" id="browserExpand" aria-label="Make the browser wider" title="Wider"><svg class="ec-i"><use href="#i-expand"/></svg></button>
+          <button type="button" class="ecb-icon" id="browserClose" aria-label="Close the browser" title="Close"><svg class="ec-i"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="ecb-bar">
+          <button type="button" class="ecb-icon" id="browserBack" aria-label="Back" title="Back" disabled><svg class="ec-i"><use href="#i-back"/></svg></button>
+          <button type="button" class="ecb-icon" id="browserForward" aria-label="Forward" title="Forward" disabled><svg class="ec-i"><use href="#i-forward"/></svg></button>
+          <button type="button" class="ecb-icon" id="browserReload" aria-label="Reload" title="Reload"><svg class="ec-i"><use href="#i-refresh"/></svg></button>
+          <form class="ecb-url" id="browserForm" autocomplete="off"><svg class="ec-i ecb-lock" id="browserLock"><use href="#i-search"/></svg><input id="browserUrl" type="text" spellcheck="false" placeholder="Type a URL or search" aria-label="Address or search"></form>
+          <div class="ecb-mode" id="browserMode" hidden><button type="button" data-bmode="live">Live</button><button type="button" data-bmode="reader">Reader</button></div>
+        </div>
+        <div class="ecb-view" id="browserView"></div>
+        <div class="ecb-foot" id="browserFoot" hidden>
+          <button type="button" class="ecb-act ecb-act-main" id="browserAsk"><svg class="ec-i"><use href="#i-chat"/></svg>Ask elora about this page</button>
+          <button type="button" class="ecb-act" id="browserSummarize"><svg class="ec-i"><use href="#i-spark"/></svg>Summarize</button>
+          <a class="ecb-act" id="browserOpenExt" href="#" target="_blank" rel="noopener noreferrer"><svg class="ec-i"><use href="#i-external"/></svg>New tab</a>
+        </div>
+      </aside>
+
+      <div class="ec-plans" id="plansView" role="dialog" aria-modal="true" aria-labelledby="plansTitle" hidden>
+        <div class="ecp-scrim" data-plans-close></div>
+        <div class="ecp-card">
+          <button type="button" class="ecp-close" data-plans-close aria-label="Close plans"><svg class="ec-i"><use href="#i-x"/></svg></button>
+          <div class="ecp-step" id="plansChoose">
+            <header class="ecp-head">
+              <span class="ecp-kicker"><i></i>elora plans</span>
+              <h2 id="plansTitle">Get more out of elora</h2>
+              <p id="plansLead">Pick the plan that fits how much you lean on elora. Change or cancel any time.</p>
+              <div class="ecp-cycle" role="tablist" aria-label="Billing cycle"><span class="ecp-cycle-pill" aria-hidden="true"></span><button type="button" class="is-active" data-plans-cycle="monthly">Monthly</button><button type="button" data-plans-cycle="yearly">Yearly <em>−20%</em></button></div>
+            </header>
+            <div class="ecp-grid" id="plansGrid"></div>
+            <p class="ecp-foot"><svg class="ec-i"><use href="#i-shield"/></svg>Secure payments by Paddle · Cancel any time · Questions? <a href="mailto:elorahubonline@gmail.com">elorahubonline@gmail.com</a></p>
+          </div>
+          <div class="ecp-step ecp-pay" id="plansPay" hidden>
+            <aside class="ecp-order">
+              <button type="button" class="ecp-back" id="plansBack"><svg class="ec-i"><use href="#i-back"/></svg>All plans</button>
+              <span class="ecp-kicker"><i></i>Your order</span>
+              <h3 id="orderName">Premium</h3>
+              <div class="ecp-order-price"><strong id="orderPrice">$25</strong><span id="orderCycle">/ month</span></div>
+              <p class="ecp-order-note" id="orderNote">Billed monthly.</p>
+              <ul class="ecp-order-list" id="orderList"></ul>
+              <div class="ecp-order-cycle" role="group" aria-label="Billing cycle"><button type="button" data-order-cycle="monthly">Monthly</button><button type="button" data-order-cycle="yearly">Yearly −20%</button></div>
+              <p class="ecp-order-fine">Renews automatically until you cancel. Cancel any time and keep your plan until the end of the period.</p>
+            </aside>
+            <div class="ecp-checkout">
+              <div class="ecp-status" id="plansPayStatus"></div>
+              <div class="ecp-signin" id="plansSignin" hidden>
+                <div class="ecp-signin-icon"><svg class="ec-i"><use href="#i-user"/></svg></div>
+                <h3>Log in to continue</h3>
+                <p>Your plan is linked to your elorahub account, so log in or create one first — it takes a few seconds.</p>
+                <div class="ecp-signin-actions"><button type="button" class="ecp-btn ecp-btn-main" id="plansLogin">Log in</button><button type="button" class="ecp-btn" id="plansSignup">Create account</button></div>
+              </div>
+              <div class="ecp-frame ec-checkout-frame" id="plansFrame"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="workspace-overlay ec-overlay" id="workspaceOverlay" hidden>
@@ -4738,7 +5051,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
         <div class="es-plan">
           <div class="es-plan-mark"><img src="assets/elorahub_logo.png" alt=""></div>
           <div class="es-copy"><strong id="settingsPlanName">Free plan</strong><p id="settingsPlanCopy">Try elora with a daily message limit.</p></div>
-          <button type="button" class="es-btn es-btn-solid" data-nav="pricing" data-settings-close id="settingsUpgradeBtn">View plans</button>
+          <button type="button" class="es-btn es-btn-solid" id="settingsUpgradeBtn">View plans</button>
         </div>
         <div class="es-row" data-keywords="payment card receipt invoice">
           <div class="es-copy"><strong>Payments and receipts</strong><p>Handled securely by Paddle. elorahub never sees or stores your card details.</p></div>
@@ -5072,6 +5385,18 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
 (function(){
   "use strict";
 
+  // Plays the soft blur-in used for page changes on any element that just
+  // changed (a chat opening, a settings tab, a panel view, ...).
+  function swapIn(el){
+    if(!el || document.documentElement.classList.contains("reduce-motion")) return;
+    el.classList.remove("is-swap-in");
+    void el.offsetWidth;
+    el.classList.add("is-swap-in");
+    clearTimeout(el._swapTimer);
+    el._swapTimer = setTimeout(function(){ el.classList.remove("is-swap-in"); }, 520);
+  }
+  window.eloraSwapIn = swapIn;
+
   /* ---------------- Navigation ---------------- */
   var pages = document.querySelectorAll(".page");
   var navButtons = document.querySelectorAll("[data-nav]");
@@ -5286,6 +5611,69 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
   })();
 
 
+  /* ---------------- Home lens: alive — follows your pointer, cycles what it's doing ---------------- */
+  (function(){
+    var stage = document.querySelector(".hx-orb-stage");
+    var orb = stage && stage.querySelector(".hx-orb");
+    if(!stage || !orb) return;
+    var reduce = document.documentElement.classList.contains("reduce-motion") || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var body = orb.querySelector(".hx-glass-body");
+    if(body){ var spot = document.createElement("span"); spot.className = "hx-glass-spot"; body.appendChild(spot); }
+    var label = orb.querySelector(".hx-orb-label");
+    var chips = stage.querySelectorAll(".hx-chip");
+    var states = [["Thinking", -1], ["Searching the web", 1], ["Reading your files", 0], ["Writing code", 2]];
+    var word = document.createElement("span");
+    word.className = "hx-orb-word";
+    word.textContent = "Thinking";
+    if(label){ Array.prototype.slice.call(label.childNodes).forEach(function(n){ if(n.nodeType === 3) n.parentNode.removeChild(n); }); label.appendChild(word); }
+    var i = 0, timer = null;
+    function step(){
+      if(!label) return;
+      i = (i + 1) % states.length;
+      var w = document.createElement("span");
+      w.className = "hx-orb-word";
+      w.textContent = states[i][0];
+      label.replaceChild(w, word);
+      word = w;
+      chips.forEach(function(c, k){ c.classList.toggle("is-lit", k === states[i][1]); });
+    }
+    function start(){ if(!timer && !reduce) timer = setInterval(step, 2600); }
+    function stop(){ clearInterval(timer); timer = null; }
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(entries){ entries.forEach(function(en){ if(en.isIntersecting) start(); else stop(); }); }, { threshold:0.2 }).observe(stage);
+    } else start();
+    document.addEventListener("visibilitychange", function(){ if(document.hidden) stop(); });
+    if(reduce) return;
+    var area = stage.closest(".hero-visual") || stage.parentNode;
+    var px = 0, py = 0, raf = 0;
+    function apply(){
+      raf = 0;
+      var cx = Math.max(-1, Math.min(1, px)), cy = Math.max(-1, Math.min(1, py));
+      stage.style.setProperty("--hx-ry", (cx * 12).toFixed(2) + "deg");
+      stage.style.setProperty("--hx-rx", (-cy * 9).toFixed(2) + "deg");
+      stage.style.setProperty("--hx-gx", (50 + cx * 32).toFixed(1) + "%");
+      stage.style.setProperty("--hx-gy", (34 + cy * 26).toFixed(1) + "%");
+      stage.classList.add("is-hover");
+    }
+    area.addEventListener("pointermove", function(e){
+      var r = stage.getBoundingClientRect();
+      px = (e.clientX - (r.left + r.width / 2)) / (r.width / 1.4);
+      py = (e.clientY - (r.top + r.height / 2)) / (r.height / 1.4);
+      if(!raf) raf = requestAnimationFrame(apply);
+    });
+    area.addEventListener("pointerleave", function(){
+      stage.style.setProperty("--hx-rx", "0deg"); stage.style.setProperty("--hx-ry", "0deg");
+      stage.classList.remove("is-hover");
+    });
+    orb.addEventListener("pointerdown", function(){
+      var b = document.createElement("span");
+      b.className = "hx-orb-burst";
+      orb.appendChild(b);
+      setTimeout(function(){ b.remove(); }, 760);
+      step();
+    });
+  })();
+
   /* ---------------- Explore tour video: chapters, autoplay in view ---------------- */
   (function(){
     var wrap = document.getElementById("tourPlayer"), video = document.getElementById("tourVideo");
@@ -5344,6 +5732,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
       document.querySelectorAll(".billed-note[data-monthly-note]").forEach(function(el){
         el.textContent = cycle === "yearly" ? el.getAttribute("data-yearly-note") : el.getAttribute("data-monthly-note");
       });
+      swapIn(document.querySelector("#page-pricing .plans"));
     });
   });
 
@@ -5383,6 +5772,11 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
           checkout: { settings: { displayMode:"inline", frameTarget:"checkout-container", frameInitialHeight:"450", frameStyle:"width:100%; min-width:312px; background-color:transparent; border:none;" } },
           eventCallback: function(event){
             var name = event && (event.name || event.type) || "";
+            try {
+              var evCode = String((event && event.error && (event.error.code || event.error.type)) || (event && event.data && event.data.error && event.data.error.code) || "");
+              var evKind = /checkout\.error/.test(name) || (event && event.error) ? "error" : /checkout\.completed/.test(name) ? "completed" : name;
+              window.dispatchEvent(new CustomEvent("elorahub:checkout", { detail:{ kind: evKind, code: evCode, name: name } }));
+            } catch(err){}
             if(/checkout\.error/.test(name) || (event && event.error)){
               var code = String((event.error && (event.error.code || event.error.type)) || (event.data && event.data.error && event.data.error.code) || "");
               setCheckoutStatus(/not_enabled|checkout_url|domain/i.test(code)
@@ -6313,6 +6707,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
       wrap.appendChild(pre);
       var codeEl = pre.querySelector("code");
       if(codeEl && !codeEl.querySelector(".ec-ln")) codeEl.innerHTML = codeEl.innerHTML.split("\n").map(function(line){ return '<span class="ec-ln">' + line + "</span>"; }).join("\n");
+      addCodeActions(wrap);
     });
   }
 
@@ -6786,6 +7181,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     chatPreferences.workspaceMode = mode;
     saveChatPreferences();
     applyWorkspaceMode();
+    swapIn(document.getElementById("chatStage"));
     if(typeof syncComposerModes === "function") syncComposerModes();
   }
   document.querySelectorAll("[data-workspace-mode]").forEach(function(tab){
@@ -6809,6 +7205,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     var plan = planInfo && planInfo.plan || "free";
     if(name) name.textContent = planLabel() + " plan";
     if(copy) copy.textContent = plan === "premium" ? "Unlimited messages with elora." : plan === "private" ? "A monthly allowance of messages, refilled when your plan renews." : "Try elora with a daily message limit. Upgrade for more.";
+    if(typeof renderUpgradePill === "function") renderUpgradePill();
     var title = document.getElementById("settingsUsageTitle");
     var value = document.getElementById("settingsUsageValue");
     var meter = document.getElementById("settingsUsageMeter");
@@ -7570,7 +7967,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
       if(!res.ok) logRequest({ kind:"Chat", status:res.status, ms:Date.now() - t0 });
       if(res.status === 429){
         var limitData = await res.json();
-        return { text: limitData.message || "You've hit today's limit — upgrade for more.", real: false };
+        return { text: limitData.message || "You've hit today's limit — upgrade for more.", real: false, limit: true };
       }
       if(!res.ok){
         var failure = await res.json().catch(function(){ return {}; });
@@ -7594,6 +7991,13 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     var text = chatInput.value.trim();
     if(!text && attachedFiles.length === 0) return;
 
+    var openCmd = /^(?:please\s+)?(?:open|go to|browse|visit)\s+(https?:\/\/\S+|[\w-]+(?:\.[\w-]+)+(?:\/\S*)?)\s*$/i.exec(text);
+    if(openCmd && attachedFiles.length === 0){
+      chatInput.value = ""; autoGrow();
+      openBrowser({ url: /^https?:/i.test(openCmd[1]) ? openCmd[1] : "https://" + openCmd[1] });
+      showToast("Opened " + openCmd[1].replace(/^https?:\/\//, "") + " in the browser.");
+      return;
+    }
     var filesForReply = attachedFiles.slice();
     var userHtml = text ? escapeHtml(text).replace(/\n/g, "<br>") : "";
     if(attachedFiles.length){
@@ -7669,6 +8073,12 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
           // elora had said them.
           if(result.real) conversationHistory.push({ role: "assistant", content: result.text });
           addMessageTyped(result.text, stepsLine, result.real, !result.real).then(function(msg){
+            if(result.limit){
+              var cta = document.createElement("button");
+              cta.type = "button"; cta.className = "ecp-btn ecp-btn-main ec-limit-cta"; cta.textContent = "See plans";
+              cta.addEventListener("click", function(){ openPlans(); });
+              msg.appendChild(cta);
+            }
             if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
             if(result.real){
               addFollowups(msg, result.truncated);
@@ -7784,6 +8194,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
 
   function setTaskPanelOpen(open){
     if(!taskPanel) return;
+    if(open && browserPanel && !browserPanel.hidden) setBrowserOpen(false);
     taskPanel.hidden = !open;
     if(chatMain) chatMain.classList.toggle("has-progress", !!open);
     if(taskPanelScrim) taskPanelScrim.classList.toggle("is-visible", !!open);
@@ -7792,6 +8203,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
   if(taskPanelScrim) taskPanelScrim.addEventListener("click", function(){ setTaskPanelOpen(false); });
   if(taskPanelBtn) taskPanelBtn.addEventListener("click", function(){ setTaskPanelOpen(taskPanel.hidden); });
 
+  var activeTaskFiles = [];
   function fileExt(name){ var m = /\.([a-z0-9]+)$/i.exec(name || ""); return m ? m[1].toUpperCase().slice(0, 4) : "TXT"; }
   function downloadFile(file){
     var blob = new Blob([file.content], { type: "text/plain;charset=utf-8" });
@@ -7804,7 +8216,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     var card = document.createElement("div");
     card.className = "ec-file";
     card.innerHTML = '<button type="button" class="ec-file-main"><span class="ec-file-badge"></span><span class="ec-file-name"></span><svg class="ec-i ec-file-caret"><use href="#i-chevron-down"/></svg></button>' +
-      '<div class="ec-file-actions"><button type="button" data-file-act="download" title="Download" aria-label="Download">' + icon("download") + '</button><button type="button" data-file-act="copy" title="Copy" aria-label="Copy">' + icon("copy") + '</button><button type="button" data-file-act="save" title="Save to Artifacts" aria-label="Save to Artifacts">' + icon("bookmark") + '</button></div>' +
+      '<div class="ec-file-actions">' + (/\.html?$/i.test(file.name) ? '<button type="button" data-file-act="preview" title="Preview" aria-label="Preview">' + icon("eye") + '</button>' : "") + '<button type="button" data-file-act="download" title="Download" aria-label="Download">' + icon("download") + '</button><button type="button" data-file-act="copy" title="Copy" aria-label="Copy">' + icon("copy") + '</button><button type="button" data-file-act="save" title="Save to Artifacts" aria-label="Save to Artifacts">' + icon("bookmark") + '</button></div>' +
       '<pre class="ec-file-preview" hidden><code></code></pre>';
     card.querySelector(".ec-file-badge").textContent = fileExt(file.name);
     card.querySelector(".ec-file-name").textContent = file.name;
@@ -7815,7 +8227,8 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     card.querySelector(".ec-file-actions").addEventListener("click", function(e){
       var btn = e.target.closest("[data-file-act]"); if(!btn) return;
       var act = btn.getAttribute("data-file-act");
-      if(act === "download") downloadFile(file);
+      if(act === "preview") previewFiles([file].concat((activeTaskFiles || []).filter(function(f){ return f.name !== file.name; })));
+      else if(act === "download") downloadFile(file);
       else if(act === "copy") copyToClipboard(file.content, "Copied " + file.name + ".");
       else if(act === "save"){
         if(window.EloraWorkspace && window.EloraWorkspace.saveArtifact){ window.EloraWorkspace.saveArtifact(file.name, file.content, "File"); showToast("Saved " + file.name + " to Artifacts."); }
@@ -7993,6 +8406,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
           } else if(u.tool === "read_links"){ t.used.links++; view.row("Read", "the links you shared"); }
         });
         (out.files || []).forEach(function(file){
+          t.files = t.files.filter(function(f){ return f.name !== file.name; });
           t.files.push(file);
           var pre = document.createElement("pre"); pre.className = "ec-trail-code"; pre.textContent = file.content.slice(0, 4000);
           view.row("Wrote", file.name, pre);
@@ -8022,6 +8436,8 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
         var files = document.createElement("div");
         files.className = "ec-files";
         t.files.forEach(function(f){ files.appendChild(fileCard(f)); });
+        activeTaskFiles = t.files.slice();
+        addFilesActions(files, t.files.slice(), t.plan && t.plan.title);
         var actions = finalMsg.querySelector(".ec-actions");
         finalMsg.insertBefore(files, actions);
       }
@@ -8059,6 +8475,628 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     if(msg) msg.remove();
     runTask(lastUserText(), []);
   });
+
+
+  /* ================================================================
+     BROWSER PANEL — open sites, search, read pages, ask elora about them.
+     Pages are fetched by elorahub's server (private addresses refused)
+     and shown live when the site allows embedding, otherwise as a clean
+     reader view. Website previews of elora's own code open here too.
+     ================================================================ */
+  var browserPanel = document.getElementById("browserPanel");
+  var browserView = document.getElementById("browserView");
+  var browserUrl = document.getElementById("browserUrl");
+  var browserState = { tabs: [], active: null, seq: 0 };
+  function bTab(){ return browserState.tabs.filter(function(t){ return t.id === browserState.active; })[0] || null; }
+  function hostOf(u){ try { return new URL(u).hostname.replace(/^www\./, ""); } catch(e){ return u; } }
+  function normalizeBrowse(v){
+    v = String(v || "").trim();
+    if(!v) return null;
+    if(/^https?:\/\//i.test(v)) return { url: v };
+    if(!/\s/.test(v) && /^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(v)) return { url: "https://" + v };
+    return { q: v };
+  }
+  function setBrowserOpen(open){
+    if(!browserPanel) return;
+    if(open && taskPanel && !taskPanel.hidden) setTaskPanelOpen(false);
+    browserPanel.hidden = !open;
+    if(chatMain) chatMain.classList.toggle("has-progress", !!open || (taskPanel && !taskPanel.hidden));
+    var btn = document.getElementById("browserToggleBtn");
+    if(btn) btn.classList.toggle("is-on", !!open);
+    if(open && !browserState.tabs.length) newBrowserTab();
+    if(open) renderBrowser();
+  }
+  function openBrowser(input){
+    setBrowserOpen(true);
+    var t = bTab();
+    if(!t || t.data) t = newBrowserTab();
+    if(input) browserGo(input);
+  }
+  window.EloraBrowser = { open: openBrowser };
+  function newBrowserTab(){
+    var t = { id: ++browserState.seq, title: "New tab", history: [], idx: -1, data: null, loading: false, mode: "live" };
+    browserState.tabs.push(t);
+    browserState.active = t.id;
+    renderBrowser();
+    return t;
+  }
+  function closeBrowserTab(id){
+    var i = browserState.tabs.findIndex(function(t){ return t.id === id; });
+    if(i < 0) return;
+    browserState.tabs.splice(i, 1);
+    if(!browserState.tabs.length){ setBrowserOpen(false); return; }
+    if(browserState.active === id) browserState.active = browserState.tabs[Math.max(0, i - 1)].id;
+    renderBrowser(true);
+  }
+  async function browserGo(input, fromHistory){
+    var t = bTab();
+    if(!t) t = newBrowserTab();
+    var req = typeof input === "string" ? normalizeBrowse(input) : input;
+    if(!req) return;
+    if(req.preview){
+      t.data = { kind: "preview", title: req.title, html: req.html };
+      t.title = req.title; t.loading = false;
+      if(!fromHistory){ t.history = t.history.slice(0, t.idx + 1); t.history.push(req); t.idx = t.history.length - 1; }
+      renderBrowser(true);
+      return;
+    }
+    if(!fromHistory){ t.history = t.history.slice(0, t.idx + 1); t.history.push(req); t.idx = t.history.length - 1; }
+    t.loading = true;
+    t.title = req.q ? "Search: " + req.q : hostOf(req.url);
+    t.pending = req;
+    renderBrowser(true);
+    var data;
+    try {
+      var res = await fetch("/api/chat", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ browse: req }) });
+      data = await res.json().catch(function(){ return { kind:"error", message:"The page couldn't be read." }; });
+    } catch(e){ data = { kind:"error", message:"elorahub couldn't be reached. Check your connection." }; }
+    if(t.pending !== req) return; // a newer navigation took over
+    t.loading = false;
+    t.data = data;
+    t.req = req;
+    t.title = data.kind === "search" ? "Search: " + data.query : (data.title || hostOf(data.url || req.url || "") || "Page");
+    t.mode = data.frameable && chatPreferences.browserMode !== "reader" ? "live" : "reader";
+    if(t.id === browserState.active) renderBrowser(true);
+    else renderBrowserTabs();
+  }
+  function renderBrowserTabs(){
+    var list = document.getElementById("browserTabs");
+    list.textContent = "";
+    browserState.tabs.forEach(function(t){
+      var b = document.createElement("div");
+      b.className = "ecb-tab" + (t.id === browserState.active ? " is-active" : "") + (t.loading ? " is-loading" : "");
+      b.setAttribute("role", "tab");
+      b.tabIndex = 0;
+      b.innerHTML = icon(t.data && t.data.kind === "preview" ? "eye" : t.loading ? "refresh" : "globe") + '<span></span><button type="button" class="ecb-tab-x" aria-label="Close tab">' + icon("x") + "</button>";
+      b.querySelector("span").textContent = t.title || "New tab";
+      b.title = t.title || "New tab";
+      b.addEventListener("click", function(e){
+        if(e.target.closest(".ecb-tab-x")){ closeBrowserTab(t.id); return; }
+        if(browserState.active !== t.id){ browserState.active = t.id; renderBrowser(true); }
+      });
+      list.appendChild(b);
+    });
+  }
+  function renderBrowser(animate){
+    if(!browserPanel || browserPanel.hidden) return;
+    renderBrowserTabs();
+    var t = bTab();
+    var data = t && t.data;
+    var back = document.getElementById("browserBack"), fwd = document.getElementById("browserForward");
+    back.disabled = !t || t.idx <= 0;
+    fwd.disabled = !t || t.idx >= t.history.length - 1;
+    var addr = t && t.pending && t.loading ? (t.pending.url || t.pending.q) : data ? (data.kind === "search" ? data.query : data.kind === "preview" ? "preview: " + data.title : data.url || "") : "";
+    if(document.activeElement !== browserUrl) browserUrl.value = addr || "";
+    var lock = document.getElementById("browserLock");
+    var secure = !!(data && data.url && /^https:/i.test(data.url));
+    lock.innerHTML = '<use href="#i-' + (secure ? "lock" : "search") + '"/>';
+    lock.classList.toggle("is-secure", secure);
+    var mode = document.getElementById("browserMode");
+    mode.hidden = !(data && data.kind === "page" && data.frameable);
+    mode.querySelectorAll("[data-bmode]").forEach(function(b){ b.classList.toggle("is-active", t && b.getAttribute("data-bmode") === t.mode); });
+    var foot = document.getElementById("browserFoot");
+    foot.hidden = !(data && (data.kind === "page" || data.kind === "preview"));
+    var ext = document.getElementById("browserOpenExt");
+    ext.hidden = !(data && data.url);
+    if(data && data.url) ext.href = data.url;
+    document.getElementById("browserSummarize").hidden = !(data && data.kind === "page");
+    browserView.textContent = "";
+    browserView.scrollTop = 0;
+    if(!t || (!data && !t.loading)) browserView.appendChild(browserEmpty());
+    else if(t.loading) browserView.appendChild(browserLoading(t.pending));
+    else if(data.kind === "error") browserView.appendChild(browserError(data, t));
+    else if(data.kind === "search") browserView.appendChild(browserResults(data));
+    else if(data.kind === "preview") browserView.appendChild(browserPreview(data));
+    else if(data.kind === "file") browserView.appendChild(browserFile(data));
+    else if(t.mode === "live" && data.frameable) browserView.appendChild(browserLive(data, t));
+    else browserView.appendChild(browserReader(data));
+    if(animate) swapIn(browserView);
+  }
+  function el(html){ var d = document.createElement("div"); d.innerHTML = html; return d.firstElementChild; }
+  function browserEmpty(){
+    var node = el('<div class="ecb-empty"><div class="ecb-empty-orb">' + icon("globe") + '</div><h3>Browse with elora</h3><p>Type a web address or a search. elora can read any page you open here and answer questions about it.</p><div class="ecb-suggest"></div></div>');
+    [["Wikipedia", "https://en.wikipedia.org/wiki/Special:Random"], ["Hacker News", "https://news.ycombinator.com"], ["MDN docs", "https://developer.mozilla.org/en-US/"], ["Search the news", "latest technology news"]].forEach(function(s){
+      var b = document.createElement("button"); b.type = "button"; b.textContent = s[0];
+      b.addEventListener("click", function(){ browserGo(s[1]); });
+      node.querySelector(".ecb-suggest").appendChild(b);
+    });
+    return node;
+  }
+  function browserLoading(req){
+    var node = el('<div class="ecb-loading"><p></p><div class="ecb-sk" style="width:62%;height:22px"></div><div class="ecb-sk" style="width:94%"></div><div class="ecb-sk" style="width:88%"></div><div class="ecb-sk" style="width:91%"></div><div class="ecb-sk" style="width:70%"></div><div class="ecb-sk" style="width:84%;margin-top:26px"></div><div class="ecb-sk" style="width:76%"></div></div>');
+    node.querySelector("p").textContent = req && req.q ? "Searching for “" + req.q + "”…" : "Opening " + hostOf(req && req.url || "") + "…";
+    return node;
+  }
+  function browserError(data, t){
+    var node = el('<div class="ecb-error"><div class="ecb-empty-orb">' + icon("globe") + '</div><strong>This page couldn\'t be opened</strong><p></p><div class="ecb-suggest"><button type="button" data-b-retry>Try again</button></div></div>');
+    node.querySelector("p").textContent = data.message || "Something went wrong.";
+    node.querySelector("[data-b-retry]").addEventListener("click", function(){ if(t.req || t.pending) browserGo(t.req || t.pending, true); });
+    if(data.url){ var a = document.createElement("a"); a.className = "ecb-act"; a.href = data.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.innerHTML = icon("external") + "Open in a new tab"; node.querySelector(".ecb-suggest").appendChild(a); }
+    return node;
+  }
+  function browserResults(data){
+    var node = el('<div class="ecb-results"><h2></h2></div>');
+    node.querySelector("h2").textContent = data.results && data.results.length ? "Results for “" + data.query + "”" : "No results for “" + data.query + "”";
+    (data.results || []).forEach(function(r){
+      var b = el('<button type="button" class="ecb-result"><small></small><strong></strong><span></span></button>');
+      b.querySelector("small").textContent = hostOf(r.href);
+      b.querySelector("strong").textContent = r.text;
+      b.querySelector("span").textContent = r.snippet || "";
+      b.addEventListener("click", function(){ browserGo({ url: r.href }); });
+      node.appendChild(b);
+    });
+    return node;
+  }
+  function browserReader(data){
+    var node = el('<article class="ecb-reader"><div class="ecb-site"></div><h1></h1><p class="ecb-desc"></p></article>');
+    node.querySelector(".ecb-site").textContent = hostOf(data.url) + (data.status && data.status >= 400 ? " · " + data.status : "");
+    node.querySelector("h1").textContent = data.title || hostOf(data.url);
+    var desc = node.querySelector(".ecb-desc");
+    if(data.description) desc.textContent = data.description; else desc.remove();
+    if(data.image){ var img = document.createElement("img"); img.className = "ecb-hero"; img.src = data.image; img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer"; img.onerror = function(){ img.remove(); }; node.appendChild(img); }
+    var ul = null;
+    (data.blocks || []).forEach(function(b){
+      if(b.t !== "li") ul = null;
+      var tag = b.t === "h2" ? "h2" : b.t === "h3" ? "h3" : b.t === "pre" ? "pre" : b.t === "quote" ? "blockquote" : b.t === "li" ? "li" : "p";
+      var n = document.createElement(tag);
+      n.textContent = b.x;
+      if(tag === "li"){ if(!ul){ ul = document.createElement("ul"); node.appendChild(ul); } ul.appendChild(n); }
+      else node.appendChild(n);
+    });
+    if(data.links && data.links.length){
+      var det = el('<details class="ecb-links"><summary></summary><ul></ul></details>');
+      det.querySelector("summary").textContent = "Links on this page (" + data.links.length + ")";
+      data.links.slice(0, 80).forEach(function(l){
+        var li = document.createElement("li");
+        var b = el('<button type="button" class="ecb-link"><span></span><small></small></button>');
+        b.querySelector("span").textContent = l.text;
+        b.querySelector("small").textContent = l.href;
+        b.addEventListener("click", function(){ browserGo({ url: l.href }); });
+        li.appendChild(b); det.querySelector("ul").appendChild(li);
+      });
+      node.appendChild(det);
+    }
+    return node;
+  }
+  function browserLive(data, t){
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "position:absolute;inset:0";
+    var frame = document.createElement("iframe");
+    frame.src = data.url;
+    frame.title = data.title || "Web page";
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox");
+    frame.setAttribute("referrerpolicy", "no-referrer");
+    frame.setAttribute("loading", "lazy");
+    wrap.appendChild(frame);
+    if(!sessionStorageSafeGet("ecb-live-note")){
+      var note = el('<div class="ecb-note"><span>Live view — click around the site yourself. Switch to Reader for elora\'s clean view.</span><button type="button" data-n-reader>Reader</button><button type="button" class="ecb-note-x" aria-label="Dismiss">' + icon("x") + '</button></div>');
+      note.querySelector("[data-n-reader]").addEventListener("click", function(){ t.mode = "reader"; renderBrowser(true); });
+      note.querySelector(".ecb-note-x").addEventListener("click", function(){ note.remove(); sessionStorageSafeSet("ecb-live-note", "1"); });
+      wrap.appendChild(note);
+    }
+    return wrap;
+  }
+  function browserFile(data){
+    if(/^image\//i.test(data.contentType || "")){ var n = el('<div class="ecb-reader"><img class="ecb-hero" alt="" referrerpolicy="no-referrer" style="max-height:none"></div>'); n.querySelector("img").src = data.url; return n; }
+    if(/pdf/i.test(data.contentType || "") && data.frameable){ var f = document.createElement("iframe"); f.src = data.url; f.title = "PDF"; return f; }
+    return browserError({ message: "This is a " + (data.contentType || "file").split(";")[0] + " — open it in a new tab to view it.", url: data.url }, bTab());
+  }
+  function browserPreview(data){
+    var wrap = el('<div class="ecb-preview-wrap"><div class="ecb-preview-bar">' + icon("eye") + '<span>Preview of <strong></strong> — running safely in a sandbox</span></div></div>');
+    wrap.querySelector("strong").textContent = data.title;
+    var frame = document.createElement("iframe");
+    frame.title = "Website preview";
+    frame.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-popups");
+    frame.srcdoc = data.html;
+    wrap.appendChild(frame);
+    return wrap;
+  }
+  function sessionStorageSafeGet(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } }
+  function sessionStorageSafeSet(k, v){ try { sessionStorage.setItem(k, v); } catch(e){} }
+  function pageAsText(data){
+    var lines = [data.title || "", data.description || ""].concat((data.blocks || []).map(function(b){ return (b.t === "li" ? "- " : b.t === "h2" || b.t === "h3" ? "## " : "") + b.x; }));
+    return "Web page: " + data.url + "\n\n" + lines.filter(Boolean).join("\n").slice(0, 24000);
+  }
+  function attachCurrentPage(){
+    var t = bTab(), data = t && t.data;
+    if(!data) return null;
+    var entry;
+    if(data.kind === "preview") entry = { name: (data.title || "preview") + ".html", textContent: data.html.slice(0, 40000), isImage:false };
+    else entry = { name: (data.title || hostOf(data.url)).replace(/[\\/:*?"<>|]+/g, " ").slice(0, 50) + ".web", textContent: pageAsText(data), isImage:false };
+    attachedFiles = attachedFiles.filter(function(f){ return f.name !== entry.name; });
+    attachedFiles.push(entry);
+    renderAttachments();
+    return entry;
+  }
+  if(browserPanel){
+    document.getElementById("browserForm").addEventListener("submit", function(e){ e.preventDefault(); browserGo(browserUrl.value); browserUrl.blur(); });
+    browserUrl.addEventListener("focus", function(){ browserUrl.select(); });
+    document.getElementById("browserNewTab").addEventListener("click", function(){ newBrowserTab(); setTimeout(function(){ browserUrl.focus(); }, 30); });
+    document.getElementById("browserClose").addEventListener("click", function(){ setBrowserOpen(false); });
+    document.getElementById("browserExpand").addEventListener("click", function(){ browserPanel.classList.toggle("is-wide"); });
+    document.getElementById("browserBack").addEventListener("click", function(){ var t = bTab(); if(t && t.idx > 0){ t.idx--; browserGo(t.history[t.idx], true); } });
+    document.getElementById("browserForward").addEventListener("click", function(){ var t = bTab(); if(t && t.idx < t.history.length - 1){ t.idx++; browserGo(t.history[t.idx], true); } });
+    document.getElementById("browserReload").addEventListener("click", function(){ var t = bTab(); if(t && t.history[t.idx]) browserGo(t.history[t.idx], true); });
+    document.getElementById("browserMode").addEventListener("click", function(e){ var b = e.target.closest("[data-bmode]"); var t = bTab(); if(!b || !t) return; t.mode = b.getAttribute("data-bmode"); renderBrowser(true); });
+    document.getElementById("browserAsk").addEventListener("click", function(){
+      var entry = attachCurrentPage();
+      if(!entry) return;
+      if(window.innerWidth <= 1100) setBrowserOpen(false);
+      chatInput.placeholder = "Ask about this page…";
+      chatInput.focus();
+      showToast("Page attached — ask elora anything about it.");
+    });
+    document.getElementById("browserSummarize").addEventListener("click", function(){
+      if(replyPending){ showToast("Wait for the current reply to finish first."); return; }
+      if(!attachCurrentPage()) return;
+      if(window.innerWidth <= 1100) setBrowserOpen(false);
+      chatInput.value = "Summarize this page for me: the main points, anything important to know, and whether it answers what it promises.";
+      sendMessage();
+    });
+    document.getElementById("browserToggleBtn").addEventListener("click", function(){ setBrowserOpen(browserPanel.hidden); });
+    var bmi = document.getElementById("browserMenuItem");
+    if(bmi) bmi.addEventListener("click", function(){ var m = document.getElementById("attachMenu"); if(m) m.hidden = true; setBrowserOpen(true); setTimeout(function(){ browserUrl.focus(); }, 50); });
+    // Links in elora's replies open in the browser panel (Ctrl/⌘-click opens a real tab).
+    chatThread.addEventListener("click", function(e){
+      var a = e.target.closest && e.target.closest(".ec-msg.is-ai .ec-msg-text a[href]");
+      if(!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1 || chatPreferences.linksInBrowser === false) return;
+      if(!/^https?:/i.test(a.getAttribute("href") || "")) return;
+      e.preventDefault();
+      openBrowser({ url: a.href });
+    });
+  }
+
+  /* ================================================================
+     CODE POWERS — Preview websites, Run JavaScript / Python, ZIP files
+     ================================================================ */
+  function fileKind(name){ var m = /\.([a-z0-9]+)$/i.exec(name || ""); return m ? m[1].toLowerCase() : ""; }
+  // Builds one self-contained page from html/css/js files, inlining the
+  // stylesheets and scripts the page links to (and adding any others).
+  function buildSite(files){
+    var html = files.filter(function(f){ return /^html?$/.test(fileKind(f.name)); });
+    var main = html.filter(function(f){ return /(^|\/)index\.html?$/i.test(f.name); })[0] || html[0];
+    if(!main) return null;
+    var out = main.content;
+    var used = {};
+    var base = function(n){ return String(n).split("/").pop().toLowerCase(); };
+    var byName = {};
+    files.forEach(function(f){ byName[base(f.name)] = f; });
+    out = out.replace(/<link\b[^>]*href=["']([^"']+)["'][^>]*>/gi, function(tag, href){
+      var f = byName[base(href)];
+      if(f && fileKind(f.name) === "css" && /stylesheet/i.test(tag)){ used[f.name] = 1; return "<style>\n" + f.content + "\n</style>"; }
+      return tag;
+    });
+    out = out.replace(/<script\b([^>]*)src=["']([^"']+)["']([^>]*)>\s*<\/script>/gi, function(tag, a, src, b){
+      var f = byName[base(src)];
+      if(f && /^(m?js)$/.test(fileKind(f.name))){ used[f.name] = 1; return "<script" + (/type=["']module["']/i.test(a + b) ? ' type="module"' : "") + ">\n" + f.content.replace(/<\/script/gi, "<\\/script") + "\n<\/script>"; }
+      return tag;
+    });
+    var extraCss = files.filter(function(f){ return fileKind(f.name) === "css" && !used[f.name]; }).map(function(f){ return "<style>\n" + f.content + "\n</style>"; }).join("\n");
+    var extraJs = files.filter(function(f){ return /^(m?js)$/.test(fileKind(f.name)) && !used[f.name]; }).map(function(f){ return "<script>\n" + f.content.replace(/<\/script/gi, "<\\/script") + "\n<\/script>"; }).join("\n");
+    if(extraCss) out = /<\/head>/i.test(out) ? out.replace(/<\/head>/i, extraCss + "\n</head>") : extraCss + out;
+    if(extraJs) out = /<\/body>/i.test(out) ? out.replace(/<\/body>(?![\s\S]*<\/body>)/i, extraJs + "\n</body>") : out + extraJs;
+    return { title: main.name, html: out };
+  }
+  function previewFiles(files){
+    var site = buildSite(files);
+    if(!site){ showToast("There's no HTML file to preview."); return; }
+    openBrowser({ preview: true, title: site.title, html: site.html });
+  }
+  function codeBlockFiles(msg){
+    var files = [], n = { html:0, css:0, js:0 };
+    msg.querySelectorAll(".ec-code").forEach(function(block){
+      var label = (block.querySelector(".ec-code-label") || {}).textContent || "";
+      var pre = block.querySelector("pre");
+      if(!pre) return;
+      var kind = fileKind(label) || label.toLowerCase();
+      var map = { html:"html", htm:"html", css:"css", js:"js", javascript:"js", mjs:"js" };
+      var k = map[kind];
+      if(!k) return;
+      var name = fileKind(label) ? label : (k === "html" ? "index" : k === "css" ? "style" : "script") + (n[k]++ ? n[k] : "") + "." + k;
+      files.push({ name: name, content: pre.textContent });
+    });
+    return files;
+  }
+  var JS_WORKER = "self.onmessage=async function(e){var fmt=function(a){return a.map(function(v){try{return typeof v==='string'?v:JSON.stringify(v,null,2);}catch(_){return String(v);}}).join(' ');};var send=function(t,x){self.postMessage({t:t,x:String(x).slice(0,20000)});};self.console={log:function(){send('out',fmt([].slice.call(arguments)));},info:function(){send('out',fmt([].slice.call(arguments)));},table:function(){send('out',fmt([].slice.call(arguments)));},warn:function(){send('err',fmt([].slice.call(arguments)));},error:function(){send('err',fmt([].slice.call(arguments)));}};try{var r=await (0,eval)('(async()=>{\\n'+e.data.code+'\\n})()');if(r!==undefined)send('info','→ '+fmt([r]));}catch(err){send('err',err&&err.name?err.name+': '+err.message:String(err));}send('done','');};";
+  var PYODIDE_BASE = "https://cdn.jsdelivr.net/pyodide/v0.27.8/full/";
+  var PY_WORKER = "importScripts('" + PYODIDE_BASE + "pyodide.js');var py=null;self.onmessage=async function(e){var send=function(t,x){self.postMessage({t:t,x:String(x).slice(0,20000)});};try{if(!py){send('info','Loading Python — the first run takes a few seconds…');py=await loadPyodide({indexURL:'" + PYODIDE_BASE + "'});}py.setStdout({batched:function(s){send('out',s);}});py.setStderr({batched:function(s){send('err',s);}});try{await py.loadPackagesFromImports(e.data.code);}catch(_){}var r=await py.runPythonAsync(e.data.code);if(r!==undefined&&r!==null)send('info','→ '+String(r));}catch(err){send('err',String(err&&err.message||err).split('\\n').slice(-8).join('\\n'));}send('done','');};";
+  var pyWorker = null;
+  function runCode(lang, code, out, btn){
+    out.hidden = false;
+    out.textContent = "";
+    var line = function(text, cls){ var s = document.createElement("div"); if(cls) s.className = "is-" + cls; s.textContent = text; out.appendChild(s); out.scrollTop = out.scrollHeight; };
+    var isPy = lang === "py";
+    var worker;
+    try {
+      if(isPy){ if(!pyWorker) pyWorker = new Worker(URL.createObjectURL(new Blob([PY_WORKER], { type:"text/javascript" }))); worker = pyWorker; }
+      else worker = new Worker(URL.createObjectURL(new Blob([JS_WORKER], { type:"text/javascript" })));
+    } catch(e){ line("Code can't run in this browser.", "err"); return; }
+    btn.disabled = true;
+    var started = Date.now(), printed = false;
+    line(isPy ? "Running Python…" : "Running…", "info");
+    var finish = function(msg){
+      btn.disabled = false;
+      clearTimeout(timer);
+      worker.onmessage = null; worker.onerror = null;
+      if(!isPy) worker.terminate();
+      if(msg) line(msg, "err");
+      else if(!printed) line("Finished with no output · " + ((Date.now() - started) / 1000).toFixed(1) + "s", "info");
+      else line("Done · " + ((Date.now() - started) / 1000).toFixed(1) + "s", "info");
+    };
+    var timer = setTimeout(function(){ worker.terminate(); if(isPy) pyWorker = null; finish("Stopped — it ran longer than " + (isPy ? 60 : 10) + " seconds."); }, isPy ? 60000 : 10000);
+    worker.onmessage = function(e){ var m = e.data || {}; if(m.t === "done") finish(); else { if(m.t === "out" || m.t === "err") printed = true; line(m.x, m.t === "err" ? "err" : m.t === "info" ? "info" : ""); } };
+    worker.onerror = function(e){ if(isPy) pyWorker = null; finish(e.message || "Couldn't run the code."); };
+    worker.postMessage({ code: code });
+  }
+  function addCodeActions(wrap){
+    var head = wrap.querySelector(".ec-code-head");
+    var pre = wrap.querySelector("pre");
+    if(!head || !pre || head.querySelector(".ec-code-run,.ec-code-preview")) return;
+    var label = ((head.querySelector(".ec-code-label") || {}).textContent || "").toLowerCase();
+    var kind = fileKind(label) || label;
+    var copyBtn = head.querySelector(".ec-code-copy");
+    if(/^(html?|svg)$/.test(kind)){
+      var pv = document.createElement("button");
+      pv.type = "button"; pv.className = "ec-code-preview"; pv.innerHTML = icon("eye") + "<span>Preview</span>";
+      pv.addEventListener("click", function(){
+        var msg = wrap.closest(".ec-msg") || wrap.parentNode;
+        var files = codeBlockFiles(msg);
+        var mine = files.filter(function(f){ return f.content === pre.textContent; })[0];
+        if(mine) files = [mine].concat(files.filter(function(f){ return f !== mine; }).filter(function(f){ return !/^html?$/.test(fileKind(f.name)); }));
+        if(kind === "svg") files = [{ name: "image.html", content: '<!doctype html><body style="margin:0;display:grid;place-items:center;min-height:100vh">' + pre.textContent + "</body>" }];
+        previewFiles(files.length ? files : [{ name: "index.html", content: pre.textContent }]);
+      });
+      head.insertBefore(pv, copyBtn);
+    }
+    var runLang = /^(js|javascript|mjs)$/.test(kind) ? "js" : /^(py|python|python3)$/.test(kind) ? "py" : null;
+    if(runLang === "js" && /\b(document|window)\.|\balert\(|addEventListener\(/.test(pre.textContent)){
+      // Browser (DOM) code: show it running on a page instead of in the console.
+      runLang = null;
+      var msgEl = wrap.closest(".ec-msg");
+      var hasHtml = msgEl && Array.prototype.some.call(msgEl.querySelectorAll(".ec-code-label"), function(l){ return /^html?$|\.html?$/i.test(l.textContent); });
+      if(!hasHtml){
+        var pv2 = document.createElement("button");
+        pv2.type = "button"; pv2.className = "ec-code-preview"; pv2.innerHTML = icon("eye") + "<span>Preview</span>";
+        pv2.addEventListener("click", function(){ previewFiles([{ name: "index.html", content: '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>\n<script>\n' + pre.textContent.replace(/<\/script/gi, "<\\/script") + "\n<\/script>\n</body></html>" }]); });
+        head.insertBefore(pv2, copyBtn);
+      }
+    }
+    if(runLang){
+      var out = document.createElement("div");
+      out.className = "ec-run-out"; out.hidden = true;
+      wrap.appendChild(out);
+      var rb = document.createElement("button");
+      rb.type = "button"; rb.className = "ec-code-run"; rb.innerHTML = icon("play") + "<span>Run</span>";
+      rb.title = runLang === "py" ? "Run this Python in your browser" : "Run this JavaScript in your browser";
+      rb.addEventListener("click", function(){ runCode(runLang, pre.textContent, out, rb); });
+      head.insertBefore(rb, copyBtn);
+    }
+  }
+  // Minimal ZIP writer (stored, no compression) for "Download all".
+  function crc32(bytes){
+    var table = crc32.t;
+    if(!table){ table = crc32.t = new Uint32Array(256); for(var n = 0; n < 256; n++){ var c = n; for(var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; table[n] = c >>> 0; } }
+    var crc = 0xFFFFFFFF;
+    for(var i = 0; i < bytes.length; i++) crc = table[(crc ^ bytes[i]) & 255] ^ (crc >>> 8);
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+  function makeZip(files){
+    var enc = new TextEncoder(), parts = [], central = [], offset = 0;
+    files.forEach(function(f){
+      var name = enc.encode(f.name), data = enc.encode(f.content), crc = crc32(data);
+      var lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+      lh.setUint16(10, 0, true); lh.setUint16(12, 0x21, true); lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true);
+      lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+      parts.push(new Uint8Array(lh.buffer), name, data);
+      var ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+      ch.setUint16(10, 0, true); ch.setUint16(12, 0, true); ch.setUint16(14, 0x21, true); ch.setUint32(16, crc, true);
+      ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+      ch.setUint32(42, offset, true);
+      central.push(new Uint8Array(ch.buffer), name);
+      offset += 30 + name.length + data.length;
+    });
+    var size = central.reduce(function(s, a){ return s + a.length; }, 0);
+    var end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+    end.setUint32(12, size, true); end.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type:"application/zip" });
+  }
+  window.EloraZip = makeZip;
+  function downloadZip(files, name){
+    var blob = makeZip(files);
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name || "elora-files.zip"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  }
+  function addFilesActions(container, files, title){
+    var bar = document.createElement("div");
+    bar.className = "ec-files-actions";
+    if(buildSite(files)){
+      var pv = document.createElement("button"); pv.type = "button"; pv.className = "ec-files-btn is-main"; pv.innerHTML = icon("eye") + "Preview the site";
+      pv.addEventListener("click", function(){ previewFiles(files); });
+      bar.appendChild(pv);
+    }
+    if(files.length > 1){
+      var zb = document.createElement("button"); zb.type = "button"; zb.className = "ec-files-btn"; zb.innerHTML = icon("zip") + "Download all (.zip)";
+      zb.addEventListener("click", function(){ downloadZip(files, String(title || "elora-files").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) + ".zip"); });
+      bar.appendChild(zb);
+    }
+    if(bar.children.length) container.insertBefore(bar, container.firstChild);
+  }
+
+  /* ================================================================
+     PLANS — choose a plan and pay with Paddle without leaving the chat
+     ================================================================ */
+  var plansView = document.getElementById("plansView");
+  var PLAN_LIST = [
+    { id:"free", name:"Free", tag:"Try elora properly before committing to anything.", m:0, y:0, features:[["Limited daily messages with elora"], ["Up to 3 file or image uploads a day"], ["Standard reasoning depth"], ["No priority reply speed", 1], ["No extended chat memory", 1]] },
+    { id:"private", name:"Private", badge:"MOST FLEXIBLE", tag:"Noticeably more room, and a private, unshared workspace.", m:15, y:144, features:[["Way more messages than Free"], ["Significantly more photo & file uploads"], ["Private, unshared conversation space"], ["Longer chat memory"]] },
+    { id:"premium", name:"Premium", badge:"UNLIMITED", featured:true, tag:"No caps. Use elora as much as your work actually needs.", m:25, y:240, features:[["Unlimited text conversations with elora"], ["Unlimited photo & file uploads"], ["Fastest queue priority"], ["Longest chat memory available"], ["Early access to new elora features"]] }
+  ];
+  var plansState = { cycle:"monthly", plan:null, open:false };
+  function money(n){ return "$" + (Math.round(n * 100) / 100).toString(); }
+  function currentPlanId(){ return planInfo && planInfo.plan ? planInfo.plan : "free"; }
+  function placeCyclePill(){
+    var wrap = plansView.querySelector(".ecp-cycle"), pill = wrap && wrap.querySelector(".ecp-cycle-pill"), on = wrap && wrap.querySelector("button.is-active");
+    if(!pill || !on) return;
+    pill.style.width = on.offsetWidth + "px";
+    pill.style.transform = "translateX(" + (on.offsetLeft - 4) + "px)";
+  }
+  function renderPlans(){
+    var grid = document.getElementById("plansGrid");
+    var current = currentPlanId();
+    plansView.querySelectorAll("[data-plans-cycle]").forEach(function(b){ b.classList.toggle("is-active", b.getAttribute("data-plans-cycle") === plansState.cycle); });
+    placeCyclePill();
+    grid.textContent = "";
+    PLAN_LIST.forEach(function(p){
+      var yearly = plansState.cycle === "yearly";
+      var per = yearly ? p.y / 12 : p.m;
+      var card = el('<div class="ecp-plan' + (p.featured ? " is-featured" : "") + '"><h3></h3><p class="ecp-tag"></p><div class="ecp-price"><strong></strong><span></span></div><p class="ecp-billed"></p><button type="button" class="ecp-btn"></button><ul class="ecp-list"></ul></div>');
+      if(current === p.id){ card.insertBefore(el('<span class="ecp-badge is-current">YOUR PLAN</span>'), card.firstChild); }
+      else if(p.badge){ card.insertBefore(el('<span class="ecp-badge"></span>'), card.firstChild).textContent = p.badge; }
+      card.querySelector("h3").textContent = p.name;
+      card.querySelector(".ecp-tag").textContent = p.tag;
+      card.querySelector(".ecp-price strong").textContent = money(per);
+      card.querySelector(".ecp-price span").textContent = p.m ? "/ month" : "/ forever";
+      card.querySelector(".ecp-billed").textContent = !p.m ? "No card needed." : yearly ? "Billed " + money(p.y) + " once a year — save " + money(p.m * 12 - p.y) : "Billed " + money(p.m) + " every month";
+      var btn = card.querySelector(".ecp-btn");
+      if(current === p.id){ btn.textContent = "Your current plan"; btn.disabled = true; }
+      else if(p.id === "free"){ btn.textContent = current === "free" ? "Your current plan" : "Included with every account"; btn.disabled = true; }
+      else if(current === "premium"){ btn.textContent = "You're on Premium"; btn.disabled = true; }
+      else { btn.textContent = "Get " + p.name; if(p.featured) btn.classList.add("ecp-btn-main"); btn.addEventListener("click", function(){ choosePlan(p.id); }); }
+      p.features.forEach(function(f){ var li = document.createElement("li"); li.textContent = f[0]; if(f[1]) li.className = "is-dim"; card.querySelector(".ecp-list").appendChild(li); });
+      grid.appendChild(card);
+    });
+  }
+  function setPlansStatus(text, kind){
+    var box = document.getElementById("plansPayStatus");
+    box.textContent = text || "";
+    box.className = "ecp-status" + (text ? " is-on" : "") + (kind ? " is-" + kind : "");
+  }
+  function renderOrder(){
+    var p = PLAN_LIST.filter(function(x){ return x.id === plansState.plan; })[0];
+    if(!p) return;
+    var yearly = plansState.cycle === "yearly";
+    document.getElementById("orderName").textContent = p.name;
+    document.getElementById("orderPrice").textContent = yearly ? money(p.y) : money(p.m);
+    document.getElementById("orderCycle").textContent = yearly ? "/ year" : "/ month";
+    document.getElementById("orderNote").textContent = yearly ? "That's " + money(p.y / 12) + " a month — you save " + money(p.m * 12 - p.y) + " a year." : "Billed every month. Switch to yearly to save 20%.";
+    var list = document.getElementById("orderList");
+    list.textContent = "";
+    p.features.filter(function(f){ return !f[1]; }).forEach(function(f){ var li = document.createElement("li"); li.textContent = f[0]; list.appendChild(li); });
+    plansView.querySelectorAll("[data-order-cycle]").forEach(function(b){ b.classList.toggle("is-active", b.getAttribute("data-order-cycle") === plansState.cycle); });
+  }
+  function closeCheckoutFrame(){ try { if(window.Paddle && window.Paddle.Checkout && window.Paddle.Checkout.close) window.Paddle.Checkout.close(); } catch(e){} document.getElementById("plansFrame").textContent = ""; }
+  async function startPlanCheckout(){
+    var frame = document.getElementById("plansFrame");
+    var signin = document.getElementById("plansSignin");
+    closeCheckoutFrame();
+    if(!currentUser || !currentUser.email){ signin.hidden = false; frame.hidden = true; setPlansStatus(""); return; }
+    signin.hidden = true; frame.hidden = false;
+    frame.innerHTML = '<div class="ecp-loading"><div class="ecb-sk" style="width:55%;height:18px"></div><div class="ecb-sk"></div><div class="ecb-sk" style="width:80%"></div><div class="ecb-sk" style="height:42px;margin-top:20px"></div><div class="ecb-sk" style="height:42px"></div></div>';
+    setPlansStatus("Opening Paddle's secure checkout…");
+    var ok = await ensurePaddleReady();
+    if(!plansState.open) return;
+    if(!ok){ frame.textContent = ""; setPlansStatus("Payments aren't switched on yet. Please try again a little later — or email elorahubonline@gmail.com and we'll sort it out.", "error"); return; }
+    var priceId = paddleConfig.priceIds[plansState.plan + "-" + plansState.cycle];
+    if(!priceId){ frame.textContent = ""; setPlansStatus("This billing option isn't available yet — try the other cycle.", "error"); return; }
+    frame.textContent = "";
+    setPlansStatus(paddleConfig.environment === "sandbox" ? "Test mode — use a Paddle test card. No real charge." : "Card, Apple Pay and Google Pay — handled securely by Paddle.");
+    try {
+      window.Paddle.Checkout.open({
+        items: [{ priceId: priceId, quantity: 1 }],
+        customer: { email: currentUser.email },
+        customData: { elorahub_email: currentUser.email },
+        settings: { displayMode:"inline", frameTarget:"ec-checkout-frame", frameInitialHeight:"450", frameStyle:"width:100%; min-width:300px; background-color:transparent; border:none;" }
+      });
+    } catch(e){ setPlansStatus("Paddle couldn't open the checkout. Try again in a moment.", "error"); }
+  }
+  function choosePlan(id){
+    plansState.plan = id;
+    document.getElementById("plansChoose").hidden = true;
+    document.getElementById("plansPay").hidden = false;
+    renderOrder();
+    startPlanCheckout();
+    plansView.querySelector(".ecp-card").scrollTop = 0;
+  }
+  function backToPlans(){
+    closeCheckoutFrame();
+    plansState.plan = null;
+    document.getElementById("plansPay").hidden = true;
+    var choose = document.getElementById("plansChoose");
+    choose.hidden = false;
+    swapIn(choose);
+    renderPlans();
+  }
+  function openPlans(planId){
+    if(!plansView) return;
+    plansState.open = true;
+    plansView.hidden = false;
+    document.getElementById("plansPay").hidden = true;
+    document.getElementById("plansChoose").hidden = false;
+    renderPlans();
+    requestAnimationFrame(placeCyclePill);
+    if(planId && planId !== "free" && currentPlanId() !== planId) choosePlan(planId);
+    if(!planInfo) loadPlanInfo().then(function(){ if(plansState.open && !plansState.plan) renderPlans(); });
+  }
+  function closePlans(){
+    if(!plansView || plansView.hidden) return;
+    plansState.open = false;
+    closeCheckoutFrame();
+    plansView.hidden = true;
+  }
+  window.EloraPlans = { open: openPlans, close: closePlans };
+  if(plansView){
+    plansView.querySelectorAll("[data-plans-close]").forEach(function(b){ b.addEventListener("click", closePlans); });
+    plansView.querySelectorAll("[data-plans-cycle]").forEach(function(b){ b.addEventListener("click", function(){ plansState.cycle = b.getAttribute("data-plans-cycle"); renderPlans(); swapIn(document.getElementById("plansGrid")); }); });
+    plansView.querySelectorAll("[data-order-cycle]").forEach(function(b){ b.addEventListener("click", function(){ if(plansState.cycle === b.getAttribute("data-order-cycle")) return; plansState.cycle = b.getAttribute("data-order-cycle"); renderOrder(); startPlanCheckout(); }); });
+    document.getElementById("plansBack").addEventListener("click", backToPlans);
+    document.getElementById("plansLogin").addEventListener("click", function(){ document.getElementById("openSignIn").click(); });
+    document.getElementById("plansSignup").addEventListener("click", function(){ document.getElementById("openSignUp").click(); });
+    document.addEventListener("keydown", function(e){ if(e.key === "Escape" && plansState.open) closePlans(); });
+    window.addEventListener("resize", function(){ if(plansState.open) placeCyclePill(); });
+    window.addEventListener("elorahub:auth-state", function(){ if(plansState.open && plansState.plan && !document.getElementById("plansSignin").hidden && currentUser && currentUser.email) startPlanCheckout(); });
+    window.addEventListener("elorahub:checkout", function(e){
+      if(!plansState.open || !plansState.plan) return;
+      var d = e.detail || {};
+      if(d.kind === "error") setPlansStatus(/not_enabled|checkout_url|domain/i.test(d.code || "") ? "Payments are being switched on for elorahub right now — please try again a little later. Questions? elorahubonline@gmail.com" : "Paddle couldn't open the checkout just now. Try again in a moment, or email elorahubonline@gmail.com.", "error");
+      else if(d.kind === "completed"){ setPlansStatus("Payment received — thank you! Your plan is being updated…", "ok"); setTimeout(function(){ loadPlanInfo(); }, 3500); setTimeout(function(){ if(plansState.open) closePlans(); showToast("Welcome to " + (plansState.plan === "premium" ? "Premium" : "Private") + "!"); }, 6000); }
+    });
+    var up = document.getElementById("sidebarUpgrade");
+    if(up) up.addEventListener("click", function(){ openPlans(); });
+    var sb = document.getElementById("settingsUpgradeBtn");
+    if(sb) sb.addEventListener("click", function(){ closeSettings(); openPlans(); });
+  }
+  function renderUpgradePill(){
+    var pill = document.getElementById("sidebarUpgrade");
+    if(!pill) return;
+    var plan = currentPlanId();
+    pill.hidden = !!(planInfo && plan === "premium");
+    document.getElementById("sidebarUpgradeTitle").textContent = plan === "private" ? "Go Premium" : currentUser && currentUser.email ? "Upgrade your plan" : "See plans";
+    document.getElementById("sidebarUpgradeSub").textContent = plan === "private" ? "Unlimited messages and uploads" : "More messages, uploads and memory";
+  }
 
   // Edit: puts your latest message back in the box and removes it (and
   // elora's answer to it) so you can change it and send again.
@@ -8151,6 +9189,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     renderConversationList();
     scrollToBottom();
     setSidebarOpen(false);
+    swapIn(document.getElementById("chatStage") || chatThread);
   }
   if(chatHistoryList){
     chatHistoryList.addEventListener("click", function(e){
@@ -8189,6 +9228,7 @@ html.reduce-motion .nav-pill::after,html.reduce-motion .nav-pill i{ animation:no
     updateConversationTitle();
     renderConversationList();
     window.dispatchEvent(new CustomEvent("elorahub:conversation-updated"));
+    swapIn(document.getElementById("chatStage") || chatThread);
     if(message) showToast(message);
   }
   document.getElementById("newChatBtn").addEventListener("click", function(){

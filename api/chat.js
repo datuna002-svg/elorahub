@@ -9,6 +9,7 @@
 // (your own self-hosted vLLM/Ollama server, RunPod, OpenRouter, etc.) by
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
+import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -44,7 +45,11 @@ Helpfulness: treat the user as a capable adult and help with any legitimate requ
 
 Quality: for anything non-trivial, think the problem through before answering and check your own work — especially code, math and facts. Say so when you're unsure instead of inventing details; never make up URLs, citations, statistics, package names or API methods. You can't browse the web yourself: when live search results or page excerpts are included in a message, use them for current facts and say they came from a search; otherwise be clear that your knowledge may be out of date. Your name is elora (always lowercase), the assistant inside elorahub. If asked what powers you, say elora runs on leading open-weight and Gemini models chosen by elorahub.
 
-About elorahub (use this when people ask how the app works; don't recite it unprompted): the chat has Chat and Code modes (tabs at the top of the sidebar) and reply modes Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.`;
+About elorahub (use this when people ask how the app works; don't recite it unprompted): the chat has Chat and Code modes (tabs at the top of the sidebar) and reply modes Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.
+
+Building things in elorahub: HTML code blocks get a Preview button that runs the page live in a sandbox, and JavaScript and Python code blocks get a Run button (in the browser; Python runs on Pyodide, so no network or files). So when someone asks for a website, landing page, game or UI, give them something that works immediately: either one complete self-contained HTML file, or separate blocks labelled like \`\`\`html filename=index.html, \`\`\`css filename=style.css and \`\`\`js filename=script.js where index.html links style.css and script.js — the preview combines them. Make it look polished (modern layout, responsive, real content instead of lorem ipsum) and never leave placeholders like "add your code here" or "...". There's also a built-in browser panel (the globe button): people can open sites there and attach a page to the chat for you to read.
+
+Hard problems: slow down. Restate what's really being asked, work through it step by step, check edge cases and your own arithmetic or logic before answering, and if something is ambiguous pick the most sensible reading and say which one you chose.`;
 
 // Finds up to 2 http(s) links in a message, fetches each with a short
 // timeout, strips it down to plain text, and returns a small combined
@@ -434,19 +439,17 @@ async function fetchLinkContext(text) {
   const excerpts = await Promise.all(
     urls.map(async (url) => {
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 6000);
-        const res = await fetch(url, {
-          signal: controller.signal,
-          headers: { "User-Agent": "elorahub-bot/1.0 (+https://elorahub.online)" },
-        });
-        clearTimeout(timeout);
-        if (!res.ok) return null;
-        const contentType = res.headers.get("content-type") || "";
-        if (!contentType.includes("text/html") && !contentType.includes("text/plain")) return null;
-        const raw = await res.text();
-        const cleaned = contentType.includes("text/html") ? htmlToText(raw) : raw.trim();
-        return `--- Content from ${url} ---\n${cleaned.slice(0, 3000)}`;
+        // safeFetch refuses private/internal addresses and caps size + time.
+        const res = await safeFetch(url, { timeoutMs: 6000 });
+        if (!res.ok || !res.textual || !res.body) return null;
+        let cleaned;
+        if (/html/i.test(res.contentType)) {
+          const page = readablePage(res.body, res.url);
+          cleaned = [page.title, page.description, ...page.blocks.map((b) => b.x)].filter(Boolean).join("\n");
+        } else {
+          cleaned = res.body.trim();
+        }
+        return `--- Content from ${url} ---\n${cleaned.slice(0, 4000)}`;
       } catch (_err) {
         return null;
       }
@@ -539,10 +542,11 @@ async function runTaskPhase(res, ctx) {
   const { phase, task, goal, history, systemBase, preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary } = ctx;
   const plan = attemptPlan(false, true); // Gemini first: tasks are token-heavy
   const maxSteps = Math.max(2, Math.min(6, Number(preferences?.taskMaxSteps) || 6));
-  const opts = (maxTokens) => ({ maxTokens, temperature: 0.3, reasoningEffort: "medium", totalBudgetMs: 48000 });
+  // Gemini gets room for whole files; Groq's cap depends on its 8k/min budget.
+  const opts = (maxTokens, effort) => ({ maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(maxTokens, 7600 - estimateTokens(msgs, sys))) : Math.max(maxTokens, 8000)), temperature: 0.3, reasoningEffort: effort || "medium", totalBudgetMs: 48000 });
 
   if (phase === "plan") {
-    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
+    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable. For a website, app or game, plan complete files (index.html, style.css, script.js — the user gets a live preview of them), and when the job is mainly code, end with a step that reviews the files for bugs and outputs corrected, complete versions.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
     const { result, failures } = await runWithFallback(plan, () => history, sys, opts(1400));
     if (!result.ok) return taskFailure(res, failures);
     const parsed = sanitizePlan(parseJsonObject(result.reply) || {});
@@ -552,7 +556,11 @@ async function runTaskPhase(res, ctx) {
   }
 
   const p = sanitizePlan(task?.plan || {});
-  const results = Array.isArray(task?.results) ? task.results.map((r) => String(r || "").slice(0, 2400)) : [];
+  // Earlier steps' output (code included) so later steps can build on and
+  // review it; newest steps keep the most room.
+  const rawResults = Array.isArray(task?.results) ? task.results.map((r) => String(r || "")) : [];
+  let room = 26000;
+  const results = rawResults.slice().reverse().map((r) => { const keep = r.slice(0, Math.max(800, Math.min(9000, room))); room -= keep.length; return keep; }).reverse();
   const planList = p.steps.map((s, k) => `${k + 1}. ${s.title}`).join("\n");
   const prior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r}`).join("\n\n");
 
@@ -570,9 +578,9 @@ async function runTaskPhase(res, ctx) {
       const links = await fetchLinkContext(goal);
       if (links) { used.push({ tool: "read_links", ok: true }); context += `\n\n${links}`; }
     }
-    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py`;
+    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.`;
     const msg = `${prior ? `Results so far:\n\n${prior}\n\n` : ""}${context ? `${context.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
-    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(step.kind === "code" || step.kind === "write" ? 3600 : 2400));
+    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(step.kind === "code" || step.kind === "write" ? 5000 : 2800, step.kind === "code" ? "high" : "medium"));
     if (!result.ok) return taskFailure(res, failures);
     return res.status(200).json({ result: result.reply, files: extractFiles(result.reply), used, provider: result.label });
   }
@@ -595,6 +603,35 @@ async function taskFailure(res, failures) {
   await logEvent("error", "chat", `Task step failed on all models: ${summary}`.slice(0, 1900));
   const busy = (failures || []).length && failures.every((f) => f.status === 429 || f.status === 503 || f.status === 0);
   return res.status(502).json({ error: busy ? "busy" : "model_error", message: busy ? "elora's models are busy right now. Try the task again in a few seconds." : "elora couldn't finish this step. Try the task again." });
+}
+
+const browseUsage = new Map();
+async function handleBrowse(req, res, browse) {
+  const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  const now = Date.now();
+  const slot = browseUsage.get(ip) || { count: 0, reset: now + 3600000 };
+  if (now > slot.reset) { slot.count = 0; slot.reset = now + 3600000; }
+  slot.count++;
+  browseUsage.set(ip, slot);
+  if (slot.count > 200) return res.status(429).json({ kind: "error", message: "You've opened a lot of pages this hour. Try again in a little while." });
+  const q = typeof browse.q === "string" ? browse.q.trim().slice(0, 300) : "";
+  if (q) {
+    const results = await searchWeb(q);
+    return res.status(200).json({ kind: "search", query: q, results });
+  }
+  const url = typeof browse.url === "string" ? browse.url.trim().slice(0, 2000) : "";
+  if (!url) return res.status(400).json({ kind: "error", message: "Type a web address or something to search for." });
+  const page = await safeFetch(url);
+  if (!page.ok && !page.textual) {
+    return res.status(200).json({ kind: "error", url, status: page.status || 0, message: page.reason || (page.status ? `The site answered with an error (${page.status}).` : "The page couldn't be opened.") });
+  }
+  const canFrame = frameable(page.headers, page.url);
+  if (!page.textual) return res.status(200).json({ kind: "file", url: page.url, contentType: page.contentType, frameable: canFrame });
+  if (!/html|xhtml/i.test(page.contentType)) {
+    return res.status(200).json({ kind: "page", url: page.url, status: page.status, title: page.url.split("/").pop() || page.url, description: "", image: "", blocks: [{ t: "pre", x: page.body.slice(0, 40000) }], links: [], frameable: canFrame });
+  }
+  const read = readablePage(page.body, page.url);
+  return res.status(200).json({ kind: "page", url: page.url, status: page.status, frameable: canFrame, ...read });
 }
 
 export default async function handler(req, res) {
@@ -622,6 +659,12 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Use GET or POST." });
+  }
+
+  // Browser panel: open a page or run a search. No AI call and nothing is
+  // charged — just a safe, rate-limited page reader (see api/_lib/browse.js).
+  if (req.body && req.body.browse && typeof req.body.browse === "object") {
+    return handleBrowse(req, res, req.body.browse);
   }
 
   const { messages, provider, images, preferences } = req.body || {};
@@ -846,7 +889,8 @@ export default async function handler(req, res) {
     // depends on the prompt; Gemini gets more room for long answers.
     maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(replyTokens + 1200, 7600 - estimateTokens(msgs, sys))) : Math.round(replyTokens * 2)),
     temperature: 0.3,
-    reasoningEffort: preferences?.style === "concise" ? "low" : "medium",
+    // Deep dive and Code get the most careful reasoning.
+    reasoningEffort: preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
     wantReasoning: preferences?.showThinking !== false,
     totalBudgetMs: 40000,
   });

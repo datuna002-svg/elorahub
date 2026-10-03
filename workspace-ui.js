@@ -219,7 +219,7 @@
       connectors:["Connectors","Read-only connections for the services you chose."],
     }[view]||["Workspace","Your EloraHub workspace"];
     activePanel=view; lastFocus=document.activeElement;
-    if(panel){panel.hidden=false;document.body.classList.add("workspace-panel-open");}
+    if(panel){panel.hidden=false;document.body.classList.add("workspace-panel-open");if(window.eloraSwapIn)window.eloraSwapIn(panel.querySelector(".workspace-panel")||panel);}
     if(panelTitle) panelTitle.textContent=meta[0]; if(panelKicker) panelKicker.textContent="ELORAHUB WORKSPACE"; if(panelDescription) panelDescription.textContent=meta[1];
     renderPanel();
     var closeBtn=panel&&panel.querySelector(".workspace-close"); if(closeBtn) closeBtn.focus();
@@ -520,7 +520,7 @@
     else if(action==="usage"){if(app&&app.openSettings)app.openSettings("subscription");}
     else if(action==="connectors")openPanel("connectors");
     else if(action==="help"){if(app&&app.showPage)app.showPage("guidelines");}
-    else if(action==="upgrade"){if(app&&app.showPage)app.showPage("pricing");}
+    else if(action==="upgrade"){if(window.EloraPlans)window.EloraPlans.open();else if(app&&app.showPage)app.showPage("pricing");}
     else if(action==="signout"){var old=document.getElementById("signOutBtn");if(old)old.click();}
   }
   function startDictation(){
