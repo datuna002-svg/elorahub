@@ -566,6 +566,41 @@
     updateResearchLabels();
     reminderTimer=setInterval(localReminderTick,20000); document.addEventListener("visibilitychange",function(){if(!document.hidden)localReminderTick();});
   }
+  // Keep every pop-up menu fully reachable: if it doesn't fit above (or
+  // below) its button inside the visible area, open it on the roomier side
+  // and let it scroll.
+  function clipBox(el){
+    var top=0,bottom=window.innerHeight,node=el.parentElement;
+    while(node&&node!==document.body){
+      var cs=getComputedStyle(node);
+      if(/(hidden|auto|scroll|clip)/.test(cs.overflowY+cs.overflow)){var r=node.getBoundingClientRect();top=Math.max(top,r.top);bottom=Math.min(bottom,r.bottom);}
+      node=node.parentElement;
+    }
+    return {top:top,bottom:bottom};
+  }
+  function fitPop(menu){
+    if(!menu||menu.hidden) return;
+    menu.classList.remove("ec-pop-flip-down","ec-pop-flip-up","is-scrolling"); menu.style.maxHeight=""; menu.style.top=""; menu.style.bottom="";
+    var wrap=(menu.parentElement||menu), anchor=wrap.getBoundingClientRect(), box=clipBox(menu), pad=10;
+    var h=menu.scrollHeight+2, above=anchor.top-box.top-pad-6, below=box.bottom-anchor.bottom-pad-6;
+    var opensUp=menu.classList.contains("ec-pop-up")||menu.classList.contains("ec-pop-account");
+    var room=opensUp?above:below, other=opensUp?below:above;
+    if(h<=room) return;
+    if(h<=other){menu.classList.add(opensUp?"ec-pop-flip-down":"ec-pop-flip-up");return;}
+    // Neither side has room: slide it so the whole menu is on screen (it may
+    // cover its own button), scrolling only if the screen is very short.
+    var space=box.bottom-box.top-2*pad;
+    if(h>space){menu.style.maxHeight=Math.floor(space)+"px";menu.classList.add("is-scrolling");h=space;}
+    var wanted=opensUp?anchor.top-6-h:anchor.bottom+6;
+    var top=Math.min(Math.max(wanted,box.top+pad),box.bottom-pad-h);
+    menu.style.top=Math.round(top-anchor.top)+"px"; menu.style.bottom="auto";
+  }
+  window.eloraFitPop=fitPop;
+  (function watchPops(){
+    var obs=new MutationObserver(function(list){list.forEach(function(m){if(m.target.classList&&m.target.classList.contains("ec-pop")&&!m.target.hidden)fitPop(m.target);});});
+    document.querySelectorAll(".ec-pop").forEach(function(menu){obs.observe(menu,{attributes:true,attributeFilter:["hidden"]});});
+    window.addEventListener("resize",function(){document.querySelectorAll(".ec-pop").forEach(function(menu){if(!menu.hidden)fitPop(menu);});});
+  })();
   function closeOne(menu,trigger){if(menu)menu.hidden=true;if(trigger)trigger.setAttribute("aria-expanded","false");}
   // Read-only counts for Settings → Usage.
   window.EloraWorkspace={saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
