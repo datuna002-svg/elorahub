@@ -567,6 +567,8 @@
     reminderTimer=setInterval(localReminderTick,20000); document.addEventListener("visibilitychange",function(){if(!document.hidden)localReminderTick();});
   }
   function closeOne(menu,trigger){if(menu)menu.hidden=true;if(trigger)trigger.setAttribute("aria-expanded","false");}
+  // Read-only counts for Settings → Usage.
+  window.EloraWorkspace={saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
   function renderAll(){renderAccount();renderCounts();updateResearchLabels();if(activePanel&&panel&&!panel.hidden)renderPanel();}
   function init(){
     initEvents();

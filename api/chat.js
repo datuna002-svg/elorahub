@@ -10,6 +10,7 @@
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 // ---------------------------------------------------------------------------
 // Free-plan (not signed in, or signed in with no active subscription)
@@ -41,7 +42,9 @@ Conversation sense: read the whole conversation before you answer. Short follow-
 
 Helpfulness: treat the user as a capable adult and help with any legitimate request — including automation scripts, security concepts, reverse-engineering or deobfuscating code they're working with, and blunt feedback. Only decline something that would cause real harm (for example malware meant to damage others, weapons, or hurting people). When you do decline, say in one sentence what you won't do and why, then offer the closest genuinely useful alternative. Never reply with only "I can't help with that."
 
-Quality: for anything non-trivial, think the problem through before answering and check your own work — especially code, math and facts. Say so when you're unsure instead of inventing details; never make up URLs, citations, statistics, package names or API methods. You can't browse the web yourself: when live search results or page excerpts are included in a message, use them for current facts and say they came from a search; otherwise be clear that your knowledge may be out of date. Your name is elora (always lowercase), the assistant inside elorahub. If asked what powers you, say elora runs on leading open-weight and Gemini models chosen by elorahub.`;
+Quality: for anything non-trivial, think the problem through before answering and check your own work — especially code, math and facts. Say so when you're unsure instead of inventing details; never make up URLs, citations, statistics, package names or API methods. You can't browse the web yourself: when live search results or page excerpts are included in a message, use them for current facts and say they came from a search; otherwise be clear that your knowledge may be out of date. Your name is elora (always lowercase), the assistant inside elorahub. If asked what powers you, say elora runs on leading open-weight and Gemini models chosen by elorahub.
+
+About elorahub (use this when people ask how the app works; don't recite it unprompted): the chat has Chat and Code modes (tabs at the top of the sidebar) and reply modes Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.`;
 
 // Finds up to 2 http(s) links in a message, fetches each with a short
 // timeout, strips it down to plain text, and returns a small combined
@@ -398,6 +401,143 @@ async function fetchLinkContext(text) {
   return `[The user's message included a link. Here's what was actually on the page, so you can answer about its real content:]\n\n${found.join("\n\n")}`;
 }
 
+// ---------------------------------------------------------------------------
+// Task mode — multi-step work with visible progress.
+//
+// The browser drives a task as a short series of requests to this same
+// function (keeps every call well inside the time limit):
+//   plan   → elora breaks the request into 2–6 steps        (charged once)
+//   step   → elora does one step; a step may run a real web
+//            search or read the user's links first          (free, needs token)
+//   finish → elora writes the final reply                    (free, needs token)
+// The plan call returns a short-lived signed token, so step/finish calls
+// are only free for a task this person actually started and paid for.
+// ---------------------------------------------------------------------------
+function taskSecret() {
+  return process.env.TASK_TOKEN_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.CONNECTOR_OAUTH_STATE_SECRET || "";
+}
+function signTaskToken(claims) {
+  const secret = taskSecret();
+  if (!secret) return null;
+  const body = Buffer.from(JSON.stringify(claims)).toString("base64url");
+  const sig = createHmac("sha256", secret).update(body).digest("base64url");
+  return `${body}.${sig}`;
+}
+function verifyTaskToken(token, subject) {
+  const secret = taskSecret();
+  if (!secret || typeof token !== "string" || token.length > 2000) return null;
+  const [body, sig] = token.split(".");
+  if (!body || !sig) return null;
+  const expected = createHmac("sha256", secret).update(body).digest("base64url");
+  const a = Buffer.from(sig), b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const claims = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
+    if (!claims || claims.sub !== subject || !(claims.exp > Date.now())) return null;
+    return claims;
+  } catch (_e) {
+    return null;
+  }
+}
+
+const TASK_KINDS = ["research", "think", "write", "code"];
+const cleanText = (v, n) => String(v == null ? "" : v).replace(/[\u0000-\u001f]+/g, " ").trim().slice(0, n);
+
+function sanitizePlan(raw) {
+  const steps = Array.isArray(raw?.steps) ? raw.steps : [];
+  const clean = steps
+    .map((s) => ({
+      title: cleanText(typeof s === "string" ? s : s?.title, 80),
+      kind: TASK_KINDS.includes(s?.kind) ? s.kind : "think",
+      search: cleanText(s?.search, 120),
+    }))
+    .filter((s) => s.title)
+    .slice(0, 6);
+  return {
+    title: cleanText(raw?.title, 80) || "Task",
+    deliverable: cleanText(raw?.deliverable, 200),
+    steps: clean.length ? clean : [{ title: "Work through the request", kind: "think", search: "" }, { title: "Write up the result", kind: "write", search: "" }],
+  };
+}
+
+function parseJsonObject(text) {
+  const t = String(text || "").replace(/```(?:json)?/gi, "");
+  const start = t.indexOf("{"), end = t.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try { return JSON.parse(t.slice(start, end + 1)); } catch (_e) { return null; }
+}
+
+// Files the model wrote as ```lang filename=NAME blocks.
+function extractFiles(text) {
+  const files = [];
+  const re = /```([\w+#.-]*)[ \t]+filename=([^\s`]+)[^\n]*\n([\s\S]*?)```/g;
+  let m;
+  while ((m = re.exec(String(text || ""))) && files.length < 6) {
+    files.push({ name: m[2].replace(/[^\w.\-]/g, "_").slice(0, 80), lang: m[1] || "", content: m[3].slice(0, 60000) });
+  }
+  return files;
+}
+
+async function runTaskPhase(res, ctx) {
+  const { phase, task, goal, history, systemBase, preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary } = ctx;
+  const plan = attemptPlan(false, true); // Gemini first: tasks are token-heavy
+  const opts = (maxTokens) => ({ maxTokens, temperature: 0.3, reasoningEffort: "medium", totalBudgetMs: 48000 });
+
+  if (phase === "plan") {
+    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–6). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
+    const { result, failures } = await runWithFallback(plan, () => history, sys, opts(1400));
+    if (!result.ok) return taskFailure(res, failures);
+    const parsed = sanitizePlan(parseJsonObject(result.reply) || {});
+    const token = signTaskToken({ sub: subject, exp: Date.now() + 20 * 60 * 1000, n: parsed.steps.length });
+    return res.status(200).json({ task: parsed, token, provider: result.label, creditsRemaining, unlimited });
+  }
+
+  const p = sanitizePlan(task?.plan || {});
+  const results = Array.isArray(task?.results) ? task.results.map((r) => String(r || "").slice(0, 2400)) : [];
+  const planList = p.steps.map((s, k) => `${k + 1}. ${s.title}`).join("\n");
+  const prior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r}`).join("\n\n");
+
+  if (phase === "step") {
+    const i = Math.max(0, Math.min(p.steps.length - 1, Number(task?.stepIndex) || 0));
+    const step = p.steps[i];
+    const used = [];
+    let context = "";
+    if (step.search && preferences?.webSearch !== false) {
+      const found = await performWebSearch(step.search);
+      used.push({ tool: "web_search", query: step.search, ok: Boolean(found), results: found ? found.split("\n").filter(Boolean).slice(0, 5) : [] });
+      if (found) context += `\n\n[Web search results for "${step.search}"]\n${found}`;
+    }
+    if (i === 0 && preferences?.readLinks !== false) {
+      const links = await fetchLinkContext(goal);
+      if (links) { used.push({ tool: "read_links", ok: true }); context += `\n\n${links}`; }
+    }
+    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py`;
+    const msg = `${prior ? `Results so far:\n\n${prior}\n\n` : ""}${context ? `${context.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
+    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(step.kind === "code" || step.kind === "write" ? 3600 : 2400));
+    if (!result.ok) return taskFailure(res, failures);
+    return res.status(200).json({ result: result.reply, files: extractFiles(result.reply), used, provider: result.label });
+  }
+
+  // finish
+  const fileNames = (Array.isArray(task?.files) ? task.files : []).map((f) => cleanText(f, 80)).filter(Boolean).slice(0, 12);
+  const sys = `${systemBase}\n\nYou just finished a multi-step task for the user. Write your final reply: lead with the result itself, then a short note on what you did. ${fileNames.length ? `These files were produced and are attached under your reply as downloads: ${fileNames.join(", ")} — refer to them by name instead of pasting their full contents again.` : ""} Keep it tight and useful.`;
+  const msg = `The user's request: """${goal.slice(0, 4000)}"""\n\nTask: ${p.title}\n\nWhat each step produced:\n\n${prior || "(no step output)"}`;
+  const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(2400));
+  if (!result.ok) return taskFailure(res, failures);
+  if (email && memoryOn) {
+    const updated = await updateUserMemory(memorySummary, goal, result.reply);
+    if (updated && updated.trim() && updated !== memorySummary) await saveUserMemory(email, updated);
+  }
+  return res.status(200).json({ reply: result.reply, provider: result.label });
+}
+
+async function taskFailure(res, failures) {
+  const summary = (failures || []).map((f) => `${f.label}/${f.model} → ${f.status || "network"}`).join(", ");
+  await logEvent("error", "chat", `Task step failed on all models: ${summary}`.slice(0, 1900));
+  const busy = (failures || []).length && failures.every((f) => f.status === 429 || f.status === 503 || f.status === 0);
+  return res.status(502).json({ error: busy ? "busy" : "model_error", message: busy ? "elora's models are busy right now. Try the task again in a few seconds." : "elora couldn't finish this step. Try the task again." });
+}
+
 export default async function handler(req, res) {
   // GET = read-only plan summary for the account menu and Settings
   // (Billing / Usage). Sends no message and spends nothing. Lives here
@@ -459,7 +599,20 @@ export default async function handler(req, res) {
   let creditsRemaining = null;
   let unlimited = false;
 
-  if (email) {
+  // Task mode (see runTaskPhase): step/finish calls ride on the plan call
+  // that was already charged, proven by a short-lived signed token.
+  const task = req.body?.task && typeof req.body.task === "object" ? req.body.task : null;
+  const taskPhase = task && ["plan", "step", "finish"].includes(task.phase) ? task.phase : null;
+  const clientIp = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  const subject = email ? `u:${email}` : `ip:${clientIp}`;
+  const taskClaims = taskPhase === "step" || taskPhase === "finish" ? verifyTaskToken(task.token, subject) : null;
+  if ((taskPhase === "step" || taskPhase === "finish") && !taskClaims && taskSecret()) {
+    return res.status(401).json({ error: "task_expired", message: "This task expired — start it again." });
+  }
+
+  if (taskClaims) {
+    // Already paid for when the task was planned.
+  } else if (email) {
     const sub = await getSubscription(email);
     if (sub && sub.plan === "premium") {
       // Unlimited — deliberately no credit check, no spend, no cap.
@@ -523,7 +676,8 @@ export default async function handler(req, res) {
   // just this session). Injected into the system prompt so it can
   // actually use it, same as a human assistant remembering a regular.
   let memorySummary = "";
-  if (email) {
+  const memoryOn = preferences?.memory !== false;
+  if (email && memoryOn) {
     memorySummary = await getUserMemory(email);
     if (memorySummary) steps.push("Recalled what I know about you");
   }
@@ -534,7 +688,7 @@ export default async function handler(req, res) {
   // and elora answers plenty from its own training just fine).
   let searchContext = "";
   const useWebSearch = preferences?.webSearch !== false;
-  if (useWebSearch && needsWebSearch(lastMessage.content)) {
+  if (!taskPhase && useWebSearch && needsWebSearch(lastMessage.content)) {
     const searchResults = await performWebSearch(lastMessage.content);
     if (searchResults) {
       searchContext = `[Live web search results for "${lastMessage.content.slice(0, 120)}" — use these to ground your answer in current information:]\n\n${searchResults}`;
@@ -545,7 +699,7 @@ export default async function handler(req, res) {
   // Fetch any plain http(s) links found in the newest message and fold in
   // a short excerpt of each page's text, so elora can actually answer
   // questions about a link instead of just seeing the bare URL.
-  const linkContext = await fetchLinkContext(lastMessage.content);
+  const linkContext = taskPhase || preferences?.readLinks === false ? "" : await fetchLinkContext(lastMessage.content);
   if (linkContext) steps.push("Read the linked page");
 
   steps.push("Thought it through");
@@ -570,9 +724,25 @@ export default async function handler(req, res) {
   const languageGuide = responseLanguage ? `Use ${responseLanguage} as the default response language unless the user explicitly asks for another language. Preserve code, names, and quoted source text as appropriate.` : "";
   const preferenceGuide = [styleGuide, languageGuide].filter(Boolean).join(" ");
   const todayLine = `\n\nToday's date is ${new Date().toISOString().slice(0, 10)} (UTC).`;
+  // Profile + custom instructions from Settings → Account.
+  const clean = (v, n) => String(v || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, n);
+  const callMe = clean(preferences?.callMe, 60);
+  const work = clean(preferences?.work, 60);
+  const instructions = String(preferences?.instructions || "").trim().slice(0, 1500);
+  const personal = [callMe ? `They like to be called ${callMe}.` : "", work ? `Their work: ${work}.` : ""].filter(Boolean).join(" ");
+  const personalBlock = personal || instructions
+    ? `\n\nAbout the user: ${personal || "(no profile details)"}${instructions ? `\nTheir standing instructions for you — follow them unless they conflict with being safe and honest:\n"""\n${instructions}\n"""` : ""}`
+    : "";
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + todayLine;
+    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
+
+  if (taskPhase) {
+    return runTaskPhase(res, {
+      phase: taskPhase, task, goal: lastMessage.content, history: trimmedHistory, systemBase: systemPrompt,
+      preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary,
+    });
+  }
 
   if (safeImages.length > 0) {
     finalMessages.push({
@@ -630,7 +800,7 @@ export default async function handler(req, res) {
   // response is sent, so this has to be awaited here, not fired-and-
   // forgotten). Uses a small, cheap, fast call — separate from the main
   // reply — that only keeps stable facts, never one-off chat content.
-  if (email) {
+  if (email && memoryOn) {
     const updated = await updateUserMemory(memorySummary, lastMessage.content, result.reply);
     // Never let this step erase existing memory — only "Forget me"
     // (DELETE /api/memory) is allowed to clear it. If the extraction
