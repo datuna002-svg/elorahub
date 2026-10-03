@@ -168,14 +168,15 @@ function cleanReply(text) {
 
 async function callModel(cfg, finalMessages, systemPrompt, opts = {}) {
   if (!cfg.apiKey) return { ok: false, configured: false, label: cfg.label, model: cfg.model };
+  const maxTokens = typeof opts.maxTokens === "function" ? opts.maxTokens(cfg, finalMessages, systemPrompt) : opts.maxTokens || 2500;
   const body = {
     model: cfg.model,
     messages: [{ role: "system", content: systemPrompt || SYSTEM_PROMPT }, ...finalMessages],
-    max_tokens: opts.maxTokens || 2500,
+    max_tokens: maxTokens,
     temperature: opts.temperature != null ? opts.temperature : 0.3,
   };
   if (isGroqEndpoint(cfg) && /gpt-oss/.test(cfg.model)) body.reasoning_effort = opts.reasoningEffort || "medium";
-  if (isGroqEndpoint(cfg) && /qwen/.test(cfg.model)) body.reasoning_format = "hidden";
+  if (isGroqEndpoint(cfg) && /qwen/.test(cfg.model)) body.reasoning_format = opts.wantReasoning ? "parsed" : "hidden";
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), opts.timeoutMs || 28000);
   try {
@@ -190,9 +191,13 @@ async function callModel(cfg, finalMessages, systemPrompt, opts = {}) {
       return { ok: false, configured: true, status: response.status, errBody, label: cfg.label, model: cfg.model };
     }
     const data = await response.json();
-    const reply = cleanReply(data?.choices?.[0]?.message?.content ?? "");
-    if (!reply) return { ok: false, configured: true, status: 502, errBody: "empty reply", label: cfg.label, model: cfg.model };
-    return { ok: true, reply, usage: data.usage || null, label: cfg.label, model: cfg.model };
+    const choice = data?.choices?.[0] || {};
+    const raw = String(choice.message?.content ?? "");
+    const inlineThought = /<think>([\s\S]*?)<\/think>/i.exec(raw);
+    const reasoning = String(choice.message?.reasoning || choice.message?.reasoning_content || (inlineThought ? inlineThought[1] : "")).trim();
+    const reply = cleanReply(raw);
+    if (!reply) return { ok: false, configured: true, status: 502, errBody: choice.finish_reason === "length" ? "ran out of tokens while thinking" : "empty reply", label: cfg.label, model: cfg.model };
+    return { ok: true, reply, reasoning, finish: choice.finish_reason || "stop", usage: data.usage || null, label: cfg.label, model: cfg.model };
   } catch (err) {
     return { ok: false, configured: true, status: 0, errBody: err.name === "AbortError" ? "timed out" : err.message, label: cfg.label, model: cfg.model };
   } finally {
@@ -225,6 +230,58 @@ async function runWithFallback(plan, messagesFor, systemPrompt, opts = {}) {
     // Bad credentials or a missing model won't fix themselves on the same provider.
   }
   return { result: failures[failures.length - 1] || { ok: false, configured: false, label: "AI" }, failures };
+}
+
+// Long answers: when a model stops because it hit its token cap, ask for
+// the rest (Gemini first — its quota fits the long prompt) and stitch the
+// pieces together, so hard questions don't end mid-sentence.
+function joinContinuation(head, tail) {
+  let t = String(tail || "").replace(/^\s*(continuing|continued)[^\n]*\n+/i, "");
+  const window = head.slice(-220);
+  for (let n = Math.min(window.length, t.length); n >= 12; n--) {
+    if (window.endsWith(t.slice(0, n))) { t = t.slice(n); break; }
+  }
+  const needsSpace = /[\w.,;:!?)]$/.test(head) && /^[\w(]/.test(t);
+  return head + (needsSpace ? " " : "") + t;
+}
+async function continueLongReply(first, baseMessages, systemPrompt, opts) {
+  let reply = first.reply;
+  let finish = first.finish;
+  let rounds = 0;
+  const started = Date.now();
+  while (finish === "length" && rounds < 2 && Date.now() - started < (opts.budgetMs || 30000)) {
+    const msgs = [...baseMessages, { role: "assistant", content: reply }, { role: "user", content: "Your reply was cut off. Continue exactly where it stopped — no repetition, no preamble, keep the same formatting (stay inside any open code block)." }];
+    const { result } = await runWithFallback(attemptPlan(false, true), () => msgs, systemPrompt, {
+      maxTokens: (cfg) => (isGroqEndpoint(cfg) ? Math.max(800, 7600 - estimateTokens(msgs, systemPrompt)) : 6000),
+      temperature: 0.3, reasoningEffort: "low", totalBudgetMs: Math.max(8000, (opts.budgetMs || 30000) - (Date.now() - started)), timeoutMs: 26000,
+    });
+    if (!result.ok) break;
+    reply = joinContinuation(reply, result.reply);
+    finish = result.finish;
+    rounds++;
+  }
+  return { reply, truncated: finish === "length", rounds };
+}
+
+// Auto task: elora decides whether a request is a multi-step job.
+function looksLikeTask(text) {
+  const t = String(text || "").trim();
+  if (t.length < 45) return false;
+  if (/^(what|who|when|where|why|is|are|does|do|can|how much|how many)\b[^.!?\n]{0,90}\?\s*$/i.test(t)) return false;
+  return /\b(build|create|make|write|generate|draft|plan|research|compare|analy[sz]e|design|develop|set ?up|implement|prepare|outline|produce|script|app|website|landing page|report|guide|checklist|strategy|itinerary|curriculum|business plan|step[- ]by[- ]step|files?|project)\b/i.test(t);
+}
+async function decideTask(text, history) {
+  const groq = buildProviderConfig("groq", false);
+  const gemini = buildProviderConfig("gemini", false);
+  const plan = [];
+  if (groq.apiKey && isGroqEndpoint(groq)) plan.push({ ...groq, model: "openai/gpt-oss-20b" });
+  if (gemini.apiKey) plan.push({ ...gemini, model: "gemini-3.5-flash-lite" });
+  if (!plan.length) return false;
+  const recent = history.slice(-4, -1).map((m) => `${m.role}: ${String(m.content).slice(0, 300)}`).join("\n");
+  const sys = `You route requests for an AI assistant. Answer TASK only when the latest request is a substantial job that clearly benefits from planning and several separate steps — for example building something with multiple files, researching and comparing several options with current information, or producing a long structured deliverable (plan, report, curriculum). Answer CHAT for questions, explanations, puzzles, opinions, single pieces of code, rewrites, short documents, follow-ups and anything a single good reply handles. When unsure, answer CHAT. Reply with exactly one word: TASK or CHAT.`;
+  const msg = `${recent ? `Earlier conversation:\n${recent}\n\n` : ""}Latest request:\n"""${String(text).slice(0, 3000)}"""`;
+  const { result } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, { maxTokens: 400, temperature: 0, reasoningEffort: "low", totalBudgetMs: 7000, timeoutMs: 6000 });
+  return Boolean(result.ok && /\bTASK\b/i.test(result.reply) && !/\bCHAT\b/i.test(result.reply));
 }
 
 // Kept for the scheduled-task runner (api/cron/scheduled-tasks.js).
@@ -481,15 +538,17 @@ function extractFiles(text) {
 async function runTaskPhase(res, ctx) {
   const { phase, task, goal, history, systemBase, preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary } = ctx;
   const plan = attemptPlan(false, true); // Gemini first: tasks are token-heavy
+  const maxSteps = Math.max(2, Math.min(6, Number(preferences?.taskMaxSteps) || 6));
   const opts = (maxTokens) => ({ maxTokens, temperature: 0.3, reasoningEffort: "medium", totalBudgetMs: 48000 });
 
   if (phase === "plan") {
-    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–6). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
+    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
     const { result, failures } = await runWithFallback(plan, () => history, sys, opts(1400));
     if (!result.ok) return taskFailure(res, failures);
     const parsed = sanitizePlan(parseJsonObject(result.reply) || {});
+    parsed.steps = parsed.steps.slice(0, maxSteps);
     const token = signTaskToken({ sub: subject, exp: Date.now() + 20 * 60 * 1000, n: parsed.steps.length });
-    return res.status(200).json({ task: parsed, token, provider: result.label, creditsRemaining, unlimited });
+    return res.status(200).json({ task: parsed, token, provider: result.label, creditsRemaining, unlimited, auto: Boolean(ctx.auto) });
   }
 
   const p = sanitizePlan(task?.plan || {});
@@ -670,6 +729,15 @@ export default async function handler(req, res) {
   // here corresponds to a real thing that happened above, not a
   // decorative fake step.
   const steps = [];
+  const startedAt = Date.now();
+
+  // Auto task: for requests that look like a bigger job, a quick, cheap
+  // routing call decides whether to plan it as a multi-step task instead
+  // of a single reply. Already charged above — the task's later steps
+  // ride on the signed token like a manual task.
+  const autoTask = !taskPhase && preferences?.autoTask === true && safeImages.length === 0 && looksLikeTask(lastMessage.content)
+    ? await decideTask(lastMessage.content, messages.slice(-6))
+    : false;
 
   // Real, persistent memory: a short profile of stable facts elora has
   // learned about this signed-in user across past conversations (not
@@ -688,7 +756,7 @@ export default async function handler(req, res) {
   // and elora answers plenty from its own training just fine).
   let searchContext = "";
   const useWebSearch = preferences?.webSearch !== false;
-  if (!taskPhase && useWebSearch && needsWebSearch(lastMessage.content)) {
+  if (!taskPhase && !autoTask && useWebSearch && needsWebSearch(lastMessage.content)) {
     const searchResults = await performWebSearch(lastMessage.content);
     if (searchResults) {
       searchContext = `[Live web search results for "${lastMessage.content.slice(0, 120)}" — use these to ground your answer in current information:]\n\n${searchResults}`;
@@ -699,7 +767,7 @@ export default async function handler(req, res) {
   // Fetch any plain http(s) links found in the newest message and fold in
   // a short excerpt of each page's text, so elora can actually answer
   // questions about a link instead of just seeing the bare URL.
-  const linkContext = taskPhase || preferences?.readLinks === false ? "" : await fetchLinkContext(lastMessage.content);
+  const linkContext = taskPhase || autoTask || preferences?.readLinks === false ? "" : await fetchLinkContext(lastMessage.content);
   if (linkContext) steps.push("Read the linked page");
 
   steps.push("Thought it through");
@@ -722,7 +790,15 @@ export default async function handler(req, res) {
   const responseLanguages = { en:"English", ka:"Georgian", es:"Spanish", fr:"French", de:"German", pt:"Portuguese", it:"Italian", nl:"Dutch", tr:"Turkish", ru:"Russian", uk:"Ukrainian", ar:"Arabic", hi:"Hindi", ja:"Japanese", ko:"Korean", zh:"Chinese" };
   const responseLanguage = Object.prototype.hasOwnProperty.call(responseLanguages, preferences?.language) ? responseLanguages[preferences.language] : null;
   const languageGuide = responseLanguage ? `Use ${responseLanguage} as the default response language unless the user explicitly asks for another language. Preserve code, names, and quoted source text as appropriate.` : "";
-  const preferenceGuide = [styleGuide, languageGuide].filter(Boolean).join(" ");
+  const code = preferences?.code && typeof preferences.code === "object" ? preferences.code : {};
+  const codeGuide = [
+    code.indent === "tabs" ? "In code, indent with tabs." : code.indent === "4" ? "In code, indent with 4 spaces." : code.indent === "2" ? "In code, indent with 2 spaces." : "",
+    code.comments === "minimal" ? "Keep code comments minimal." : code.comments === "thorough" ? "Comment code thoroughly for a learner." : "",
+    code.explain === "brief" ? "After code, keep the explanation to a few lines." : code.explain === "full" ? "After code, explain how it works step by step." : "",
+    /^[\w#+. -]{1,24}$/.test(String(code.language || "")) && code.language !== "auto" ? `When the language isn't specified, default to ${code.language}.` : "",
+    code.types === true ? "Prefer typed code (TypeScript over JavaScript, type hints in Python)." : "",
+  ].filter(Boolean).join(" ");
+  const preferenceGuide = [styleGuide, languageGuide, codeGuide].filter(Boolean).join(" ");
   const todayLine = `\n\nToday's date is ${new Date().toISOString().slice(0, 10)} (UTC).`;
   // Profile + custom instructions from Settings → Account.
   const clean = (v, n) => String(v || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, n);
@@ -737,10 +813,10 @@ export default async function handler(req, res) {
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
     : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
 
-  if (taskPhase) {
+  if (taskPhase || autoTask) {
     return runTaskPhase(res, {
-      phase: taskPhase, task, goal: lastMessage.content, history: trimmedHistory, systemBase: systemPrompt,
-      preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary,
+      phase: autoTask ? "plan" : taskPhase, task: task || {}, goal: lastMessage.content, history: trimmedHistory, systemBase: systemPrompt,
+      preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary, auto: autoTask,
     });
   }
 
@@ -760,15 +836,19 @@ export default async function handler(req, res) {
   // prompts go to Gemini first; Groq attempts get a trimmed history that
   // fits its per-minute token limit.
   const hasImages = safeImages.length > 0;
-  const replyTokens = preferences?.style === "concise" ? 1400 : preferences?.style === "deep" || preferences?.style === "technical" ? 3600 : 2600;
+  const replyTokens = preferences?.style === "concise" ? 1600 : preferences?.style === "deep" || preferences?.style === "technical" ? 4000 : 3000;
   const promptTokens = estimateTokens(finalMessages, systemPrompt);
   const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500;
   const plan = attemptPlan(hasImages, preferGemini);
   const messagesFor = (cfg) => (isGroqEndpoint(cfg) ? fitToBudget(finalMessages, systemPrompt, Math.max(1200, 6800 - replyTokens)) : finalMessages);
   const { result, failures } = await runWithFallback(plan, messagesFor, systemPrompt, {
-    maxTokens: replyTokens,
+    // Groq counts prompt + reply against 8k tokens/minute, so its cap
+    // depends on the prompt; Gemini gets more room for long answers.
+    maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(replyTokens + 1200, 7600 - estimateTokens(msgs, sys))) : Math.round(replyTokens * 2)),
     temperature: 0.3,
     reasoningEffort: preferences?.style === "concise" ? "low" : "medium",
+    wantReasoning: preferences?.showThinking !== false,
+    totalBudgetMs: 40000,
   });
 
   if (!result.ok) {
@@ -791,6 +871,17 @@ export default async function handler(req, res) {
     });
   }
 
+  // Cut off by the token cap? Fetch the rest so the answer is complete.
+  let finalReply = result.reply;
+  let truncated = false;
+  if (result.finish === "length") {
+    const textOnly = [...finalMessages.slice(0, -1), { role: "user", content: lastText }];
+    const more = await continueLongReply(result, textOnly, systemPrompt, { budgetMs: Math.max(8000, 52000 - (Date.now() - startedAt)) });
+    finalReply = more.reply;
+    truncated = more.truncated;
+    if (more.rounds) steps.push(more.rounds === 1 ? "Kept writing past the length limit" : `Kept writing past the length limit (${more.rounds} more parts)`);
+  }
+
   if (failures.length) {
     await logEvent("warning", "chat", `Answered by ${result.label}/${result.model} after ${failures.length} busy model(s): ${failures.map((f) => `${f.model} ${f.status || "network"}`).join(", ")}`);
   }
@@ -801,7 +892,7 @@ export default async function handler(req, res) {
   // forgotten). Uses a small, cheap, fast call — separate from the main
   // reply — that only keeps stable facts, never one-off chat content.
   if (email && memoryOn) {
-    const updated = await updateUserMemory(memorySummary, lastMessage.content, result.reply);
+    const updated = await updateUserMemory(memorySummary, lastMessage.content, finalReply);
     // Never let this step erase existing memory — only "Forget me"
     // (DELETE /api/memory) is allowed to clear it. If the extraction
     // came back empty (nothing new/stable in this exchange) or failed,
@@ -812,11 +903,15 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({
-    reply: result.reply,
+    reply: finalReply,
     usage: result.usage,
     creditsRemaining,
     unlimited,
     provider: result.label,
+    model: result.model,
     steps,
+    thinking: preferences?.showThinking === false ? "" : String(result.reasoning || "").slice(0, 8000),
+    truncated,
+    elapsedMs: Date.now() - startedAt,
   });
 }

@@ -526,7 +526,7 @@
   function startDictation(){
     var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!Speech){toast("Voice dictation is not supported in this browser. You can still type your message.");return;}
-    var recognition=new Speech(); recognition.lang=navigator.language||"en-US"; recognition.interimResults=true; recognition.continuous=false;
+    var recognition=new Speech(); recognition.lang=(function(){try{return JSON.parse(localStorage.getItem("elorahub_chat_preferences")||"{}").dictationLang||"";}catch(e){return "";}})()||navigator.language||"en-US"; recognition.interimResults=true; recognition.continuous=false;
     var prefix=chatInput.value+(chatInput.value.trim()?" ":"");
     recognition.onresult=function(event){var phrase=Array.from(event.results).map(function(r){return r[0].transcript;}).join("");chatInput.value=prefix+phrase;chatInput.dispatchEvent(new Event("input",{bubbles:true}));};
     recognition.onerror=function(){toast("Microphone input stopped. Check browser permission and try again.");};
@@ -568,7 +568,7 @@
   }
   function closeOne(menu,trigger){if(menu)menu.hidden=true;if(trigger)trigger.setAttribute("aria-expanded","false");}
   // Read-only counts for Settings → Usage.
-  window.EloraWorkspace={saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
+  window.EloraWorkspace={saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
   function renderAll(){renderAccount();renderCounts();updateResearchLabels();if(activePanel&&panel&&!panel.hidden)renderPanel();}
   function init(){
     initEvents();
