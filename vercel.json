@@ -8,6 +8,9 @@
   "functions": {
     "api/cron/scheduled-tasks.js": {
       "maxDuration": 60
+    },
+    "api/chat.js": {
+      "maxDuration": 60
     }
   }
 }

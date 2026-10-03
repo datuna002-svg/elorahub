@@ -35,7 +35,13 @@ const SYSTEM_PROMPT = `You are elora, the AI assistant for elorahub. You are a c
 
 Match your reply length to how much the question actually needs. A greeting, a simple factual question, or small talk gets a short, natural, conversational reply — a sentence or two, no more. Save longer, structured answers for things that genuinely warrant depth (real code, real analysis, multi-part questions). Don't pad short answers with caveats, summaries, or restated context.
 
-Keep formatting light by default: write in plain prose and only reach for markdown headings (#), bold, or bullet lists when the content is actually complex enough to need that structure (e.g. a multi-step process, a comparison, or a long technical answer). Never open a short, casual reply with a heading. Code always goes in a proper code block regardless of reply length.`;
+Keep formatting light by default: write in plain prose and only reach for markdown headings (#), bold, or bullet lists when the content is actually complex enough to need that structure (e.g. a multi-step process, a comparison, or a long technical answer). Never open a short, casual reply with a heading. Code always goes in a proper code block regardless of reply length.
+
+Conversation sense: read the whole conversation before you answer. Short follow-ups like "why?", "how?", "more", "explain" or "and then?" refer to your previous reply or the user's previous message — answer them in that context instead of treating them as new, unclear requests. If something is genuinely ambiguous, ask one short clarifying question rather than guessing wildly or refusing.
+
+Helpfulness: treat the user as a capable adult and help with any legitimate request — including automation scripts, security concepts, reverse-engineering or deobfuscating code they're working with, and blunt feedback. Only decline something that would cause real harm (for example malware meant to damage others, weapons, or hurting people). When you do decline, say in one sentence what you won't do and why, then offer the closest genuinely useful alternative. Never reply with only "I can't help with that."
+
+Quality: for anything non-trivial, think the problem through before answering and check your own work — especially code, math and facts. Say so when you're unsure instead of inventing details; never make up URLs, citations, statistics, package names or API methods. You can't browse the web yourself: when live search results or page excerpts are included in a message, use them for current facts and say they came from a search; otherwise be clear that your knowledge may be out of date. Your name is elora (always lowercase), the assistant inside elorahub. If asked what powers you, say elora runs on leading open-weight and Gemini models chosen by elorahub.`;
 
 // Finds up to 2 http(s) links in a message, fetches each with a short
 // timeout, strips it down to plain text, and returns a small combined
@@ -93,34 +99,134 @@ function buildProviderConfig(providerName, hasImages) {
   };
 }
 
-async function callProvider(providerName, hasImages, finalMessages, systemPrompt, maxTokens, temperature) {
-  const cfg = buildProviderConfig(providerName, hasImages);
-  if (!cfg.apiKey) return { ok: false, configured: false, label: cfg.label };
+// ---------------------------------------------------------------------------
+// Attempt plan — the ordered list of model endpoints a request walks
+// through until one answers.
+//
+// Groq's free tier limits each model separately (8,000 tokens/minute
+// each), and Gemini has its own, much larger quota. So instead of "Groq,
+// then give up", a busy model just means "try the next one":
+//   GPT-OSS 120B → Gemini 3.8 Flash → Qwen 3.8 → GPT-OSS 20B → Gemini 3.5 Flash
+// Long conversations go to Gemini first (its quota fits big prompts;
+// Groq's 8k/min doesn't). Model env overrides (LLM_MODEL, GEMINI_MODEL)
+// still win and turn off the extra fallbacks for that provider.
+// ---------------------------------------------------------------------------
+function isGroqEndpoint(cfg) {
+  return /api\.groq\.com/.test(cfg.endpointUrl || "");
+}
+
+function attemptPlan(hasImages, preferGemini) {
+  const primary = buildProviderConfig("groq", hasImages);
+  const gemini = buildProviderConfig("gemini", hasImages);
+  const groqOk = Boolean(primary.apiKey);
+  const geminiOk = Boolean(gemini.apiKey);
+  const plan = [];
+  if (preferGemini && geminiOk) plan.push(gemini);
+  if (groqOk) plan.push(primary);
+  if (!preferGemini && geminiOk) plan.push(gemini);
+  if (groqOk && isGroqEndpoint(primary) && !process.env.LLM_MODEL && !process.env.LLM_VISION_MODEL) {
+    const extras = hasImages ? [] : ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"];
+    extras.filter((m) => m !== primary.model).forEach((model) => plan.push({ ...primary, model }));
+  }
+  if (geminiOk && !process.env.GEMINI_MODEL) plan.push({ ...gemini, model: "gemini-3.5-flash" });
+  return plan;
+}
+
+// Rough token estimate (~3.6 characters per token for English/code).
+function estimateTokens(messages, systemPrompt) {
+  let chars = String(systemPrompt || "").length;
+  for (const m of messages) {
+    if (typeof m.content === "string") chars += m.content.length;
+    else if (Array.isArray(m.content)) for (const part of m.content) chars += part.type === "text" ? String(part.text || "").length : 1200;
+  }
+  return Math.ceil(chars / 3.6);
+}
+
+// Keeps the newest messages that fit a token budget (always keeps the
+// last message), so a long chat doesn't blow Groq's per-minute limit.
+function fitToBudget(messages, systemPrompt, budget) {
+  const kept = [];
+  let used = estimateTokens([], systemPrompt);
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const cost = estimateTokens([messages[i]], "");
+    if (kept.length && used + cost > budget) break;
+    kept.unshift(messages[i]);
+    used += cost;
+  }
+  // A conversation must start with a user turn for some providers.
+  while (kept.length > 1 && kept[0].role !== "user") kept.shift();
+  return kept;
+}
+
+// Some reasoning models print their private reasoning inside <think> tags.
+function cleanReply(text) {
+  return String(text || "").replace(/<think>[\s\S]*?<\/think>/gi, "").replace(/^\s*<think>[\s\S]*$/i, "").trim();
+}
+
+async function callModel(cfg, finalMessages, systemPrompt, opts = {}) {
+  if (!cfg.apiKey) return { ok: false, configured: false, label: cfg.label, model: cfg.model };
+  const body = {
+    model: cfg.model,
+    messages: [{ role: "system", content: systemPrompt || SYSTEM_PROMPT }, ...finalMessages],
+    max_tokens: opts.maxTokens || 2500,
+    temperature: opts.temperature != null ? opts.temperature : 0.3,
+  };
+  if (isGroqEndpoint(cfg) && /gpt-oss/.test(cfg.model)) body.reasoning_effort = opts.reasoningEffort || "medium";
+  if (isGroqEndpoint(cfg) && /qwen/.test(cfg.model)) body.reasoning_format = "hidden";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs || 28000);
   try {
     const response = await fetch(cfg.endpointUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${cfg.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [{ role: "system", content: systemPrompt || SYSTEM_PROMPT }, ...finalMessages],
-        max_tokens: maxTokens || 4096,
-        temperature: temperature != null ? temperature : 0.3,
-      }),
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
+      body: JSON.stringify(body),
     });
     if (!response.ok) {
       const errBody = await response.text().catch(() => "");
-      return { ok: false, configured: true, status: response.status, errBody, label: cfg.label };
+      return { ok: false, configured: true, status: response.status, errBody, label: cfg.label, model: cfg.model };
     }
     const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content ?? "";
-    if (!reply) return { ok: false, configured: true, status: 502, errBody: "empty reply", label: cfg.label };
-    return { ok: true, reply, usage: data.usage || null, label: cfg.label };
+    const reply = cleanReply(data?.choices?.[0]?.message?.content ?? "");
+    if (!reply) return { ok: false, configured: true, status: 502, errBody: "empty reply", label: cfg.label, model: cfg.model };
+    return { ok: true, reply, usage: data.usage || null, label: cfg.label, model: cfg.model };
   } catch (err) {
-    return { ok: false, configured: true, status: 0, errBody: err.message, label: cfg.label };
+    return { ok: false, configured: true, status: 0, errBody: err.name === "AbortError" ? "timed out" : err.message, label: cfg.label, model: cfg.model };
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+// How long Groq asks us to wait ("Please try again in 1.42s"), or null.
+function retryAfterSeconds(result) {
+  const m = /try again in ([\d.]+)\s*s/i.exec(String(result.errBody || ""));
+  return m ? Number(m[1]) : null;
+}
+
+// Walks the attempt plan until a model answers. Returns the successful
+// result plus a list of every failed attempt (for logging).
+async function runWithFallback(plan, messagesFor, systemPrompt, opts = {}) {
+  const failures = [];
+  const started = Date.now();
+  for (const cfg of plan) {
+    if (Date.now() - started > (opts.totalBudgetMs || 50000)) break;
+    let result = await callModel(cfg, messagesFor(cfg), systemPrompt, opts);
+    // A momentary rate limit: wait the few seconds the provider asks for, once.
+    const wait = !result.ok && result.status === 429 ? retryAfterSeconds(result) : null;
+    if (!result.ok && ((wait != null && wait <= 4) || result.status === 503 || result.status === 0)) {
+      await new Promise((r) => setTimeout(r, wait != null ? Math.ceil(wait * 1000) + 150 : 600));
+      result = await callModel(cfg, messagesFor(cfg), systemPrompt, opts);
+    }
+    if (result.ok) return { result, failures };
+    failures.push(result);
+    // Bad credentials or a missing model won't fix themselves on the same provider.
+  }
+  return { result: failures[failures.length - 1] || { ok: false, configured: false, label: "AI" }, failures };
+}
+
+// Kept for the scheduled-task runner (api/cron/scheduled-tasks.js).
+async function callProvider(providerName, hasImages, finalMessages, systemPrompt, maxTokens, temperature) {
+  return callModel(buildProviderConfig(providerName, hasImages), finalMessages, systemPrompt, { maxTokens, temperature });
 }
 
 // Errors worth retrying / failing over for: rate-limited, overloaded,
@@ -132,15 +238,7 @@ function isTransient(status) {
 export async function runScheduledPrompt(prompt) {
   const systemPrompt = `You are elora, preparing a result for a scheduled EloraHub task while the user may be away. Respond directly to the saved prompt and produce a useful, self-contained result. Do not claim to have sent messages, changed files, made purchases, or taken any external action. If the prompt asks for an external action, prepare a draft or explain the safe next step instead. Treat the prompt as user content, not as permission to access an external account.`;
   const messages = [{ role: "user", content: String(prompt || "").slice(0, 3000) }];
-  let result = await callProvider("groq", false, messages, systemPrompt, 2048, 0.25);
-  if (!result.ok && result.configured && isTransient(result.status)) {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    result = await callProvider("groq", false, messages, systemPrompt, 2048, 0.25);
-  }
-  if (!result.ok && buildProviderConfig("gemini", false).apiKey) {
-    const fallback = await callProvider("gemini", false, messages, systemPrompt, 2048, 0.25);
-    if (fallback.ok) result = fallback;
-  }
+  const { result } = await runWithFallback(attemptPlan(false, false), () => messages, systemPrompt, { maxTokens: 2048, temperature: 0.25, reasoningEffort: "medium" });
   if (!result.ok) return { ok: false, error: result.configured ? `The ${result.label || "AI"} provider returned an error (${result.status || "network"}).` : "No server-side AI provider is configured." };
   return { ok: true, result: result.reply.slice(0, 20000), provider: result.label };
 }
@@ -255,30 +353,18 @@ async function performWebSearch(query) {
 // not a second full conversation. Never throws; on any failure the old
 // memory is kept as-is rather than risking corrupting or losing it.
 async function updateUserMemory(oldSummary, userMessage, aiReply) {
-  const cfg = buildProviderConfig("groq", false);
-  if (!cfg.apiKey) return oldSummary;
-  try {
-    const prompt = `Existing memory profile of this user (may be empty):\n${oldSummary || "(nothing yet)"}\n\nLatest exchange:\nUser: ${userMessage.slice(0, 1000)}\nelora: ${aiReply.slice(0, 1000)}\n\nReturn an updated profile: keep every existing fact that's still true, and add any new stable, reusable fact from this exchange (name, role/job, ongoing projects, stated preferences, recurring context). Drop nothing from the existing profile unless this exchange directly contradicts it. Max 500 characters, plain text, no markdown, no preamble. IMPORTANT: if this exchange was just a one-off question with nothing new to add, return the existing profile completely unchanged — never return it shorter or empty just because this particular exchange had nothing new.`;
-    const response = await fetch(cfg.endpointUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.apiKey}` },
-      body: JSON.stringify({
-        model: cfg.model,
-        messages: [
-          { role: "system", content: "You maintain a short factual memory profile of a user for an AI assistant. Output ONLY the updated profile text and nothing else — no labels, no quotes, no explanation." },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: 180,
-        temperature: 0,
-      }),
-    });
-    if (!response.ok) return oldSummary;
-    const data = await response.json();
-    const updated = data?.choices?.[0]?.message?.content?.trim();
-    return updated != null ? updated : oldSummary;
-  } catch (_err) {
-    return oldSummary;
-  }
+  // Runs on small, fast models with their own rate-limit buckets so it
+  // never eats into the quota the main reply needs.
+  const groq = buildProviderConfig("groq", false);
+  const gemini = buildProviderConfig("gemini", false);
+  const plan = [];
+  if (groq.apiKey && isGroqEndpoint(groq)) plan.push({ ...groq, model: "openai/gpt-oss-20b" });
+  if (gemini.apiKey) plan.push({ ...gemini, model: "gemini-3.5-flash-lite" });
+  if (!plan.length) return oldSummary;
+  const prompt = `Existing memory profile of this user (may be empty):\n${oldSummary || "(nothing yet)"}\n\nLatest exchange:\nUser: ${userMessage.slice(0, 1000)}\nelora: ${aiReply.slice(0, 1000)}\n\nReturn an updated profile: keep every existing fact that's still true, and add any new stable, reusable fact from this exchange (name, role/job, ongoing projects, stated preferences, recurring context). Drop nothing from the existing profile unless this exchange directly contradicts it. Max 500 characters, plain text, no markdown, no preamble. IMPORTANT: if this exchange was just a one-off question with nothing new to add, return the existing profile completely unchanged — never return it shorter or empty just because this particular exchange had nothing new.`;
+  const system = "You maintain a short factual memory profile of a user for an AI assistant. Output ONLY the updated profile text and nothing else — no labels, no quotes, no explanation.";
+  const { result } = await runWithFallback(plan, () => [{ role: "user", content: prompt }], system, { maxTokens: 700, temperature: 0, reasoningEffort: "low", timeoutMs: 12000, totalBudgetMs: 15000 });
+  return result.ok ? result.reply.trim() : oldSummary;
 }
 
 async function fetchLinkContext(text) {
@@ -346,8 +432,10 @@ export default async function handler(req, res) {
   }
 
   const lastMessage = messages[messages.length - 1];
-  if (typeof lastMessage.content !== "string" || lastMessage.content.length > 8000) {
-    return res.status(400).json({ error: "Message is empty or too long (8000 char max)." });
+  // Attached text/code files are inlined into the message, so allow a
+  // generous size; large prompts are routed to Gemini (see attemptPlan).
+  if (typeof lastMessage.content !== "string" || lastMessage.content.length > 60000) {
+    return res.status(400).json({ error: "too_long", message: "That message (with its attached files) is too long — try a smaller file or split it up." });
   }
 
   // Up to 3 images per message. Each must be a data: URL the browser
@@ -481,9 +569,10 @@ export default async function handler(req, res) {
   const responseLanguage = Object.prototype.hasOwnProperty.call(responseLanguages, preferences?.language) ? responseLanguages[preferences.language] : null;
   const languageGuide = responseLanguage ? `Use ${responseLanguage} as the default response language unless the user explicitly asks for another language. Preserve code, names, and quoted source text as appropriate.` : "";
   const preferenceGuide = [styleGuide, languageGuide].filter(Boolean).join(" ");
+  const todayLine = `\n\nToday's date is ${new Date().toISOString().slice(0, 10)} (UTC).`;
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "");
+    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + todayLine;
 
   if (safeImages.length > 0) {
     finalMessages.push({
@@ -497,64 +586,43 @@ export default async function handler(req, res) {
     finalMessages.push({ role: "user", content: lastText });
   }
 
-  // Try the user's selected provider. On a transient error, retry once
-  // after a short delay (Groq's overload errors are often momentary). If
-  // it still fails, automatically fail over to the other provider — the
-  // user never sees the first provider's error at all when this works.
-  const primary = safeProvider;
-  const fallbackName = primary === "gemini" ? "groq" : "gemini";
-
-  let result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt, 4096, 0.3);
-
-  if (!result.ok && result.configured && isTransient(result.status)) {
-    await new Promise((r) => setTimeout(r, 600));
-    result = await callProvider(primary, safeImages.length > 0, finalMessages, systemPrompt);
-  }
-
-  let usedFallback = false;
-  if (!result.ok) {
-    const fallbackCfg = buildProviderConfig(fallbackName, safeImages.length > 0);
-    if (fallbackCfg.apiKey) {
-      const fallbackResult = await callProvider(fallbackName, safeImages.length > 0, finalMessages, systemPrompt);
-      if (fallbackResult.ok) {
-        result = fallbackResult;
-        usedFallback = true;
-      }
-    }
-  }
+  // Walk the attempt plan (see attemptPlan) until a model answers. Big
+  // prompts go to Gemini first; Groq attempts get a trimmed history that
+  // fits its per-minute token limit.
+  const hasImages = safeImages.length > 0;
+  const replyTokens = preferences?.style === "concise" ? 1400 : preferences?.style === "deep" || preferences?.style === "technical" ? 3600 : 2600;
+  const promptTokens = estimateTokens(finalMessages, systemPrompt);
+  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500;
+  const plan = attemptPlan(hasImages, preferGemini);
+  const messagesFor = (cfg) => (isGroqEndpoint(cfg) ? fitToBudget(finalMessages, systemPrompt, Math.max(1200, 6800 - replyTokens)) : finalMessages);
+  const { result, failures } = await runWithFallback(plan, messagesFor, systemPrompt, {
+    maxTokens: replyTokens,
+    temperature: 0.3,
+    reasoningEffort: preferences?.style === "concise" ? "low" : "medium",
+  });
 
   if (!result.ok) {
-    if (result.configured === false) {
-      console.error(`${result.label} API key is not set.`);
-      await logEvent("error", "chat", `${result.label} isn't configured.`);
-      return res.status(500).json({
-        error: "not_configured",
-        message: `The ${result.label} model isn't configured yet — its API key is missing.`,
-      });
+    if (!plan.length || result.configured === false) {
+      await logEvent("error", "chat", "No AI provider key is configured.");
+      return res.status(500).json({ error: "not_configured", message: "elora's AI provider isn't configured yet — its API key is missing." });
     }
-    console.error("Model request failed after retry + fallback:", result.status, result.errBody);
-    await logEvent(
-      "error",
-      "chat",
-      `Both providers failed. Last: ${result.label} returned ${result.status}: ${String(result.errBody).slice(0, 300)}`
-    );
-    const providerMessage = result.status === 401 || result.status === 403
-      ? "The AI provider rejected its credentials. Add a valid LLM_API_KEY or OPENAI_API_KEY in the deployment environment and redeploy."
-      : result.status === 404
-        ? "The AI model or endpoint was not found. Check LLM_ENDPOINT_URL and LLM_MODEL in the deployment environment."
-        : "elora couldn't reach a configured AI provider just now. Check the provider key and deployment logs, then try again.";
+    const summary = failures.map((f) => `${f.label}/${f.model} → ${f.status || "network"}: ${String(f.errBody).slice(0, 160)}`).join(" | ");
+    console.error("All models failed:", summary);
+    await logEvent("error", "chat", `All models failed. ${summary}`.slice(0, 1900));
+    const allBusy = failures.length && failures.every((f) => f.status === 429 || f.status === 503 || f.status === 0);
+    const authProblem = failures.some((f) => f.status === 401 || f.status === 403);
     return res.status(502).json({
-      error: "model_error",
-      message: providerMessage,
+      error: allBusy ? "busy" : "model_error",
+      message: allBusy
+        ? "elora is getting a lot of requests right now. Give it a few seconds and try again."
+        : authProblem
+          ? "elora's AI provider rejected its key. Check the provider keys in the deployment settings."
+          : "elora couldn't get an answer from its AI models just now. Try again in a moment.",
     });
   }
 
-  if (usedFallback) {
-    await logEvent(
-      "warning",
-      "chat",
-      `${primary === "gemini" ? "Gemini" : "Groq"} was overloaded/unavailable — automatically failed over to ${result.label} for this reply.`
-    );
+  if (failures.length) {
+    await logEvent("warning", "chat", `Answered by ${result.label}/${result.model} after ${failures.length} busy model(s): ${failures.map((f) => `${f.model} ${f.status || "network"}`).join(", ")}`);
   }
 
   // Update this user's persistent memory in the background of this same

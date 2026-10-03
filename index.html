@@ -2131,6 +2131,83 @@ html[data-ec-theme="light"] #page-chat .workspace-panel{ color-scheme:light; }
   .ec-composer{ border-radius:18px; }
 }
 
+
+/* ---------- chat v2: modes, pins, stop/retry/edit, follow-ups ---------- */
+.ec-modes{ display:grid; grid-template-columns:1fr 1fr; gap:3px; padding:3px; margin:0 2px 10px; border:1px solid var(--ec-line); border-radius:11px; background:var(--ec-bg); }
+.ec-mode-tab{ display:flex; align-items:center; justify-content:center; gap:7px; height:32px; border:0; border-radius:8px; background:transparent; color:var(--ec-text-2); font:550 13.5px var(--ec-font); cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .18s ease; }
+.ec-mode-tab .ec-i{ width:16px; height:16px; }
+.ec-mode-tab:hover{ color:var(--ec-text); }
+.ec-mode-tab.is-active{ background:var(--ec-raised-2); color:var(--ec-text); box-shadow:0 1px 2px rgba(0,0,0,.25),0 0 0 1px var(--ec-line); }
+html[data-ec-mode="code"] .ec-suggest-set[data-set="chat"],html:not([data-ec-mode="code"]) .ec-suggest-set[data-set="code"]{ display:none; }
+.ec-suggest-set{ display:contents; }
+.ec-chat-row{ position:relative; }
+.ec-chat-row .ec-chat-item{ padding-right:34px; }
+.ec-chat-pin{ position:absolute; top:3px; right:3px; width:28px; height:28px; display:grid; place-items:center; padding:0; border:0; border-radius:7px; background:transparent; color:var(--ec-text-3); opacity:0; cursor:pointer; transition:opacity .15s ease,background .15s ease,color .15s ease; }
+.ec-chat-pin .ec-i{ width:15px; height:15px; }
+.ec-chat-row:hover .ec-chat-pin,.ec-chat-pin:focus-visible,.ec-chat-row.is-pinned .ec-chat-pin{ opacity:1; }
+.ec-chat-pin:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-chat-row.is-pinned .ec-chat-pin{ color:var(--ec-accent); }
+@media (hover:none){ .ec-chat-pin{ opacity:1; } }
+#page-chat .ec-scheduled-item .ec-i{ width:16px; height:16px; color:var(--ec-text-2); }
+#page-chat .ec-scheduled-item span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ec-send .ec-send-stop{ display:none; fill:currentColor; stroke:none; }
+.ec-send.is-stop{ opacity:1; background:var(--ec-text); color:var(--ec-bg); }
+.ec-send.is-stop .ec-send-go{ display:none; }
+.ec-send.is-stop .ec-send-stop{ display:block; width:15px; height:15px; }
+.ec-msg.is-user .ec-actions{ justify-content:flex-end; margin:4px -6px 0 0; }
+.ec-msg.is-user:hover .ec-actions,.ec-msg.is-user .ec-actions:focus-within{ opacity:1; }
+.ec-msg.is-user:not(:nth-last-child(-n+2)) .ec-edit{ display:none; }
+.ec-msg.is-ai:not(:last-child) .ec-regen{ display:none; }
+.ec-msg.is-error .ec-msg-text{ color:var(--ec-text-2); }
+.ec-actions-error{ opacity:1!important; margin-top:8px; }
+.ec-retry{ display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:9px; background:transparent; color:var(--ec-text); font:550 13.5px var(--ec-font); cursor:pointer; }
+.ec-retry:hover{ background:var(--ec-hover); }
+.ec-retry .ec-i{ width:15px; height:15px; }
+.ec-followups{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; font-family:var(--ec-font); animation:ec-in .3s ease both .15s; }
+.ec-followup{ height:30px; padding:0 12px; border:1px solid var(--ec-line); border-radius:999px; background:transparent; color:var(--ec-text-2); font:13px var(--ec-font); cursor:pointer; }
+.ec-followup:hover{ border-color:var(--ec-line-2); background:var(--ec-hover); color:var(--ec-text); }
+
+/* Layered dark-grey glow around the message box: several soft rings,
+   each a little lighter and wider, so it reads as one smooth gradient. */
+.ec-composer{
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.035),
+    0 1px 2px rgba(0,0,0,.45),
+    0 0 0 5px rgba(64,64,68,.16),
+    0 0 0 11px rgba(56,56,60,.11),
+    0 0 0 18px rgba(48,48,52,.075),
+    0 0 0 26px rgba(42,42,46,.05),
+    0 6px 16px rgba(0,0,0,.30),
+    0 18px 44px rgba(0,0,0,.34),
+    0 30px 80px 10px rgba(30,30,33,.55);
+}
+.ec-composer:focus-within{
+  border-color:rgba(255,255,255,.22);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.05),
+    0 1px 2px rgba(0,0,0,.45),
+    0 0 0 5px rgba(78,78,84,.2),
+    0 0 0 11px rgba(66,66,72,.13),
+    0 0 0 18px rgba(56,56,62,.09),
+    0 0 0 26px rgba(48,48,54,.06),
+    0 6px 16px rgba(0,0,0,.3),
+    0 18px 44px rgba(0,0,0,.34),
+    0 30px 80px 10px rgba(30,30,33,.55);
+}
+html[data-ec-theme="light"] .ec-composer{
+  box-shadow:0 0 0 1px rgba(0,0,0,.02),0 1px 2px rgba(0,0,0,.08),0 0 0 5px rgba(120,120,126,.08),0 0 0 11px rgba(120,120,126,.055),0 0 0 18px rgba(120,120,126,.035),0 0 0 26px rgba(120,120,126,.02),0 10px 30px rgba(0,0,0,.08);
+}
+html[data-ec-theme="light"] .ec-composer:focus-within{
+  box-shadow:0 0 0 1px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.08),0 0 0 5px rgba(110,110,116,.12),0 0 0 11px rgba(110,110,116,.08),0 0 0 18px rgba(110,110,116,.05),0 0 0 26px rgba(110,110,116,.03),0 10px 30px rgba(0,0,0,.08);
+}
+.ec-dock{ position:relative; padding-top:30px; }
+.ec-main:not(.is-empty) .ec-dock{ margin-top:-30px; background:linear-gradient(to bottom,transparent,var(--ec-bg) 34px); }
+@media (max-width:700px){
+  .ec-composer{ box-shadow:0 0 0 1px rgba(255,255,255,.03),0 0 0 4px rgba(64,64,68,.14),0 0 0 9px rgba(52,52,56,.08),0 0 0 15px rgba(44,44,48,.05),0 10px 30px rgba(0,0,0,.35); }
+  .ec-dock{ padding-top:18px; }
+  .ec-main:not(.is-empty) .ec-dock{ margin-top:-18px; }
+}
+
 /* ---------- settings window ---------- */
 .es-overlay{ position:fixed; inset:0; z-index:500; display:none; place-items:center; padding:24px; background:var(--ec-scrim); color:var(--ec-text); font-family:var(--ec-font); color-scheme:dark; }
 html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
@@ -2223,6 +2300,169 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   .es-input{ width:100%; }
   .es-plan{ flex-wrap:wrap; }
 }
+
+/* ============================================================
+   HOME v2 — glowing orb, auto-playing demo, useful sections
+   ============================================================ */
+.hero-visual{ max-width:430px; }
+.hx-orb-stage{ position:relative; z-index:2; display:flex; justify-content:center; margin:0 auto -44px; pointer-events:none; }
+.hx-orb{ position:relative; width:200px; height:200px; padding:0; border:0; border-radius:50%; background:transparent; cursor:pointer; isolation:isolate; pointer-events:auto; animation:hx-float 7s ease-in-out infinite; will-change:transform; }
+.hx-orb:focus-visible{ outline:2px solid #ff8a93; outline-offset:10px; }
+.hx-orb-glow{ position:absolute; z-index:-1; inset:-45%; border-radius:50%; background:radial-gradient(circle,rgba(208,52,66,.5) 0%,rgba(150,26,42,.26) 30%,rgba(90,14,26,.12) 50%,transparent 70%); animation:hx-breathe 4.6s ease-in-out infinite; will-change:transform,opacity; }
+.hx-orb-ring{ position:absolute; inset:-7px; border-radius:50%; background:conic-gradient(from 0deg,transparent 0 18%,rgba(255,128,134,.9) 30%,rgba(197,48,62,.95) 38%,transparent 52%,transparent 68%,rgba(255,255,255,.6) 80%,transparent 90%); -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1.5px)); mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1.5px)); animation:hx-spin 6s linear infinite; will-change:transform; }
+.hx-orb-ring-2{ inset:-20px; opacity:.4; animation-duration:12s; animation-direction:reverse; }
+.hx-orb-core{ position:absolute; inset:0; overflow:hidden; border-radius:50%; background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.42),transparent 20%),radial-gradient(circle at 50% 62%,#4a0d17 0%,#1d0609 55%,#0b0304 100%); box-shadow:inset 0 0 42px rgba(214,58,72,.6),inset 0 -20px 44px rgba(255,96,108,.28),0 0 70px rgba(197,48,62,.38),0 0 140px rgba(150,26,42,.22); }
+.hx-orb-swirl{ position:absolute; inset:-35%; background:conic-gradient(from 90deg,transparent,rgba(255,84,98,.38),transparent 38%,rgba(255,255,255,.1) 58%,transparent 74%); animation:hx-spin 9s linear infinite; will-change:transform; }
+.hx-orb-orbit{ position:absolute; inset:-30px; animation:hx-spin 15s linear infinite; will-change:transform; }
+.hx-orb-orbit i{ position:absolute; top:-1px; left:50%; width:6px; height:6px; border-radius:50%; background:#ff9aa1; box-shadow:0 0 12px 3px rgba(255,90,102,.7); }
+.hx-orb-orbit i:nth-child(2){ top:auto; left:auto; bottom:14%; right:3%; width:4px; height:4px; }
+.hx-orb-orbit i:nth-child(3){ top:42%; left:-1px; width:3px; height:3px; }
+.hx-orb-label{ position:absolute; left:50%; bottom:21%; transform:translateX(-50%); display:inline-flex; align-items:center; gap:7px; padding:6px 13px; border:1px solid rgba(255,255,255,.16); border-radius:999px; background:rgba(12,4,6,.62); color:#f4f2f0; font:600 13px var(--font-body); white-space:nowrap; }
+.hx-orb-dot{ width:7px; height:7px; border-radius:50%; background:#ff5a67; box-shadow:0 0 10px #ff5a67; animation:hx-blink 1.4s ease-in-out infinite; }
+.hx-orb:hover .hx-orb-glow{ animation-duration:2.2s; }
+.hx-orb:hover .hx-orb-ring{ animation-duration:2.6s; }
+.hx-orb:active .hx-orb-core{ transform:scale(.96); transition:transform .12s ease; }
+.hero-visual .chat-mock{ position:relative; z-index:1; padding-top:52px; border-color:rgba(255,255,255,.1);
+  box-shadow:0 0 0 1px rgba(255,255,255,.03),0 0 0 6px rgba(60,60,64,.14),0 0 0 13px rgba(52,52,56,.09),0 0 0 21px rgba(44,44,48,.06),0 0 0 30px rgba(38,38,42,.035),0 24px 70px rgba(0,0,0,.55); }
+@keyframes hx-float{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+@keyframes hx-breathe{ 0%,100%{ opacity:.72; transform:scale(.93); } 50%{ opacity:1; transform:scale(1.07); } }
+@keyframes hx-spin{ to{ transform:rotate(360deg); } }
+@keyframes hx-blink{ 50%{ opacity:.35; } }
+
+/* demo player */
+.hx-demo{ max-width:980px; margin:0 auto; }
+.hx-demo-tabs{ display:flex; align-items:flex-end; gap:8px; margin-bottom:16px; }
+.hx-tab{ flex:1; display:flex; flex-direction:column; gap:9px; padding:8px 4px 0; border:0; background:transparent; color:var(--text-3); font:600 14.5px var(--font-body); text-align:left; cursor:pointer; }
+.hx-tab:hover{ color:var(--text-2); }
+.hx-tab.is-active{ color:var(--text-1); }
+.hx-tab i{ display:block; height:3px; overflow:hidden; border-radius:3px; background:rgba(255,255,255,.1); }
+.hx-tab b{ display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#8f1d2a,#e0434f); }
+.hx-tab.is-done b{ width:100%; }
+.hx-demo-play{ width:38px; height:38px; flex:none; display:grid; place-items:center; padding:0; border:1px solid rgba(255,255,255,.14); border-radius:50%; background:rgba(255,255,255,.04); color:var(--text-1); cursor:pointer; }
+.hx-demo-play:hover{ background:rgba(255,255,255,.09); }
+.hx-demo-play svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.hx-demo-play .hx-ic-play{ display:none; fill:currentColor; stroke:none; }
+.hx-demo-play.is-paused .hx-ic-pause{ display:none; }
+.hx-demo-play.is-paused .hx-ic-play{ display:block; }
+.hx-screen{ display:flex; flex-direction:column; height:470px; overflow:hidden; border:1px solid rgba(255,255,255,.1); border-radius:20px; background:#151515;
+  box-shadow:0 0 0 1px rgba(255,255,255,.02),0 0 0 7px rgba(58,58,62,.12),0 0 0 15px rgba(50,50,54,.08),0 0 0 24px rgba(42,42,46,.05),0 30px 80px rgba(0,0,0,.55); }
+.hx-screen-bar{ display:flex; align-items:center; gap:12px; height:44px; flex:none; padding:0 16px; border-bottom:1px solid rgba(255,255,255,.07); color:var(--text-3); font-size:13px; }
+.hx-thread{ flex:1; min-height:0; display:flex; flex-direction:column; justify-content:flex-end; gap:16px; overflow:hidden; padding:20px clamp(16px,5vw,56px); color:#ececec; font:15px/1.62 var(--font-body); }
+.hx-u{ align-self:flex-end; max-width:82%; padding:10px 15px; border-radius:16px; background:#2a2a2a; animation:hx-pop .3s ease both; }
+.hx-a{ animation:hx-pop .3s ease both; }
+.hx-a p{ margin:0 0 .65em; } .hx-a p:last-child{ margin-bottom:0; }
+.hx-a ul,.hx-a ol{ margin:0 0 .65em; padding-left:1.3em; }
+.hx-a li{ margin:.2em 0; }
+.hx-a strong{ color:#fff; font-weight:650; }
+.hx-a code{ padding:.1em .35em; border-radius:5px; background:rgba(255,255,255,.08); font:.86em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+.hx-a pre{ margin:0 0 .65em; padding:12px 14px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:#0c0c0c; font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+.hx-a pre code{ padding:0; background:none; font-size:inherit; }
+.hx-a h3{ margin:.2em 0 .4em; font:650 15px var(--font-body); }
+.hx-stepline{ margin-bottom:6px; color:#8b8b8b; font-size:13px; }
+.hx-think{ display:inline-flex; align-items:center; gap:9px; color:#a9a9a9; font-size:14px; }
+.hx-think img{ width:20px; height:20px; animation:hx-spin 2.4s linear infinite; }
+.hx-composer{ display:flex; align-items:center; gap:10px; flex:none; min-height:54px; margin:0 16px 16px; padding:8px 8px 8px 16px; border:1px solid rgba(255,255,255,.14); border-radius:16px; background:#1f1f1f; color:#ececec; font:15px var(--font-body);
+  box-shadow:0 0 0 5px rgba(64,64,68,.12),0 0 0 11px rgba(52,52,56,.07),0 10px 30px rgba(0,0,0,.4); }
+.hx-composer-text{ flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.hx-composer-text:empty::before{ content:"How can I help you today?"; color:#7c7c7c; }
+.hx-composer-send{ width:34px; height:34px; flex:none; display:grid; place-items:center; border-radius:10px; background:#c5303e; opacity:.4; transition:opacity .2s ease,transform .2s ease; }
+.hx-composer.is-ready .hx-composer-send{ opacity:1; }
+.hx-composer.is-sending .hx-composer-send{ transform:scale(.88); }
+.hx-composer-send svg{ width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; }
+@keyframes hx-pop{ from{ opacity:0; transform:translateY(8px); } }
+
+/* use cases */
+.hx-uses{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+.hx-use{ padding:24px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008)); transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s ease,background .25s ease; }
+.hx-use:hover{ transform:translateY(-4px); border-color:rgba(255,255,255,.16); background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.012)); }
+.hx-use-icon{ width:42px; height:42px; display:grid; place-items:center; margin-bottom:16px; border-radius:12px; background:rgba(197,48,62,.14); color:#ff7a85; }
+.hx-use-icon svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.hx-use h3{ margin-bottom:12px; color:var(--text-1); font:500 21px var(--font-display); }
+.hx-use ul{ display:grid; gap:9px; margin:0; padding:0; list-style:none; }
+.hx-use li{ position:relative; padding-left:18px; color:var(--text-2); font-size:14px; line-height:1.5; }
+.hx-use li::before{ content:""; position:absolute; top:.62em; left:2px; width:6px; height:6px; border-radius:50%; background:#c5303e; }
+
+/* tools */
+.hx-tools{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--line); }
+.hx-tool{ padding:22px; background:#0b0b0d; transition:background .2s ease; }
+.hx-tool:hover{ background:#131316; }
+.hx-tool strong{ display:block; margin-bottom:6px; color:var(--text-1); font-size:15px; }
+.hx-tool p{ margin:0; color:var(--text-2); font-size:13.5px; line-height:1.55; }
+
+/* how it works */
+.hx-steps{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin:0; padding:0; list-style:none; }
+.hx-steps li{ position:relative; padding:22px; border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.02); }
+.hx-step-n{ width:30px; height:30px; display:grid; place-items:center; margin-bottom:14px; border-radius:50%; background:#c5303e; color:#fff; font:700 13px var(--font-body); }
+.hx-steps h3{ margin-bottom:6px; color:var(--text-1); font-size:16px; }
+.hx-steps p{ margin:0; color:var(--text-2); font-size:14px; line-height:1.55; }
+
+/* tips */
+.hx-tips{ display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:36px; padding:38px; border:1px solid var(--line); border-radius:22px; background:radial-gradient(ellipse 60% 80% at 0% 0%,rgba(197,48,62,.1),transparent 70%),#0b0b0d; }
+.hx-tips-head h2{ margin-top:8px; color:var(--text-1); font:500 clamp(26px,3vw,34px)/1.15 var(--font-display); }
+.hx-tips-list{ display:grid; gap:14px; margin:0; padding:0; list-style:none; }
+.hx-tips-list li{ position:relative; padding-left:30px; color:var(--text-2); font-size:14.5px; line-height:1.55; }
+.hx-tips-list li::before{ content:""; position:absolute; top:.2em; left:0; width:18px; height:18px; border-radius:50%; background:rgba(197,48,62,.18) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a85' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/11px no-repeat; }
+.hx-tips-list strong{ color:var(--text-1); }
+
+/* faq */
+.hx-faq{ display:grid; gap:10px; max-width:820px; margin:0 auto; }
+.hx-faq details{ border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); transition:border-color .2s ease,background .2s ease; }
+.hx-faq details[open]{ border-color:rgba(255,255,255,.16); background:rgba(255,255,255,.035); }
+.hx-faq summary{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:18px 20px; color:var(--text-1); font:600 15.5px var(--font-body); list-style:none; cursor:pointer; }
+.hx-faq summary::-webkit-details-marker{ display:none; }
+.hx-faq summary::after{ content:"+"; flex:none; color:var(--text-3); font-size:22px; line-height:1; transition:transform .25s ease; }
+.hx-faq details[open] summary::after{ transform:rotate(45deg); }
+.hx-faq p{ margin:0; padding:0 20px 18px; color:var(--text-2); font-size:14.5px; line-height:1.6; animation:hx-pop .3s ease both; }
+@media (max-width:760px){
+  .hx-orb{ width:170px; height:170px; }
+  .hx-orb-stage{ margin-bottom:-38px; }
+  .hx-tips{ grid-template-columns:1fr; gap:22px; padding:24px; }
+  .hx-screen{ height:520px; }
+  .hx-thread{ font-size:14px; padding:16px; }
+  .hx-tab{ font-size:13.5px; }
+}
+@media (prefers-reduced-motion:reduce){ .hx-orb,.hx-orb-glow,.hx-orb-ring,.hx-orb-swirl,.hx-orb-orbit,.hx-orb-dot,.hx-think img{ animation:none; } }
+
+
+/* home polish */
+#page-home .section{ padding-top:clamp(48px,6vw,84px); padding-bottom:clamp(48px,6vw,84px); }
+.hero-copy h1 em{ background:linear-gradient(100deg,#ff7a84 0%,#e0434f 38%,#b3202e 70%,#7a1424 100%)!important; -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; }
+.hx-thread{ -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 34px); mask-image:linear-gradient(to bottom,transparent 0,#000 34px); }
+
+/* ============================================================
+   PERFORMANCE — smooth scrolling
+   The page sat on a fixed, full-screen layer of blurred, blended,
+   animated shapes plus dozens of backdrop blurs, all repainted on
+   every scroll frame. Same look, without the per-frame cost.
+   ============================================================ */
+.atmosphere{ contain:strict; transform:translateZ(0); }
+.atmosphere::before{ filter:none!important; background:radial-gradient(circle at 50% 35%,transparent 32%,rgba(0,0,0,.36) 88%)!important; }
+.atmosphere::after{ mix-blend-mode:normal!important; }
+.blur-orb{ filter:none!important; mix-blend-mode:normal!important; animation:none!important; will-change:auto!important; }
+*,*::before,*::after{ -webkit-backdrop-filter:none!important; backdrop-filter:none!important; }
+.nav{ background:rgba(6,6,8,.95)!important; }
+.mobile-menu{ background:#09090b!important; }
+.modal-overlay{ background:rgba(0,0,0,.72); }
+.hero-visual .chat-mock,.teaser-strip,.plan.premium{ animation:none!important; }
+
+/* ============================================================
+   MOTION — every button, tab and menu responds
+   ============================================================ */
+:where(.btn,.ec-btn,.ec-nav-item,.ec-chip,.ec-followup,.ec-retry,.ec-iconbtn,.ec-act,.ec-mode-tab,.ec-send,.es-btn,.es-tab,.es-seg button,.nav-links button,.mobile-menu button,.pricing-switch button,.owner-tabs button,.social-btn,.workspace-primary,.workspace-secondary,.hx-tab,.hx-demo-play,.ec-account,.ec-title,.ec-mode,.ec-chat-item,.ec-brand,.ec-pop>button,.ec-code-copy,.ec-steps-toggle){ transition:transform .16s cubic-bezier(.2,.8,.2,1),background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .2s ease,opacity .18s ease; }
+:where(.btn,.ec-btn,.ec-chip,.ec-followup,.ec-retry,.ec-iconbtn,.ec-act,.ec-mode-tab,.ec-send,.es-btn,.es-seg button,.nav-links button,.mobile-menu button,.pricing-switch button,.owner-tabs button,.social-btn,.workspace-primary,.workspace-secondary,.hx-tab,.hx-demo-play,.ec-mode,.ec-nav-item,.es-tab,.ec-account,.ec-code-copy):active:not(:disabled){ transform:scale(.96); }
+.ec-pop:not([hidden]){ animation:ec-pop .16s cubic-bezier(.2,.8,.2,1) both; }
+.ec-pop-below{ transform-origin:top left; }
+.ec-pop-up{ transform-origin:bottom left; }
+.ec-pop-up.ec-pop-right{ transform-origin:bottom right; }
+.ec-pop-account{ transform-origin:bottom center; }
+.es-panel.is-active{ animation:ec-in .22s ease both; }
+#page-chat .workspace-overlay:not([hidden]) .workspace-panel{ animation:ec-pop .2s cubic-bezier(.2,.8,.2,1) both; }
+#page-chat .workspace-overlay:not([hidden]) .workspace-scrim{ animation:ec-fade .2s ease both; }
+.es-overlay.is-open{ animation:ec-fade .18s ease both; }
+#page-chat.page.is-active .ec-main{ animation:ec-fade .3s ease both; }
+.ec-chat-item{ transition:background-color .15s ease,color .15s ease; }
+@keyframes ec-pop{ from{ opacity:0; transform:translateY(4px) scale(.97); } }
+@keyframes ec-fade{ from{ opacity:0; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -2278,31 +2518,32 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       <div class="hero-copy reveal">
         <div class="intro-badge">
           <span class="intro-dot"></span>
-          Introducing elorahub
+          elora · AI for code and everyday thinking
         </div>
         <h1>Meet <em>elora</em>, the AI that actually thinks it through.</h1>
-        <p class="lede">elorahub pairs the speed you want with the depth you don't usually get. elora reads the whole question, reasons through it in the background, checks its own logic, and still gets back to you in about four to five seconds.</p>
+        <p class="lede">Fix a bug, think through a decision, write the message you've been putting off. elora reads the whole conversation, remembers what matters about you, looks things up when the question is about now, and answers in seconds.</p>
         <div class="hero-cta">
           <button class="btn btn-primary btn-lg" data-nav="chat">Start chatting with elora</button>
           <button class="btn btn-lg" data-nav="pricing">See plans &amp; pricing</button>
         </div>
         <div class="hero-meta">
-          <div><strong>~4–5s</strong><span>Typical reply time</span></div>
-          <div><strong>3-pass</strong><span>Internal reasoning check</span></div>
-          <div><strong>Text · Image · File</strong><span>Every plan can upload</span></div>
+          <div><strong>Free</strong><span>To start, no card</span></div>
+          <div><strong>Chat · Code</strong><span>Two focused modes</span></div>
+          <div><strong>Text · Images · Code</strong><span>Attach and ask</span></div>
         </div>
-        <div class="model-credit">elora isn't one single model — it's leading open-weight &amp; Gemini models, fine-tuned and fused together under one voice.</div>
+        <div class="model-credit">elora runs on leading open-weight and Gemini models, with automatic fallback — if one model is busy, the next one answers.</div>
       </div>
 
       <div class="hero-visual reveal">
-        <div class="thinking-orb-stage">
-          <button class="thinking-orb" type="button" data-nav="chat" aria-label="Start chatting with elora" title="Start chatting with elora">
-            <span class="thinking-orb-halo" aria-hidden="true"></span>
-            <span class="thinking-orb-horizon" aria-hidden="true"></span>
-            <span class="thinking-orb-glint" aria-hidden="true"></span>
-            <span class="thinking-orb-label"><span class="thinking-orb-dot" aria-hidden="true"></span>Thinking</span>
+        <div class="hx-orb-stage">
+          <button class="hx-orb" type="button" data-nav="chat" aria-label="Start chatting with elora" title="Start chatting with elora">
+            <span class="hx-orb-glow" aria-hidden="true"></span>
+            <span class="hx-orb-ring" aria-hidden="true"></span>
+            <span class="hx-orb-ring hx-orb-ring-2" aria-hidden="true"></span>
+            <span class="hx-orb-core" aria-hidden="true"><span class="hx-orb-swirl"></span></span>
+            <span class="hx-orb-orbit" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="hx-orb-label"><span class="hx-orb-dot" aria-hidden="true"></span>Thinking</span>
           </button>
-          <span class="thinking-orb-caption" aria-hidden="true">A little space to think before the answer.</span>
         </div>
         <div class="chat-mock">
           <div class="chat-mock-head">
@@ -2316,78 +2557,126 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
           </div>
           <div class="bubble user hero-followup" style="opacity:0;">Clean catch. Can you add a retry with backoff too?</div>
         </div>
-        <div class="float-card f1">Reads files &amp; images</div>
-        <div class="float-card f2">Reasons before replying</div>
       </div>
     </div>
 
-    <!-- HOW ELORA THINKS -->
-    <div class="section" id="how">
+    <!-- DEMO: an auto-playing walkthrough of real use cases -->
+    <div class="section hx-demo-section" id="demo">
       <div class="section-head reveal">
-        <h2>How elora gets to a good answer, fast</h2>
-        <p>Most fast chatbots are fast because they skip steps. elora isn't. Every message runs through the same short pipeline before a word ever reaches you.</p>
+        <span class="eyebrow-plain">See it work</span>
+        <h2>One assistant for code, decisions, writing and learning</h2>
+        <p>Here's what a normal session looks like. Pick a tab, or let it play.</p>
       </div>
-      <div class="process-grid">
-        <div class="process-card reveal">
-          <span class="step-mark">i.</span>
-          <h3>Read &amp; understand</h3>
-          <p>elora parses your prompt, any uploaded files or images, and the earlier turns in the conversation, so it knows exactly what you're actually asking.</p>
+      <div class="hx-demo reveal" id="heroDemo">
+        <div class="hx-demo-tabs" role="tablist" aria-label="Demo examples">
+          <button type="button" role="tab" class="hx-tab is-active" data-demo="0"><span>Code</span><i><b></b></i></button>
+          <button type="button" role="tab" class="hx-tab" data-demo="1"><span>Think</span><i><b></b></i></button>
+          <button type="button" role="tab" class="hx-tab" data-demo="2"><span>Write</span><i><b></b></i></button>
+          <button type="button" role="tab" class="hx-tab" data-demo="3"><span>Learn</span><i><b></b></i></button>
+          <button type="button" class="hx-demo-play" id="demoPlayBtn" aria-label="Pause demo" title="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="hx-ic-pause" d="M8 5v14M16 5v14"/><path class="hx-ic-play" d="M7 5l12 7-12 7z"/></svg></button>
         </div>
-        <div class="process-card reveal">
-          <span class="step-mark">ii.</span>
-          <h3>Reason in the background</h3>
-          <p>Before drafting a reply, elora works through the problem privately — weighing angles, checking assumptions, ruling out weak answers.</p>
-        </div>
-        <div class="process-card reveal">
-          <span class="step-mark">iii.</span>
-          <h3>Cross-check the logic</h3>
-          <p>A second internal pass checks the draft answer against the original question, catching contradictions or gaps before you ever see them.</p>
-        </div>
-        <div class="process-card reveal">
-          <span class="step-mark">iv.</span>
-          <h3>Reply in seconds</h3>
-          <p>All of that happens quietly and quickly. You get a considered, specific answer in roughly four to five seconds, not a wall of caveats.</p>
+        <div class="hx-screen">
+          <div class="hx-screen-bar"><span class="dots-group"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span><span class="hx-screen-title" id="demoTitle">elora · Code</span></div>
+          <div class="hx-thread" id="demoThread" aria-live="off"></div>
+          <div class="hx-composer"><span class="hx-composer-text" id="demoComposer"></span><span class="hx-composer-send" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
         </div>
       </div>
     </div>
 
-    <!-- FEATURES -->
+    <!-- WHAT IT HELPS WITH -->
     <div class="section">
       <div class="section-head reveal">
-        <h2>What you can actually do with it</h2>
-        <p>elorahub is built around one chat that can genuinely help with writing, reasoning, and the files you throw at it — not a demo that falls apart outside a script.</p>
+        <span class="eyebrow-plain">What it's for</span>
+        <h2>Real help, not a demo that falls apart</h2>
+        <p>The four things people use elora for most — and what to expect from each.</p>
       </div>
-      <div class="feature-grid">
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg></div>
-          <h3>Genuinely creative writing</h3>
-          <p>Stories, scripts, brand voice, brainstorms — elora writes with actual point of view instead of the same three templates.</p>
+      <div class="hx-uses">
+        <article class="hx-use reveal">
+          <div class="hx-use-icon"><svg viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg></div>
+          <h3>Code</h3>
+          <ul><li>Paste an error and the code around it — get the cause and a fix, not a checklist</li><li>Write complete, runnable scripts and functions</li><li>Review code for bugs, edge cases and readability</li><li>Attach source files (.py, .js, .ts and more) so it reads the real thing</li></ul>
+        </article>
+        <article class="hx-use reveal">
+          <div class="hx-use-icon"><svg viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.8 2.8 0 0 0 5 0zM19 8l-2.5 6a2.8 2.8 0 0 0 5 0z"/></svg></div>
+          <h3>Think</h3>
+          <ul><li>Lay out the real trade-offs before a decision you can't undo</li><li>Turn a messy goal into a step-by-step plan</li><li>Get blunt feedback on an idea, a plan or a pitch</li><li>Ask "why?" and it follows the thread of the conversation</li></ul>
+        </article>
+        <article class="hx-use reveal">
+          <div class="hx-use-icon"><svg viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/></svg></div>
+          <h3>Write</h3>
+          <ul><li>Emails and messages that sound like you, in the tone you ask for</li><li>Rewrite a draft shorter, clearer or more confident</li><li>Posts, bios, descriptions and cover letters</li><li>Replies in 16 languages, including Georgian</li></ul>
+        </article>
+        <article class="hx-use reveal">
+          <div class="hx-use-icon"><svg viewBox="0 0 24 24"><path d="m2.5 9.5 9.5-5 9.5 5-9.5 5zM6.5 11.6V16c1.5 1.5 3.5 2.5 5.5 2.5s4-1 5.5-2.5v-4.4"/></svg></div>
+          <h3>Learn</h3>
+          <ul><li>Explanations at your level — "like I'm 12" or "like I'm an engineer"</li><li>Worked examples and practice questions</li><li>Upload a screenshot or photo and ask what it shows</li><li>Follow-ups like "give me an example" are one tap away</li></ul>
+        </article>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="section">
+      <div class="section-head reveal">
+        <span class="eyebrow-plain">Built in</span>
+        <h2>Tools in every chat</h2>
+      </div>
+      <div class="hx-tools">
+        <div class="hx-tool reveal"><strong>Code mode</strong><p>One switch in the sidebar. Answers come as complete, runnable code with coding follow-ups.</p></div>
+        <div class="hx-tool reveal"><strong>Files &amp; images</strong><p>Images up to 3&nbsp;MB, plus text and source-code files — elora reads the first ~30,000 characters of each. PDFs aren't read yet.</p></div>
+        <div class="hx-tool reveal"><strong>Memory you control</strong><p>Signed-in users get a short note of stable facts. See it or wipe it anytime in Settings → Memory.</p></div>
+        <div class="hx-tool reveal"><strong>Look-ups for current questions</strong><p>Questions about "today" or "latest" trigger a search, and elora tells you when it searched.</p></div>
+        <div class="hx-tool reveal"><strong>Reads links</strong><p>Paste up to two links and elora reads the pages before answering.</p></div>
+        <div class="hx-tool reveal"><strong>Projects &amp; Artifacts</strong><p>Group related chats, and save any answer with one click to find it later.</p></div>
+        <div class="hx-tool reveal"><strong>Scheduled</strong><p>Reminders while the tab is open, plus daily background AI tasks for signed-in accounts.</p></div>
+        <div class="hx-tool reveal"><strong>Stop, retry, edit</strong><p>Stop a reply, ask for a different answer, or press ↑ to edit your last message.</p></div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section" id="how">
+      <div class="section-head reveal">
+        <span class="eyebrow-plain">Under the hood</span>
+        <h2>How a reply comes together</h2>
+      </div>
+      <ol class="hx-steps">
+        <li class="reveal"><span class="hx-step-n">1</span><h3>You ask</h3><p>Type, attach files or images, and pick a reply mode — Quick, Balanced, Deep dive or Code.</p></li>
+        <li class="reveal"><span class="hx-step-n">2</span><h3>elora gathers context</h3><p>The conversation so far, what it remembers about you, any links you shared and, for current questions, a search.</p></li>
+        <li class="reveal"><span class="hx-step-n">3</span><h3>A strong model reasons it out</h3><p>Your message goes to a large reasoning model. If it's busy, elora automatically moves to the next one.</p></li>
+        <li class="reveal"><span class="hx-step-n">4</span><h3>You get something usable</h3><p>A line like "Recalled memory · 2.1s" shows what it did. Copy, save, retry, or follow up in one tap.</p></li>
+      </ol>
+    </div>
+
+    <!-- TIPS -->
+    <div class="section">
+      <div class="hx-tips reveal">
+        <div class="hx-tips-head">
+          <span class="eyebrow-plain">Get better answers</span>
+          <h2>Six habits that make any AI more useful</h2>
         </div>
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V6a2 2 0 012-2h8.5L20 8.5V19.5A1.5 1.5 0 0118.5 21h-13A1.5 1.5 0 014 19.5z"/><path d="M14 4v4.5A1.5 1.5 0 0015.5 10H20"/></svg></div>
-          <h3>Reads files &amp; images</h3>
-          <p>Drop in PDFs, spreadsheets, screenshots or photos. elora reads them properly and answers questions about what's inside.</p>
-        </div>
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3l-6 9 6 9M15 3l6 9-6 9"/></svg></div>
-          <h3>Code &amp; data, explained plainly</h3>
-          <p>Debug a script, walk through a dataset, or get a second opinion on an approach — explained the way you'd want a colleague to.</p>
-        </div>
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-9-9M21 3l-9 9M21 3v6h-6"/></svg></div>
-          <h3>Deep, multi-angle reasoning</h3>
-          <p>For questions with real stakes, elora doesn't stop at the first plausible answer — it weighs trade-offs before committing to one.</p>
-        </div>
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8M8 13h5M21 12c0 4.97-4.03 9-9 9-1.5 0-2.9-.36-4.14-1L3 21l1.09-3.68A8.96 8.96 0 013 12c0-4.97 4.03-9 9-9s9 4.03 9 9z"/></svg></div>
-          <h3>Remembers the conversation</h3>
-          <p>elora tracks context across a long chat, so you don't have to keep re-explaining what you already told it two messages ago.</p>
-        </div>
-        <div class="feature-cell reveal">
-          <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
-          <h3>Works in your language</h3>
-          <p>Switch languages mid-conversation and elora follows naturally, keeping tone and meaning intact either way.</p>
-        </div>
+        <ul class="hx-tips-list">
+          <li><strong>Say the goal, not just the task.</strong> "Rewrite this so my manager approves the budget" beats "rewrite this".</li>
+          <li><strong>Paste the exact error.</strong> Include the message and the code around it — not a description of it.</li>
+          <li><strong>Name the format.</strong> "A table", "three bullet points" or "a full Python file".</li>
+          <li><strong>Give constraints.</strong> Budget, deadline, language version, what you've already tried.</li>
+          <li><strong>Ask for options.</strong> "Give me three different approaches and the trade-offs" gets past the first idea.</li>
+          <li><strong>Push back.</strong> "Why?", "are you sure?" and "shorter" are good follow-ups, not rude ones.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="section">
+      <div class="section-head reveal">
+        <span class="eyebrow-plain">FAQ</span>
+        <h2>Straight answers</h2>
+      </div>
+      <div class="hx-faq reveal">
+        <details><summary>Is elora free?</summary><p>Yes — the Free plan includes a daily message allowance and file uploads. Private and Premium give you more messages; Premium is unlimited. See Pricing for details.</p></details>
+        <details><summary>Which AI models does it use?</summary><p>Leading open-weight reasoning models (served by Groq) and Google's Gemini. elora picks automatically and switches if one is busy, so you get an answer instead of an error.</p></details>
+        <details><summary>Does it remember me?</summary><p>Only when you're signed in, and only a short note of stable facts like your name and ongoing projects. You can read it or erase it anytime in Settings → Memory.</p></details>
+        <details><summary>Can it browse the web?</summary><p>It can read links you paste and run a search for questions about current events. It can't log in to sites or take actions on your behalf.</p></details>
+        <details><summary>What files can I attach?</summary><p>Images (up to 3&nbsp;MB) and text or source-code files (up to 200&nbsp;KB; elora reads the first ~30,000 characters). Other types, like PDFs and Word documents, are attached by name only for now.</p></details>
+        <details><summary>Where do my messages go?</summary><p>To elora's AI provider to write your reply. Your recent chats are saved in your browser. Payments are handled by Paddle — elorahub never sees your card.</p></details>
       </div>
     </div>
 
@@ -2450,6 +2739,12 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       <symbol id="i-cap" viewBox="0 0 24 24"><path d="m2.5 9.5 9.5-5 9.5 5-9.5 5zM6.5 11.6V16c1.5 1.5 3.5 2.5 5.5 2.5s4-1 5.5-2.5v-4.4M21.5 9.5V15"/></symbol>
       <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
       <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.8 2.8 0 0 0 5 0zM19 8l-2.5 6a2.8 2.8 0 0 0 5 0z"/></symbol>
+      <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 19V6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H8.5z"/></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 4.5V9h-4.5"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M9.5 4h5l-.8 5.5 3.3 3.3H7l3.3-3.3zM12 12.8V20"/></symbol>
+      <symbol id="i-bug" viewBox="0 0 24 24"><rect x="7" y="8" width="10" height="11" rx="5"/><path d="M9.5 8a2.5 2.5 0 0 1 5 0M3.5 13H7M17 13h3.5M4.5 8.5 7.5 10M19.5 8.5 16.5 10M4.5 18l3-1.5M19.5 18l-3-1.5"/></symbol>
+      <symbol id="i-check-list" viewBox="0 0 24 24"><path d="m4 7 2 2 3.5-3.5M4 15l2 2 3.5-3.5M13 8h7M13 16h7"/></symbol>
       <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
     </svg>
 
@@ -2458,6 +2753,11 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
         <div class="ec-side-head">
           <button type="button" class="ec-brand" data-nav="home" title="elorahub home"><img src="assets/elorahub_logo.png" alt=""><span>elora</span></button>
           <button type="button" class="ec-iconbtn" id="sidebarCollapseBtn" aria-label="Close sidebar" title="Close sidebar"><svg class="ec-i"><use href="#i-panel"/></svg></button>
+        </div>
+
+        <div class="ec-modes" role="tablist" aria-label="Workspace mode">
+          <button type="button" role="tab" class="ec-mode-tab is-active" aria-selected="true" data-workspace-mode="chat"><svg class="ec-i"><use href="#i-chat"/></svg>Chat</button>
+          <button type="button" role="tab" class="ec-mode-tab" aria-selected="false" data-workspace-mode="code"><svg class="ec-i"><use href="#i-code"/></svg>Code</button>
         </div>
 
         <label class="ec-search" for="chatSearchInput">
@@ -2485,8 +2785,12 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
 
         <div class="ec-side-scroll">
           <div class="ec-group" id="workspacePinned" hidden>
-            <div class="ec-group-label">Pinned</div>
+            <div class="ec-group-label">Pinned projects</div>
             <div id="workspacePinnedList"></div>
+          </div>
+          <div class="ec-group" id="sidebarScheduled" hidden>
+            <div class="ec-group-label">Scheduled</div>
+            <div id="sidebarScheduledList"></div>
           </div>
           <div class="ec-group">
             <div class="ec-group-label">Recents</div>
@@ -2551,7 +2855,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
           <div class="ec-dock">
             <div class="ec-composer" id="composerBox">
               <div class="ec-attachments" id="attachRow" style="display:none;"></div>
-              <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" hidden>
+              <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.tsv,.json,.log,.py,.js,.mjs,.ts,.jsx,.tsx,.html,.htm,.css,.scss,.java,.kt,.c,.h,.cpp,.hpp,.cs,.go,.rs,.rb,.php,.swift,.dart,.sql,.sh,.yml,.yaml,.toml,.ini,.xml,.vue,.svelte,.lua" hidden>
               <input type="file" id="folderInput" multiple webkitdirectory directory hidden>
               <textarea id="chatInput" rows="1" aria-label="Message elora" placeholder="How can I help you today?"></textarea>
               <div class="ec-composer-bar">
@@ -2578,16 +2882,25 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
                     <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="technical"><span class="ec-mode-copy"><b>Code</b><small>Technical, with examples</small></span><svg class="ec-i ec-check"><use href="#i-check"/></svg></button>
                   </div>
                 </div>
-                <button type="button" class="ec-send" id="sendBtn" aria-label="Send message" title="Send (Enter)"><svg class="ec-i"><use href="#i-arrow-up"/></svg></button>
+                <button type="button" class="ec-send" id="sendBtn" aria-label="Send message" title="Send (Enter)"><svg class="ec-i ec-send-go"><use href="#i-arrow-up"/></svg><svg class="ec-i ec-send-stop"><use href="#i-stop"/></svg></button>
               </div>
             </div>
 
             <div class="ec-suggest" id="chatSuggestions">
+              <span class="ec-suggest-set" data-set="code">
+              <button type="button" class="ec-chip" data-fill="Help me fix this error. Here's the message and the code around it:&#10;&#10;"><svg class="ec-i"><use href="#i-bug"/></svg>Fix an error</button>
+              <button type="button" class="ec-chip" data-fill="Explain what this code does, step by step:&#10;&#10;"><svg class="ec-i"><use href="#i-code"/></svg>Explain code</button>
+              <button type="button" class="ec-chip" data-fill="Write a complete, runnable script that "><svg class="ec-i"><use href="#i-pen"/></svg>Write a script</button>
+              <button type="button" class="ec-chip" data-fill="Review this code for bugs, edge cases and readability:&#10;&#10;"><svg class="ec-i"><use href="#i-check-list"/></svg>Review my code</button>
+              <button type="button" class="ec-chip" data-fill="Plan how to build "><svg class="ec-i"><use href="#i-bulb"/></svg>Plan a feature</button>
+              </span>
+              <span class="ec-suggest-set" data-set="chat">
               <button type="button" class="ec-chip" data-fill="Help me write "><svg class="ec-i"><use href="#i-pen"/></svg>Write</button>
               <button type="button" class="ec-chip" data-fill="Explain this to me simply: "><svg class="ec-i"><use href="#i-cap"/></svg>Learn</button>
               <button type="button" class="ec-chip" data-fill="Help me with this code: "><svg class="ec-i"><use href="#i-code"/></svg>Code</button>
               <button type="button" class="ec-chip" data-fill="Help me weigh up a decision: "><svg class="ec-i"><use href="#i-scale"/></svg>Decide</button>
               <button type="button" class="ec-chip" data-fill="Brainstorm genuinely different ideas for "><svg class="ec-i"><use href="#i-bulb"/></svg>Brainstorm</button>
+              </span>
             </div>
             <p class="ec-foot" id="inputFoot">elora can make mistakes. Double-check anything important.</p>
           </div>
@@ -3853,7 +4166,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
           if(followup){
             setTimeout(function(){ followup.style.transition = "opacity .5s ease"; followup.style.opacity = "1"; }, 400);
           }
-          setTimeout(playOnce, 5000);
+          setTimeout(function again(){ if(heroVisible && !document.hidden) playOnce(); else setTimeout(again, 1000); }, 5000);
         }
       }, 18);
     }
@@ -3866,8 +4179,10 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     });
 
     var started = false;
+    var heroVisible = false;
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(e){
+        heroVisible = e.isIntersecting;
         if(e.isIntersecting && !started){
           started = true;
           setTimeout(playOnce, 500);
@@ -3875,6 +4190,121 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       });
     }, { threshold: 0.3 });
     io.observe(target.closest(".hero-visual"));
+  })();
+
+  /* ---------------- Home demo: an auto-playing walkthrough ----------------
+     Plays like a short video: types a question, shows "Thinking", then
+     streams the answer, and moves to the next example. Only runs while
+     it's on screen (and the tab is visible), so it costs nothing
+     otherwise. Tabs jump to an example; the button pauses. */
+  (function(){
+    var root = document.getElementById("heroDemo");
+    if(!root) return;
+    var thread = document.getElementById("demoThread");
+    var composer = document.getElementById("demoComposer");
+    var composerBox = composer.parentNode;
+    var title = document.getElementById("demoTitle");
+    var playBtn = document.getElementById("demoPlayBtn");
+    var tabs = Array.prototype.slice.call(root.querySelectorAll(".hx-tab"));
+    var logo = (document.querySelector(".brand img") || {}).src || "assets/elorahub_logo.png";
+    var SCENES = [
+      { name:"Code", prompt:"My script crashes with KeyError: 'email' when a user has no email. Fix it?", steps:"Thought for 2.3s",
+        answer:"The crash comes from `user['email']`, which assumes every user has that key. Use `.get()` and skip users without one:\n\n```py\nfor user in users:\n    email = user.get(\"email\")\n    if not email:\n        log.warning(\"User %s has no email\", user[\"id\"])\n        continue\n    send_welcome(email)\n```\n\nNow one incomplete record logs a warning instead of stopping the whole run." },
+      { name:"Think", prompt:"Remote job with 15% more pay, or stay where I'm up for a promotion?", steps:"Recalled memory · 2.8s",
+        answer:"**It comes down to three things:**\n\n1. **Two-year money** — a promotion raise may close most of that 15% gap.\n2. **Growth** — which role gives you the bigger scope next year?\n3. **How you work best** — remote suits some people far better than others.\n\nBefore deciding, ask your manager for the promotion's timing and salary in writing." },
+      { name:"Write", prompt:"Write a short, friendly message asking my landlord to fix the heating.", steps:"Thought for 1.6s",
+        answer:"Hi Maria,\n\nHope you're well! The heating stopped working on Monday — the radiators stay cold even when it's on. Could you arrange for someone to take a look this week? I'm home most evenings after 6.\n\nThanks so much,\nNika" },
+      { name:"Learn", prompt:"Explain compound interest like I'm 12.", steps:"Thought for 1.9s",
+        answer:"Picture a jar with **100 coins**. Every year the bank adds **10%** of whatever is inside:\n\n- Year 1: +10 → **110**\n- Year 2: +11 → **121**\n- Year 3: +12.1 → **133**\n\nThe extra grows each year because you also earn on the coins you already earned. That's compound interest." }
+    ];
+    var index = 0, paused = false, visible = false, running = false, token = 0;
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function wait(ms, my){
+      return new Promise(function(resolve, reject){
+        var left = ms;
+        (function tick(){
+          if(my !== token) return reject("cancelled");
+          if(paused || !visible || document.hidden){ setTimeout(tick, 200); return; }
+          var step = Math.min(left, 50);
+          left -= step;
+          if(left <= 0) resolve(); else setTimeout(tick, step);
+        })();
+      });
+    }
+    function setProgress(i, fraction, animateMs){
+      tabs.forEach(function(tab, t){
+        var bar = tab.querySelector("b");
+        tab.classList.toggle("is-active", t === i);
+        tab.setAttribute("aria-selected", String(t === i));
+        tab.classList.toggle("is-done", t < i);
+        if(t !== i){ bar.style.transition = "none"; bar.style.width = t < i ? "100%" : "0"; }
+      });
+      var current = tabs[i].querySelector("b");
+      current.style.transition = animateMs ? "width " + animateMs + "ms linear" : "none";
+      current.style.width = (fraction * 100) + "%";
+    }
+    async function play(i, my){
+      var scene = SCENES[i];
+      title.textContent = "elora · " + scene.name;
+      thread.innerHTML = "";
+      composer.textContent = "";
+      composerBox.classList.remove("is-ready", "is-sending");
+      setProgress(i, 0, 0);
+      var total = 1200 + scene.prompt.length * 28 + 2200 + scene.answer.length * 9 + 3600;
+      requestAnimationFrame(function(){ setProgress(i, 1, total); });
+      if(reduce){
+        thread.innerHTML = '<div class="hx-u"></div><div class="hx-a"><div class="hx-stepline"></div><div class="hx-a-body"></div></div>';
+        thread.querySelector(".hx-u").textContent = scene.prompt;
+        thread.querySelector(".hx-stepline").textContent = scene.steps;
+        thread.querySelector(".hx-a-body").innerHTML = mdToHtml(scene.answer);
+        await wait(9000, my); return;
+      }
+      await wait(700, my);
+      for(var c = 1; c <= scene.prompt.length; c++){ composer.textContent = scene.prompt.slice(0, c); composerBox.classList.add("is-ready"); await wait(28, my); }
+      await wait(450, my);
+      composerBox.classList.add("is-sending");
+      var u = document.createElement("div"); u.className = "hx-u"; u.textContent = scene.prompt;
+      thread.appendChild(u);
+      composer.textContent = ""; composerBox.classList.remove("is-ready", "is-sending");
+      var think = document.createElement("div"); think.className = "hx-think"; think.innerHTML = '<img src="' + logo + '" alt="">Thinking';
+      thread.appendChild(think);
+      await wait(1700, my);
+      think.remove();
+      var a = document.createElement("div"); a.className = "hx-a";
+      a.innerHTML = '<div class="hx-stepline"></div><div class="hx-a-body"></div>';
+      a.querySelector(".hx-stepline").textContent = scene.steps;
+      thread.appendChild(a);
+      var body = a.querySelector(".hx-a-body");
+      for(var k = 0; k <= scene.answer.length; k += 3){ body.innerHTML = escapeHtml(scene.answer.slice(0, k)).replace(/\n/g, "<br>"); await wait(9, my); }
+      body.innerHTML = mdToHtml(scene.answer);
+      await wait(3600, my);
+    }
+    async function loop(){
+      if(running) return;
+      running = true;
+      var my = ++token;
+      try {
+        while(my === token){ await play(index, my); index = (index + 1) % SCENES.length; }
+      } catch(e){ /* cancelled by a tab click */ }
+      if(my === token) running = false;
+    }
+    function jump(i){ index = i; token++; running = false; loop(); }
+    tabs.forEach(function(tab){ tab.addEventListener("click", function(){ jump(Number(tab.getAttribute("data-demo"))); }); });
+    playBtn.addEventListener("click", function(){
+      paused = !paused;
+      playBtn.classList.toggle("is-paused", paused);
+      playBtn.setAttribute("aria-label", paused ? "Play demo" : "Pause demo");
+      playBtn.title = paused ? "Play" : "Pause";
+      var bar = tabs[index].querySelector("b");
+      if(paused){ var w = getComputedStyle(bar).width; bar.style.transition = "none"; bar.style.width = w; }
+      else { jump(index); }
+    });
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){ visible = entry.isIntersecting; if(visible) loop(); });
+      }, { threshold: 0.25 }).observe(root);
+    } else { visible = true; loop(); }
   })();
 
   /* ---------------- Chat ---------------- */
@@ -3926,10 +4356,12 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     var query = chatSearchInput ? chatSearchInput.value.trim().toLowerCase() : "";
     var matches = chatSessions.filter(function(session){ return !query || session.title.toLowerCase().includes(query); })
       .sort(function(a, b){ return (b.updatedAt || 0) - (a.updatedAt || 0); });
+    // Pinned chats first, then the rest under day labels.
+    matches = matches.filter(function(s){ return s.pinned; }).concat(matches.filter(function(s){ return !s.pinned; }));
     chatHistoryList.textContent = "";
     var lastGroup = null;
     matches.forEach(function(session){
-      var group = conversationDayGroup(session.updatedAt || Date.now());
+      var group = session.pinned ? "Pinned" : conversationDayGroup(session.updatedAt || Date.now());
       if(group !== lastGroup){
         var label = document.createElement("div");
         label.className = "ec-day";
@@ -3938,16 +4370,26 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
         lastGroup = group;
       }
       var isActive = !!(activeConversation && session.id === activeConversation.id);
+      var row = document.createElement("div");
+      row.className = "ec-chat-row" + (session.pinned ? " is-pinned" : "");
+      row.setAttribute("role", "listitem");
       var item = document.createElement("button");
       item.type = "button";
       item.className = "ec-chat-item" + (isActive ? " is-active" : "");
-      item.setAttribute("role", "listitem");
       item.dataset.chatSession = String(session.id);
       item.title = session.title;
       item.textContent = session.title;
       item.disabled = replyPending;
       if(isActive) item.setAttribute("aria-current", "page");
-      chatHistoryList.appendChild(item);
+      var pin = document.createElement("button");
+      pin.type = "button";
+      pin.className = "ec-chat-pin";
+      pin.dataset.pinSession = String(session.id);
+      pin.setAttribute("aria-label", (session.pinned ? "Unpin " : "Pin ") + session.title);
+      pin.title = session.pinned ? "Unpin" : "Pin";
+      pin.innerHTML = '<svg class="ec-i" aria-hidden="true"><use href="#i-pin"/></svg>';
+      row.append(item, pin);
+      chatHistoryList.appendChild(row);
     });
     if(chatHistoryEmpty){
       chatHistoryEmpty.hidden = matches.length > 0;
@@ -3958,9 +4400,11 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   if(chatSearchInput) chatSearchInput.addEventListener("input", renderConversationList);
   var chatMain = document.getElementById("chatMain");
   function greetingText(){
+    var name = currentUser && (currentUser.name || String(currentUser.email || "").split("@")[0]);
+    var codeMode = typeof chatPreferences !== "undefined" && chatPreferences && chatPreferences.workspaceMode === "code";
+    if(codeMode) return name ? "What are we building, " + name + "?" : "What are we building?";
     var hour = new Date().getHours();
     var part = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 18 ? "Good afternoon" : "Good evening";
-    var name = currentUser && (currentUser.name || String(currentUser.email || "").split("@")[0]);
     return name ? part + ", " + name : part;
   }
   // A new chat shows the greeting with the message box centered under it;
@@ -4015,7 +4459,10 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       sendMessage();
     }
   });
-  sendBtn.addEventListener("click", sendMessage);
+  sendBtn.addEventListener("click", function(){ if(replyPending) stopReply(); else sendMessage(); });
+  chatInput.addEventListener("keydown", function(e){
+    if(e.key === "ArrowUp" && !chatInput.value && !replyPending && chatThread.querySelector(".ec-msg.is-user")){ e.preventDefault(); editLastMessage(null); }
+  });
 
   document.querySelectorAll("#chatSuggestions [data-fill]").forEach(function(chip){
     chip.addEventListener("click", function(){
@@ -4032,7 +4479,10 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   // attached by name only — their content genuinely isn't extracted yet.
   var MAX_IMAGE_BYTES = 3 * 1024 * 1024; // keep base64 payload under Vercel's request-body limit
   var MAX_TEXT_BYTES = 200 * 1024;
-  var TEXTY_TYPES = ["text/plain", "text/markdown", "text/csv", "application/json", "text/x-log"];
+  var TEXTY_TYPES = ["text/plain", "text/markdown", "text/csv", "application/json", "text/x-log", "text/html", "text/css", "text/javascript", "application/javascript", "application/xml", "text/xml", "application/x-yaml", "text/x-python"];
+  // Plain-text and source-code files are read and sent to elora in full
+  // (up to the size limit); other types are attached by name only.
+  var CODE_FILE_PATTERN = /\.(txt|md|markdown|csv|tsv|json|log|py|js|mjs|cjs|ts|jsx|tsx|html?|css|scss|java|kt|kts|c|h|cc|cpp|hpp|cs|go|rs|rb|php|swift|dart|sql|sh|bash|zsh|ps1|yml|yaml|toml|ini|cfg|env\.example|xml|vue|svelte|lua|r|pl|gradle|dockerfile)$/i;
 
   function readFileAsDataURL(file){
     return new Promise(function(resolve){
@@ -4087,13 +4537,13 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
         }
         entry.isImage = true;
         entry.dataUrl = await readFileAsDataURL(f);
-      } else if(TEXTY_TYPES.indexOf(f.type) > -1 || /\.(txt|md|csv|json|log)$/i.test(f.name)){
+      } else if(TEXTY_TYPES.indexOf(f.type) > -1 || CODE_FILE_PATTERN.test(f.name)){
         if(f.size > MAX_TEXT_BYTES){
           showToast(f.name + " is too large to read (max 200KB for text files) — skipped.");
           continue;
         }
         var text = await readFileAsText(f);
-        entry.textContent = text ? text.slice(0, 6000) : null;
+        entry.textContent = text ? text.slice(0, 30000) : null;
       } else {
         entry.unsupported = true; // attached by name only — content not read
       }
@@ -4205,9 +4655,45 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     tools.innerHTML =
       '<button type="button" class="ec-act" data-copy-message="1" aria-label="Copy reply" title="Copy">' + icon("copy") + '</button>' +
       '<button type="button" class="ec-act" data-message-reaction="up" aria-label="Good reply" title="Good reply">' + icon("thumb-up") + '</button>' +
-      '<button type="button" class="ec-act" data-message-reaction="down" aria-label="Bad reply" title="Bad reply">' + icon("thumb-down") + '</button>';
+      '<button type="button" class="ec-act" data-message-reaction="down" aria-label="Bad reply" title="Bad reply">' + icon("thumb-down") + '</button>' +
+      '<button type="button" class="ec-act ec-regen" data-regenerate="1" aria-label="Try a different answer" title="Try a different answer">' + icon("refresh") + '</button>';
     tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
     msg.appendChild(tools);
+  }
+  function addUserTools(msg, sourceText){
+    var tools = document.createElement("div");
+    tools.className = "ec-actions";
+    tools.innerHTML =
+      '<button type="button" class="ec-act" data-copy-message="1" aria-label="Copy message" title="Copy">' + icon("copy") + '</button>' +
+      '<button type="button" class="ec-act ec-edit" data-edit-message="1" aria-label="Edit message" title="Edit (↑)">' + icon("pen") + '</button>';
+    tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
+    msg.appendChild(tools);
+  }
+  function addRetryTools(msg){
+    msg.classList.add("is-error");
+    var tools = document.createElement("div");
+    tools.className = "ec-actions ec-actions-error";
+    tools.innerHTML = '<button type="button" class="ec-retry" data-retry="1">' + icon("refresh") + '<span>Try again</span></button>';
+    msg.appendChild(tools);
+  }
+  // Quick one-tap follow-ups under the latest reply.
+  function addFollowups(msg){
+    if(chatPreferences.suggestions === false) return;
+    var code = chatPreferences.workspaceMode === "code";
+    var options = code
+      ? [["Explain it", "Explain how that code works, step by step."], ["Add error handling", "Add proper error handling and edge-case checks to that."], ["Write tests", "Write tests for that code."]]
+      : [["Shorter", "Make that shorter and more direct."], ["More detail", "Go deeper on that, with more detail."], ["Give an example", "Give me a concrete example."]];
+    var row = document.createElement("div");
+    row.className = "ec-followups";
+    options.forEach(function(opt){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ec-followup";
+      btn.dataset.followup = opt[1];
+      btn.textContent = opt[0];
+      row.appendChild(btn);
+    });
+    msg.appendChild(row);
   }
 
   function copyToClipboard(value, okMessage){
@@ -4251,10 +4737,11 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     return { msg: msg, text: text };
   }
 
-  function addMessage(role, html){
+  function addMessage(role, html, sourceText){
     var parts = buildMessage(role);
     parts.text.innerHTML = html;
     if(role !== "user") addResponseTools(parts.msg, parts.text.textContent || "");
+    else addUserTools(parts.msg, sourceText != null ? sourceText : (parts.text.textContent || ""));
     chatThread.appendChild(parts.msg);
     scrollToBottom();
     return parts.msg;
@@ -4305,7 +4792,8 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   function isNearBottom(){
     return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 140;
   }
-  function addMessageTyped(fullText, stepsLine, escape){
+  var skipTyping = false;
+  function addMessageTyped(fullText, stepsLine, escape, isError){
     var parts = buildMessage("ai");
     if(stepsLine) parts.msg.insertBefore(stepsLine, parts.text);
     var caret = document.createElement("span");
@@ -4321,9 +4809,10 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       // in roughly the same couple of seconds.
       var step = Math.max(1, Math.ceil(total / 130));
       if(document.documentElement.classList.contains("reduce-motion")) step = total;
+      skipTyping = false;
       var timer = setInterval(function(){
         var stickToBottom = isNearBottom();
-        revealed = Math.min(total, revealed + step);
+        revealed = skipTyping ? total : Math.min(total, revealed + step);
         var slice = fullText.slice(0, revealed);
         var atEnd = revealed >= total;
         // Mid-typing, show plain escaped text — partial markdown (a
@@ -4334,7 +4823,8 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
         if(atEnd){
           clearInterval(timer);
           caret.remove();
-          addResponseTools(parts.msg, fullText);
+          if(isError) addRetryTools(parts.msg);
+          else addResponseTools(parts.msg, fullText);
           if(stickToBottom){ scrollToBottom(); }
           resolve(parts.msg);
         }
@@ -4347,7 +4837,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   function renderHistory(history){
     chatThread.innerHTML = "";
     (history || []).forEach(function(item){
-      if(item.role === "user") addMessage("user", escapeHtml(String(item.content || "")).replace(/\n/g, "<br>"));
+      if(item.role === "user") addMessage("user", escapeHtml(String(item.content || "")).replace(/\n/g, "<br>"), String(item.content || ""));
       else addMessage("assistant", mdToHtml(String(item.content || "")));
     });
   }
@@ -4468,7 +4958,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   /* ---------------- Preferences + Settings window ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, enterToSend:true, suggestions:true, autoFocus:true, contrast:false, themeMode:"dark", chatFont:"system", textSize:"medium", transcriptWidth:"medium", motion:"system", responseLanguage:"auto", sidebarCollapsed:false };
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, enterToSend:true, suggestions:true, autoFocus:true, contrast:false, themeMode:"dark", chatFont:"system", textSize:"medium", transcriptWidth:"medium", motion:"system", responseLanguage:"auto", sidebarCollapsed:false, workspaceMode:"chat" };
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
   // Carry over settings saved by the previous chat design.
   if(["system","light","dark"].indexOf(chatPreferences.themeMode) === -1) chatPreferences.themeMode = "dark";
@@ -4504,6 +4994,35 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     if(systemDark.addEventListener) systemDark.addEventListener("change", onSystemTheme);
     else if(systemDark.addListener) systemDark.addListener(onSystemTheme);
   }
+  // Chat / Code switch at the top of the sidebar. Code mode answers in the
+  // technical style with complete, runnable code, and swaps the starter
+  // ideas and follow-ups for coding ones.
+  function applyWorkspaceMode(){
+    var mode = chatPreferences.workspaceMode === "code" ? "code" : "chat";
+    document.documentElement.setAttribute("data-ec-mode", mode);
+    document.querySelectorAll("[data-workspace-mode]").forEach(function(tab){
+      var on = tab.getAttribute("data-workspace-mode") === mode;
+      tab.classList.toggle("is-active", on);
+      tab.setAttribute("aria-selected", String(on));
+    });
+    var heading = document.querySelector("#chatThread #welcomeTitle");
+    if(heading) heading.textContent = greetingText();
+  }
+  function setWorkspaceMode(mode){
+    mode = mode === "code" ? "code" : "chat";
+    if(mode === chatPreferences.workspaceMode) return;
+    if(mode === "code"){ chatPreferences.chatStyle = chatPreferences.style; chatPreferences.style = "technical"; }
+    else { chatPreferences.style = chatPreferences.chatStyle && chatPreferences.chatStyle !== "technical" ? chatPreferences.chatStyle : "balanced"; }
+    chatPreferences.workspaceMode = mode;
+    saveChatPreferences();
+    applyWorkspaceMode();
+    if(typeof syncComposerModes === "function") syncComposerModes();
+  }
+  document.querySelectorAll("[data-workspace-mode]").forEach(function(tab){
+    tab.addEventListener("click", function(){ setWorkspaceMode(tab.getAttribute("data-workspace-mode")); });
+  });
+  applyWorkspaceMode();
+
   function setThemeMode(mode){
     chatPreferences.themeMode = ["system","light","dark"].indexOf(mode) > -1 ? mode : "dark";
     saveChatPreferences(); applyTheme(); syncSettingsForm();
@@ -4852,7 +5371,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   document.querySelectorAll("[data-composer-style]").forEach(function(btn){ btn.addEventListener("click", function(){ chatPreferences.style = btn.getAttribute("data-composer-style"); var style = document.getElementById("responseStyle"); if(style) style.value = chatPreferences.style; var mode = document.getElementById("composerModeSelect"); if(mode) mode.value = chatPreferences.style; saveChatPreferences(); syncComposerModes(); closeModeMenu(false); if(chatInput) chatInput.focus(); }); });
   syncComposerModes();
 
-  async function getReply(text, fileEntries){
+  async function getReply(text, fileEntries, signal){
     var fileNames = fileEntries.map(function(e){ return e.name; });
     // Fold text-file contents into the message so the model can actually
     // read them, and collect image data URLs separately for the vision
@@ -4876,6 +5395,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     try {
       var res = await fetch("/api/chat", {
         method: "POST",
+        signal: signal,
         headers: Object.assign(
           { "Content-Type": "application/json" },
           getAccessToken() ? { "Authorization": "Bearer " + getAccessToken() } : {}
@@ -4894,7 +5414,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       }
       if(!res.ok){
         var failure = await res.json().catch(function(){ return {}; });
-        return { text: failure.message || "The elora AI service is unavailable. Add LLM_API_KEY or OPENAI_API_KEY to the deployment environment, redeploy, and try again.", real: false, serviceError: true };
+        return { text: failure.message || "elora couldn't answer just now. Try again in a moment.", real: false, serviceError: true };
       }
 
       var data = await res.json();
@@ -4902,7 +5422,8 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
       if(planInfo && data.creditsRemaining != null){ planInfo.creditsRemaining = data.creditsRemaining; renderPlanInfo(); }
       return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null };
     } catch(err){
-      return { text: "The elora AI service could not be reached. This chat needs its server-side model provider connected before it can generate a real answer.", real: false, serviceError: true };
+      if(err && err.name === "AbortError") return { aborted: true };
+      return { text: "elora couldn't be reached — check your connection and try again.", real: false, serviceError: true };
     }
   }
 
@@ -4926,7 +5447,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     var welcomePanel = document.getElementById("chatWelcome");
     if(welcomePanel) welcomePanel.remove();
     setChatEmpty(false);
-    addMessage("user", userHtml);
+    addMessage("user", userHtml, text);
     conversationHistory.push({ role: "user", content: text });
     beginActiveConversation(text, filesForReply);
     chatInput.value = "";
@@ -4934,6 +5455,17 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     attachedFiles = [];
     renderAttachments();
     chatSuggestions.style.display = "none";
+    requestReply(text, filesForReply);
+  }
+
+  // Asks the server for a reply to the conversation as it stands (the
+  // last history entry is the user's message). Used for new messages,
+  // "Try again" and "Try a different answer".
+  var activeRequest = null;
+  var lastRequest = { text: "", files: [] };
+  function requestReply(text, filesForReply){
+    lastRequest = { text: text, files: filesForReply || [] };
+    chatThread.querySelectorAll(".ec-followups").forEach(function(el){ el.remove(); });
     setReplyPending(true);
 
     var typingRow = document.createElement("div");
@@ -4945,12 +5477,16 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
 
     var startTime = Date.now();
-    var minDelay = 700; // keep the thinking state from flashing on a very fast reply
+    var minDelay = 600; // keep the thinking state from flashing on a very fast reply
+    var request = new AbortController();
+    activeRequest = request;
 
-    getReply(text, filesForReply).then(function(result){
-      var elapsed = Date.now() - startTime;
-      var wait = Math.max(0, minDelay - elapsed);
+    getReply(text, lastRequest.files, request.signal).then(function(result){
+      if(request.signal.aborted || result.aborted) return; // Stop already tidied up
+      var wait = Math.max(0, minDelay - (Date.now() - startTime));
       setTimeout(function(){
+        if(request.signal.aborted) return;
+        activeRequest = null;
         var label = typingRow.querySelector(".typing-label");
         // Only steps the server actually reported for this reply (memory
         // recalled, web searched, a link read) — never decorative ones.
@@ -4960,9 +5496,12 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
           if(typingRow.parentNode){ typingRow.parentNode.removeChild(typingRow); }
           var seconds = (Date.now() - startTime) / 1000;
           var stepsLine = chatPreferences.activity !== false && result.real ? buildStepsLine(result.steps, seconds) : null;
-          conversationHistory.push({ role: "assistant", content: result.text });
-          addMessageTyped(result.text, stepsLine, result.real).then(function(){
+          // Error notices are shown but never sent back to the model as if
+          // elora had said them.
+          if(result.real) conversationHistory.push({ role: "assistant", content: result.text });
+          addMessageTyped(result.text, stepsLine, result.real, !result.real).then(function(msg){
             if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
+            if(result.real) addFollowups(msg);
             saveActiveConversation();
             setReplyPending(false);
             if(chatPreferences.autoFocus !== false && window.innerWidth > 760 && !settingsModal.classList.contains("is-open")) chatInput.focus();
@@ -4973,13 +5512,94 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
         // Briefly replay what actually happened, then show the answer.
         var i = 0;
         (function nextStep(){
+          if(request.signal.aborted) return;
           if(i >= realSteps.length){ reveal(); return; }
           if(label) label.textContent = summarizeSteps([realSteps[i]])[0] || String(realSteps[i]);
           i++;
-          setTimeout(nextStep, 420);
+          setTimeout(nextStep, 380);
         })();
       }, wait);
     });
+  }
+
+  // Stop: cancels a reply that's still being fetched, or finishes the
+  // typing animation instantly if the answer has already arrived.
+  function stopReply(){
+    if(!replyPending) return;
+    if(!activeRequest){ skipTyping = true; return; }
+    activeRequest.abort();
+    activeRequest = null;
+    var row = chatThread.querySelector(".ec-thinking-row");
+    if(row) row.remove();
+    var parts = buildMessage("ai");
+    parts.text.textContent = "You stopped this reply.";
+    chatThread.appendChild(parts.msg);
+    addRetryTools(parts.msg);
+    if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
+    saveActiveConversation();
+    setReplyPending(false);
+    scrollToBottom();
+  }
+
+  function lastUserText(){
+    for(var i = conversationHistory.length - 1; i >= 0; i--){ if(conversationHistory[i].role === "user") return conversationHistory[i].content; }
+    return "";
+  }
+  // "Try again" on an error / stopped reply, and "Try a different answer"
+  // on the latest real reply.
+  document.addEventListener("click", function(e){
+    if(!e.target.closest || replyPending) return;
+    var retry = e.target.closest("[data-retry]");
+    var regen = e.target.closest("[data-regenerate]");
+    var edit = e.target.closest("[data-edit-message]");
+    var follow = e.target.closest("[data-followup]");
+    if(retry){
+      var failed = retry.closest(".ec-msg");
+      if(failed) failed.remove();
+      requestReply(lastUserText(), lastRequest.files);
+    } else if(regen){
+      var msg = regen.closest(".ec-msg");
+      if(!msg || msg !== chatThread.querySelector(".ec-msg.is-ai:last-child")) return;
+      msg.remove();
+      if(conversationHistory.length && conversationHistory[conversationHistory.length - 1].role === "assistant") conversationHistory.pop();
+      requestReply(lastUserText(), lastRequest.files);
+    } else if(edit){
+      editLastMessage(edit.closest(".ec-msg"));
+    } else if(follow){
+      chatInput.value = follow.dataset.followup;
+      sendMessage();
+    }
+  });
+
+  // Edit: puts your latest message back in the box and removes it (and
+  // elora's answer to it) so you can change it and send again.
+  function editLastMessage(target){
+    if(replyPending) return;
+    var userMsgs = chatThread.querySelectorAll(".ec-msg.is-user");
+    var last = userMsgs[userMsgs.length - 1];
+    if(!last) return;
+    if(target && target !== last){ showToast("You can edit your latest message."); return; }
+    var idx = -1;
+    for(var i = conversationHistory.length - 1; i >= 0; i--){ if(conversationHistory[i].role === "user"){ idx = i; break; } }
+    var text = idx > -1 ? conversationHistory[idx].content : "";
+    if(idx > -1) conversationHistory = conversationHistory.slice(0, idx);
+    var node = last;
+    while(node){ var next = node.nextElementSibling; node.remove(); node = next; }
+    chatInput.value = text;
+    autoGrow();
+    chatInput.focus();
+    try { chatInput.setSelectionRange(text.length, text.length); } catch(err){}
+    if(!chatThread.querySelector(".ec-msg")){
+      chatSessions = chatSessions.filter(function(x){ return x.id !== activeConversation.id; });
+      activeConversation.started = false;
+      activeConversation.title = "New conversation";
+      renderChatWelcome();
+      updateConversationTitle();
+      renderConversationList();
+      window.dispatchEvent(new CustomEvent("elorahub:conversation-updated"));
+    } else {
+      saveActiveConversation();
+    }
   }
 
   function beginActiveConversation(text, files){
@@ -5001,7 +5621,9 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     activeConversation.updatedAt = Date.now();
     chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
     chatSessions.unshift(activeConversation);
-    if(chatSessions.length > 16) chatSessions.length = 16;
+    var pinnedChats = chatSessions.filter(function(x){ return x.pinned; });
+    var otherChats = chatSessions.filter(function(x){ return !x.pinned; }).slice(0, Math.max(10, 30 - pinnedChats.length));
+    chatSessions = chatSessions.filter(function(x){ return x.pinned || otherChats.indexOf(x) > -1; });
     updateConversationTitle();
     renderConversationList();
     window.dispatchEvent(new CustomEvent("elorahub:conversation-updated"));
@@ -5009,7 +5631,9 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
 
   function setReplyPending(pending){
     replyPending = !!pending;
-    sendBtn.disabled = replyPending;
+    sendBtn.classList.toggle("is-stop", replyPending);
+    sendBtn.setAttribute("aria-label", replyPending ? "Stop reply" : "Send message");
+    sendBtn.title = replyPending ? "Stop" : "Send (Enter)";
     var newChatBtn = document.getElementById("newChatBtn");
     var clearBtn = document.getElementById("clearChatBtn");
     var signOutBtn = document.getElementById("signOutBtn");
@@ -5041,6 +5665,16 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
   }
   if(chatHistoryList){
     chatHistoryList.addEventListener("click", function(e){
+      var pin = e.target.closest && e.target.closest("[data-pin-session]");
+      if(pin){
+        var session = chatSessions.find(function(x){ return x.id === Number(pin.dataset.pinSession); });
+        if(session){
+          session.pinned = !session.pinned;
+          renderConversationList();
+          window.dispatchEvent(new CustomEvent("elorahub:conversation-updated"));
+        }
+        return;
+      }
       var item = e.target.closest && e.target.closest("[data-chat-session]");
       if(item) openSavedConversation(Number(item.dataset.chatSession));
     });
@@ -5603,7 +6237,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
     startNewChat:function(){ resetConversation(); },
     restoreSessions:function(list){
       if(activeConversation && activeConversation.started) saveActiveConversation();
-      chatSessions=(Array.isArray(list)?list:[]).filter(function(s){return s&&s.id!=null&&Array.isArray(s.history);}).map(function(s){return {id:Number(s.id),title:String(s.title||"Conversation").slice(0,100),started:!!s.started,history:s.history.filter(function(m){return m&&(m.role==="user"||m.role==="assistant");}).slice(0,400).map(function(m){return {role:m.role,content:String(m.content||"").slice(0,30000)};}),threadHtml:String(s.threadHtml||"").slice(0,150000),updatedAt:Number(s.updatedAt)||Date.now(),projectId:typeof s.projectId==="string"?s.projectId:null};}).slice(0,16);
+      chatSessions=(Array.isArray(list)?list:[]).filter(function(s){return s&&s.id!=null&&Array.isArray(s.history);}).map(function(s){return {id:Number(s.id),title:String(s.title||"Conversation").slice(0,100),started:!!s.started,history:s.history.filter(function(m){return m&&(m.role==="user"||m.role==="assistant");}).slice(0,400).map(function(m){return {role:m.role,content:String(m.content||"").slice(0,30000)};}),threadHtml:String(s.threadHtml||"").slice(0,150000),updatedAt:Number(s.updatedAt)||Date.now(),projectId:typeof s.projectId==="string"?s.projectId:null,pinned:!!s.pinned};}).slice(0,30);
       nextConversationId=Math.max(1,chatSessions.reduce(function(max,s){return Math.max(max,Number(s.id)||0);},0)+1);
       activeConversation=createConversation(); conversationHistory=[]; attachedFiles=[]; renderAttachments(); chatInput.value=""; autoGrow(); chatThread.innerHTML=""; renderChatWelcome(); updateConversationTitle(); renderConversationList();
     },

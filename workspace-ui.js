@@ -161,6 +161,20 @@
     if(ac) ac.textContent=state.artifacts.length?String(state.artifacts.length):"";
     if(sc) sc.textContent=state.schedules.filter(function(s){return s.enabled!==false;}).length?String(state.schedules.filter(function(s){return s.enabled!==false;}).length):"";
     renderPinnedProjects();
+    renderSidebarSchedules();
+  }
+  // Active scheduled tasks/reminders, listed in the sidebar like pinned items.
+  function renderSidebarSchedules(){
+    var host=document.getElementById("sidebarScheduledList"), wrap=document.getElementById("sidebarScheduled");
+    if(!host||!wrap) return;
+    var active=state.schedules.filter(function(s){return s.enabled!==false;});
+    wrap.hidden=!active.length; host.textContent="";
+    active.slice(0,5).forEach(function(item){
+      var btn=document.createElement("button"); btn.type="button"; btn.className="workspace-pinned-item ec-scheduled-item"; btn.dataset.workspaceView="scheduled";
+      btn.innerHTML='<svg class="ec-i" aria-hidden="true"><use href="#i-clock"/></svg>';
+      var label=document.createElement("span"); label.textContent=item.title||"Scheduled task";
+      btn.appendChild(label); btn.addEventListener("click",function(){openPanel("scheduled");}); host.appendChild(btn);
+    });
   }
   function renderAccount(){
     var user=currentUser(), name=(user && (user.name||user.email))||"Guest", email=(user && user.email)||"Not signed in";
