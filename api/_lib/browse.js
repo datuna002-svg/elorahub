@@ -185,29 +185,67 @@ export function frameable(headers, url) {
   return true;
 }
 
-// Search results for the browser's address bar (DuckDuckGo, then Wikipedia).
+// Web search without an API key: DuckDuckGo, then Bing, then Mojeek, then
+// Wikipedia — whichever answers first with real results.
+function decodeBingHref(href) {
+  const m = /[?&]u=a1([^&]+)/.exec(href);
+  if (!m) return href;
+  try { return Buffer.from(m[1].replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"); } catch (_e) { return href; }
+}
+function parseDuckDuckGo(html) {
+  const out = [];
+  const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>)?/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 10) {
+    let href = decodeEntities(m[1]);
+    const uddg = /[?&]uddg=([^&]+)/.exec(href);
+    if (uddg) { try { href = decodeURIComponent(uddg[1]); } catch (_e) {} }
+    if (href.startsWith("//")) href = "https:" + href;
+    if (/^https?:/i.test(href) && !/duckduckgo\.com\/y\.js/.test(href)) out.push({ href, text: stripTags(m[2]).slice(0, 160), snippet: stripTags(m[3] || "").slice(0, 300) });
+  }
+  return out;
+}
+function parseBing(html) {
+  const out = [];
+  const blocks = html.split(/<li class="b_algo"/).slice(1);
+  for (const b of blocks) {
+    if (out.length >= 10) break;
+    const a = /<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(b);
+    if (!a) continue;
+    const href = decodeBingHref(decodeEntities(a[1]));
+    const p = /<p[^>]*>([\s\S]*?)<\/p>/i.exec(b) || /<div class="b_caption"[^>]*>([\s\S]*?)<\/div>/i.exec(b);
+    if (/^https?:/i.test(href) && !/bing\.com\//i.test(href)) out.push({ href, text: stripTags(a[2]).slice(0, 160), snippet: stripTags(p ? p[1] : "").slice(0, 300) });
+  }
+  return out;
+}
+function parseMojeek(html) {
+  const out = [];
+  const re = /<a[^>]*class="title"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:<p class="s">([\s\S]*?)<\/p>)?/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 10) {
+    const href = decodeEntities(m[1]);
+    if (/^https?:/i.test(href)) out.push({ href, text: stripTags(m[2]).slice(0, 160), snippet: stripTags(m[3] || "").slice(0, 300) });
+  }
+  return out;
+}
 export async function searchWeb(query) {
   const q = String(query || "").slice(0, 300);
-  const res = await safeFetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`, { timeoutMs: 7000 });
+  const engines = [
+    { url: `https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}`, parse: parseDuckDuckGo },
+    { url: `https://www.bing.com/search?q=${encodeURIComponent(q)}&setlang=en`, parse: parseBing },
+    { url: `https://www.mojeek.com/search?q=${encodeURIComponent(q)}`, parse: parseMojeek },
+  ];
+  for (const e of engines) {
+    const res = await safeFetch(e.url, { timeoutMs: 6000 });
+    if (!res.ok || !res.body) continue;
+    const results = e.parse(res.body);
+    if (results.length >= 2) return results;
+  }
   const results = [];
-  if (res.ok && res.body) {
-    const re = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>[\s\S]*?(?:<a[^>]*class="result__snippet"[^>]*>([\s\S]*?)<\/a>)?/g;
-    let m;
-    while ((m = re.exec(res.body)) && results.length < 10) {
-      let href = decodeEntities(m[1]);
-      const uddg = /[?&]uddg=([^&]+)/.exec(href);
-      if (uddg) { try { href = decodeURIComponent(uddg[1]); } catch (_e) {} }
-      if (href.startsWith("//")) href = "https:" + href;
-      if (!/^https?:/i.test(href) || /duckduckgo\.com\/y\.js/.test(href)) continue;
-      results.push({ href, text: stripTags(m[2]).slice(0, 160), snippet: stripTags(m[3] || "").slice(0, 300) });
-    }
-  }
-  if (!results.length) {
-    const wiki = await safeFetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&srlimit=8`, { timeoutMs: 6000, accept: "application/json" });
-    try {
-      const hits = JSON.parse(wiki.body || "{}")?.query?.search || [];
-      hits.forEach((h) => results.push({ href: `https://en.wikipedia.org/wiki/${encodeURIComponent(String(h.title).replace(/ /g, "_"))}`, text: h.title, snippet: stripTags(h.snippet) }));
-    } catch (_e) {}
-  }
+  const wiki = await safeFetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&srlimit=8`, { timeoutMs: 6000, accept: "application/json" });
+  try {
+    const hits = JSON.parse(wiki.body || "{}")?.query?.search || [];
+    hits.forEach((h) => results.push({ href: `https://en.wikipedia.org/wiki/${encodeURIComponent(String(h.title).replace(/ /g, "_"))}`, text: h.title, snippet: stripTags(h.snippet) }));
+  } catch (_e) {}
   return results;
 }

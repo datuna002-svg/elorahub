@@ -369,6 +369,17 @@ function extractDuckDuckGoResults(html) {
 // encyclopedic grounding. Logs exactly what happened at each step so the
 // real outcome is visible in the admin console rather than guessed at.
 async function performWebSearch(query) {
+  // Shared multi-engine search (DuckDuckGo → Bing → Mojeek → Wikipedia).
+  try {
+    const found = await searchWeb(query);
+    if (found.length) {
+      await logEvent("info", "chat", `Web search returned ${found.length} results for "${String(query).slice(0, 80)}".`);
+      return found.slice(0, 6).map((r) => `${r.text} — ${r.snippet} (${r.href})`).join("\n");
+    }
+  } catch (_err) {}
+  return performWebSearchLegacy(query);
+}
+async function performWebSearchLegacy(query) {
   const endpoints = [
     { name: "DuckDuckGo (html)", url: `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}` },
     { name: "DuckDuckGo (lite)", url: `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}` },
