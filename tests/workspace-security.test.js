@@ -34,7 +34,10 @@ test("OAuth state is signed, provider-bound and rejects tampering",()=>{
   const state=createOAuthState({userId:"user-123",provider:"google",step:"authorize"});
   assert.equal(verifyOAuthState(state,"google").userId,"user-123");
   assert.equal(verifyOAuthState(state,"github"),null);
-  const tampered=state.replace(/.$/,state.endsWith("a")?"b":"a");
+  // Change a whole character of the signature (the last base64 character can
+  // carry only padding bits, so tampering with it isn't always a real change).
+  const at=state.lastIndexOf(".")+1;
+  const tampered=state.slice(0,at)+(state[at]==="A"?"B":"A")+state.slice(at+1);
   assert.equal(verifyOAuthState(tampered,"google"),null);
   if(previous===undefined)delete process.env.CONNECTOR_OAUTH_STATE_SECRET;else process.env.CONNECTOR_OAUTH_STATE_SECRET=previous;
 });

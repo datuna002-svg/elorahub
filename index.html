@@ -1834,7 +1834,7 @@ html{
   --ec-text:#ececec; --ec-text-2:#a9a9a9; --ec-text-3:#848484;
   --ec-user:#2a2a2a; --ec-code:#0e0e0e;
   --ec-accent:#f2f2f2; --ec-accent-hover:#ffffff; --ec-accent-soft:rgba(255,255,255,.08); --ec-on-accent:#141414;
-  --ec-danger:#d6d6d6; --ec-green:#3ddc84;
+  --ec-danger:#ff6b6b; --ec-green:#3ddc84;
   --ec-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 6px rgba(0,0,0,.22);
   --ec-pop-shadow:0 16px 44px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
   --ec-scrim:rgba(0,0,0,.55);
@@ -1850,7 +1850,7 @@ html[data-ec-theme="light"]{
   --ec-text:#1c1c1c; --ec-text-2:#565656; --ec-text-3:#6f6f6f;
   --ec-user:#eeeeeb; --ec-code:#f6f6f4;
   --ec-accent:#1a1a1a; --ec-accent-hover:#000000; --ec-accent-soft:rgba(0,0,0,.06); --ec-on-accent:#ffffff;
-  --ec-danger:#2b2b2b; --ec-green:#16a34a;
+  --ec-danger:#d93636; --ec-green:#16a34a;
   --ec-shadow:0 8px 24px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.06);
   --ec-pop-shadow:0 14px 36px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.08);
   --ec-scrim:rgba(20,20,20,.28);
@@ -2330,7 +2330,7 @@ html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
 .es-btn-solid{ border-color:transparent; background:var(--ec-text); color:var(--ec-bg); }
 .es-btn-solid:hover{ background:var(--ec-text); opacity:.88; }
 .es-btn-danger{ border-color:color-mix(in srgb,var(--ec-danger) 45%,transparent); color:var(--ec-danger); }
-.es-btn-danger.is-confirming{ border-color:transparent; background:var(--ec-danger); color:var(--ec-bg); }
+.es-btn-danger.is-confirming{ border-color:transparent; background:var(--ec-danger); color:#fff; }
 .es-plan{ display:flex; align-items:center; gap:16px; margin:14px 0 6px; padding:18px; border:1px solid var(--ec-line); border-radius:14px; background:var(--ec-raised); }
 .es-plan-mark{ width:44px; height:44px; flex:none; display:grid; place-items:center; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-side); }
 .es-plan-mark img{ width:26px; height:26px; }
@@ -3446,15 +3446,7 @@ html[data-ec-theme="light"] :is(.ecp-btn-main,.ec-btn-solid,.es-btn-solid,#page-
 /* Headline accent words: soft white instead of a coloured gradient */
 .hero-copy h1 em,.dx-hero h1 em,.ab-hero h1 em{ background:linear-gradient(180deg,#ffffff 0%,#c9c9c9 100%)!important; -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; }
 /* Window dots: all grey */
-.ec-dot-close,.ec-dot-min,.ec-dot-full{ background:#6f6f6f!important; }
-.ec-dots:hover .ec-dot{ background:#9a9a9a!important; }
-.xv-bar .dot:nth-child(n){ background:#5f5f5f!important; }
-.es-connector.is-connected .es-connector-icon{ background:rgba(255,255,255,.1)!important; color:#f2f2f2!important; }
 /* Calm message box: a soft halo instead of many rings */
-.ec-composer{ box-shadow:0 0 0 1px rgba(255,255,255,.05),0 0 0 5px rgba(255,255,255,.025),0 12px 32px rgba(0,0,0,.38)!important; }
-.ec-composer:focus-within{ border-color:rgba(255,255,255,.26)!important; box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 0 5px rgba(255,255,255,.04),0 12px 32px rgba(0,0,0,.4)!important; }
-html[data-ec-theme="light"] .ec-composer{ box-shadow:0 0 0 1px rgba(0,0,0,.03),0 1px 3px rgba(0,0,0,.07),0 8px 24px rgba(0,0,0,.06)!important; }
-html[data-ec-theme="light"] .ec-composer:focus-within{ border-color:rgba(0,0,0,.28)!important; box-shadow:0 0 0 1px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.08)!important; }
 /* Thinking: a glowing green light that breathes, with a soft ripple */
 .ec-think-orb{ position:relative; width:22px; height:22px; flex:none; display:grid; place-items:center; }
 .ec-think-dot{ position:relative; width:13px; height:13px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#d4ffe6 0%,#3ddc84 45%,#159a52 100%); box-shadow:0 0 0 3px rgba(61,220,132,.16),0 0 12px 4px rgba(61,220,132,.6); animation:ec-green-breathe 1.6s ease-in-out infinite; }
@@ -3478,7 +3470,6 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 @media (max-width:700px){ .ec-pop>button{ min-height:42px; font-size:15px; } .ec-pop{ min-width:240px; } }
 .ec-table table{ min-width:0!important; }
 .ec-table td,.ec-table th{ overflow-wrap:anywhere; }
-.chat-mock-head .dot{ background:#5f5f5f!important; box-shadow:none!important; }
 @media (max-width:760px){ #userChip>span:first-child{ display:none!important; } #userChip .btn{ padding:8px 14px!important; } }
 
 /* ============================================================
@@ -3720,11 +3711,180 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
 .es-table th,.es-table td{ font-family:var(--ec-font)!important; text-align:left!important; }
 .es-table td:last-child,.es-table th:last-child{ text-align:right!important; }
 /* Success states in grey and white too (green is only the "thinking / live" light) */
-.es-pill.is-on{ border-color:var(--ec-line-2)!important; background:var(--ec-hover)!important; color:var(--ec-text)!important; }
-.es-status.is-ok{ background:var(--ec-hover)!important; color:var(--ec-text)!important; }
-.ecb-lock.is-secure,.ecb-result small{ color:var(--ec-text-2)!important; }
-.ecp-status.is-ok{ border-color:var(--ec-line-2)!important; background:var(--ec-hover)!important; color:var(--ec-text)!important; }
-.ec-pay-banner.is-ok{ border-color:var(--ec-line-2)!important; }
+
+/* ============================================================
+   COLOUR v5 — colours are back (no red design; red only for errors
+   and the window's close dot), plus an Apple-Intelligence-style
+   rainbow glow on the special things.
+   ============================================================ */
+:root{ --ai-grad:linear-gradient(90deg,#0894ff 0%,#c959dd 36%,#ff2e54 68%,#ff9004 100%); --ai-conic:conic-gradient(from var(--ai-angle,0deg),#0894ff,#c959dd,#ff2e54,#ff9004,#0894ff); }
+@property --ai-angle{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+@keyframes ai-spin{ to{ --ai-angle:360deg; } }
+@keyframes ai-shift{ 0%,100%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } }
+/* Glowing rainbow ring + soft outer halo */
+.plan.premium,.ecp-plan.is-featured,.ec-upgrade-pill,.ec-composer.is-busy,.ec-composer:has(.ec-send.is-stop){ position:relative; }
+.plan.premium::before,.ecp-plan.is-featured::before,.ec-upgrade-pill::before,.ec-composer.is-busy::before,.ec-composer:has(.ec-send.is-stop)::before{
+  content:""; position:absolute; inset:-1px; z-index:3; padding:1.5px; border-radius:inherit; pointer-events:none;
+  background:var(--ai-conic); animation:ai-spin 5s linear infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.plan.premium::after,.ecp-plan.is-featured::after,.ec-composer.is-busy::after,.ec-composer:has(.ec-send.is-stop)::after{
+  content:""; position:absolute; inset:-26px; z-index:-1; padding:26px; border-radius:calc(var(--r,22px) + 26px); pointer-events:none;
+  background:var(--ai-conic); filter:blur(20px); opacity:.5; animation:ai-spin 5s linear infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.ec-composer:has(.ec-send.is-stop)::after,.ec-composer.is-busy::after{ opacity:.38; filter:blur(16px); }
+.ec-upgrade-pill{ border-color:transparent!important; }
+.ec-upgrade-ico{ background:var(--ai-conic)!important; animation:ai-spin 6s linear infinite; box-shadow:0 0 14px rgba(201,89,221,.35)!important; }
+.plan.premium .plan-badge,.ecp-badge:not(.is-current){ background:var(--ai-grad)!important; background-size:200% 100%!important; animation:ai-shift 6s ease infinite; color:#fff!important; border:0!important; box-shadow:0 4px 18px rgba(201,89,221,.35)!important; }
+.hero-copy h1 em{ background:var(--ai-grad)!important; background-size:200% 100%!important; -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; animation:ai-shift 8s ease infinite; }
+/* The main call to action gets a rainbow halo on hover */
+.hero-copy .btn-primary{ position:relative; }
+.hero-copy .btn-primary::after{ content:""; position:absolute; inset:-3px; z-index:-1; border-radius:inherit; background:var(--ai-conic); filter:blur(14px); opacity:0; transition:opacity .35s ease; animation:ai-spin 4s linear infinite; }
+.hero-copy .btn-primary:hover::after{ opacity:.75; }
+html.reduce-motion .plan.premium::before,html.reduce-motion .plan.premium::after,html.reduce-motion .ecp-plan.is-featured::before,html.reduce-motion .ecp-plan.is-featured::after,html.reduce-motion .ec-upgrade-pill::before,html.reduce-motion .ec-upgrade-ico,html.reduce-motion .ec-composer::before,html.reduce-motion .ec-composer::after{ animation:none!important; }
+/* Real window dots (red is fine here) */
+.ec-dot-close{ background:#ff5f57!important; } .ec-dot-min{ background:#febc2e!important; } .ec-dot-full{ background:#28c840!important; }
+.xv-bar .dot:nth-child(1),.chat-mock-head .dot:nth-child(1){ background:#ff5f57!important; } .xv-bar .dot:nth-child(2),.chat-mock-head .dot:nth-child(2){ background:#febc2e!important; } .xv-bar .dot:nth-child(3),.chat-mock-head .dot:nth-child(3){ background:#28c840!important; }
+/* Errors in red, success in green */
+.es-status.is-bad{ background:rgba(239,90,95,.14)!important; color:#ff7b80!important; }
+.ecp-status.is-error{ border-color:rgba(239,90,95,.45)!important; background:rgba(239,90,95,.08)!important; color:#ffb3b6!important; }
+.ec-run-out .is-err{ color:#ff8a8f!important; }
+.ec-pay-banner.is-bad{ border-color:rgba(239,90,95,.45)!important; }
+.ec-task.is-done .ec-task-spin{ background:linear-gradient(135deg,#4ade80,#16a34a)!important; }
+/* Colourful custom icon tiles instead of grey ones */
+[data-tile]{ color:#fff!important; border:0!important; box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 6px 16px rgba(0,0,0,.28)!important; }
+[data-tile] svg{ color:#fff; stroke:#fff; }
+[data-tile="blue"]{ background:linear-gradient(150deg,#5aa9ff,#0a63f0)!important; }
+[data-tile="green"]{ background:linear-gradient(150deg,#5bdc8f,#16a34a)!important; }
+[data-tile="orange"]{ background:linear-gradient(150deg,#ffb547,#f97316)!important; }
+[data-tile="teal"]{ background:linear-gradient(150deg,#5fd4f5,#0891b2)!important; }
+[data-tile="indigo"]{ background:linear-gradient(150deg,#7f93ff,#3f56e6)!important; }
+[data-tile="pink"]{ background:linear-gradient(150deg,#ff92c9,#ec4899)!important; }
+[data-tile="yellow"]{ background:linear-gradient(150deg,#ffd966,#eaa500)!important; }
+[data-tile="mint"]{ background:linear-gradient(150deg,#6ff2c8,#10b386)!important; }
+[data-tile="graphite"]{ background:linear-gradient(150deg,#a1a1aa,#52525b)!important; }
+[data-tile="rainbow"]{ background:conic-gradient(from 210deg,#0894ff,#c959dd,#ff2e54,#ff9004,#0894ff)!important; }
+.ew-card-ico[data-tile]{ border-radius:10px; }
+/* Back / forward in the chat sidebar */
+.ec-histnav{ display:flex; align-items:center; gap:2px; margin-right:auto; padding-left:4px; }
+.ec-side-head .ec-hist{ width:28px; height:28px; border-radius:8px; }
+.ec-hist .ec-i{ width:17px; height:17px; }
+.ec-hist:disabled{ opacity:.32; cursor:default; background:transparent!important; }
+/* Task progress bar */
+.ec-task-bar{ height:3px; margin:10px 2px 4px; border-radius:99px; background:var(--ec-hover); overflow:hidden; }
+.ec-task-bar i{ display:block; width:4%; height:100%; border-radius:inherit; background:var(--ai-grad); background-size:200% 100%; animation:ai-shift 3s ease infinite; transition:width .6s cubic-bezier(.2,.8,.2,1); }
+.ec-task.is-done .ec-task-bar i{ width:100%!important; background:linear-gradient(90deg,#4ade80,#16a34a); animation:none; }
+.ec-task.is-failed .ec-task-bar i{ background:var(--ec-danger); animation:none; }
+/* Long chat titles never run under the buttons */
+.ec-title-wrap{ flex:1 1 auto; }
+.ec-title{ max-width:100%!important; }
+.ec-top-actions{ flex:none; }
+
+/* ============================================================
+   TOP TABS v4 — separate pill tabs (like the reference), active tab
+   white, an account pill with a menu; bold sans headlines
+   ============================================================ */
+.nav{ backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); background:rgba(8,8,8,.72)!important; border-bottom:1px solid rgba(255,255,255,.06)!important; }
+.nav-links{ gap:8px!important; padding:0!important; border:0!important; background:transparent!important; box-shadow:none!important; backdrop-filter:none!important; }
+.nav-links .nav-pill{ display:none!important; }
+.nav-links button{ height:40px!important; padding:0 17px!important; border:1px solid rgba(255,255,255,.12)!important; border-radius:999px!important; background:rgba(255,255,255,.035)!important; color:#e9e9e9!important; font:600 14px var(--font-body)!important; letter-spacing:-.005em; box-shadow:none!important; transition:background .2s ease,border-color .2s ease,color .2s ease,transform .2s ease!important; }
+.nav-links button::before,.nav-links button::after{ display:none!important; }
+.nav-links button:hover{ background:rgba(255,255,255,.08)!important; border-color:rgba(255,255,255,.22)!important; transform:translateY(-1px); }
+.nav-links button.is-active{ background:#f5f5f5!important; border-color:#f5f5f5!important; color:#0b0b0b!important; }
+.nav-links .nav-ico{ display:none!important; }
+.nav-actions .btn{ height:40px; padding:0 18px; border-radius:999px; font:600 14px var(--font-body); }
+.nav-actions #openSignIn{ border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.035); color:#e9e9e9; }
+.nav-account{ position:relative; display:flex; align-items:center; }
+.nav-account-btn{ display:flex; align-items:center; gap:9px; height:40px; padding:0 12px 0 5px; border:1px solid rgba(255,255,255,.12); border-radius:999px; background:rgba(255,255,255,.035); color:#f2f2f2; font:600 14px var(--font-body); cursor:pointer; transition:background .2s ease,border-color .2s ease; }
+.nav-account-btn:hover,.nav-account-btn[aria-expanded="true"]{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.22); }
+.nav-avatar{ width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:var(--ai-conic); color:#fff; font:800 13px var(--font-body); }
+.nav-account-name{ max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-account-btn .nav-ico{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; opacity:.7; }
+.nav-account-menu{ position:absolute; top:calc(100% + 8px); right:0; z-index:90; min-width:220px; padding:6px; border:1px solid rgba(255,255,255,.1); border-radius:14px; background:#161616; box-shadow:0 18px 44px rgba(0,0,0,.55); animation:ec-pop .16s cubic-bezier(.2,.8,.2,1) both; }
+.nav-account-menu[hidden]{ display:none; }
+.nav-account-who{ padding:8px 10px 10px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,.08); color:#9a9a9a; font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.nav-account-menu button{ display:flex; align-items:center; gap:10px; width:100%; height:38px; padding:0 10px; border:0; border-radius:9px; background:transparent; color:#ececec; font:500 14px var(--font-body); text-align:left; cursor:pointer; }
+.nav-account-menu button:hover{ background:rgba(255,255,255,.07); }
+.nav-account-menu .nav-ico{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; opacity:.8; }
+.nav-account-menu #signOutBtn{ color:#ff8a8a; }
+.nav-account-sep{ height:1px; margin:5px 4px; background:rgba(255,255,255,.08); }
+.mobile-menu button{ border:1px solid rgba(255,255,255,.1)!important; border-radius:999px!important; }
+.mobile-menu button.is-active{ background:#f5f5f5!important; color:#0b0b0b!important; }
+@media (max-width:760px){ .nav-account-name{ display:none; } .nav-account-btn{ padding:0 8px 0 5px; } }
+/* Headlines: bold and clean */
+.hero-copy h1{ font-family:var(--font-body)!important; font-weight:800!important; letter-spacing:-.04em!important; line-height:1.02!important; font-size:clamp(2.5rem,5.2vw,4.5rem)!important; }
+.hero-copy h1 em{ font-style:normal!important; }
+.pricing-hero h1,#page-pricing h1,#page-about h1,.dx-hero h1,.ab-hero h1,.xv-head h2,#page-home h2{ font-family:var(--font-body)!important; font-weight:800!important; letter-spacing:-.035em!important; }
+.dx-hero h1 em,.ab-hero h1 em{ font-style:normal!important; background:var(--ai-grad)!important; -webkit-background-clip:text!important; background-clip:text!important; color:transparent!important; }
+/* Status pill */
+.intro-badge{ border-radius:999px!important; }
+.intro-badge.is-online .intro-dot{ background:#3ddc84!important; box-shadow:0 0 10px rgba(61,220,132,.8)!important; }
+.intro-badge.is-offline{ border-color:rgba(239,90,95,.45)!important; background:rgba(239,90,95,.1)!important; color:#ffb3b6!important; }
+.intro-badge.is-offline .intro-dot{ background:#ef5350!important; box-shadow:0 0 10px rgba(239,90,95,.8)!important; }
+/* ============================================================
+   RESOURCES — Help, What's new, Guidelines, Privacy, Terms share one
+   layout: side menu on the left, content on the right
+   ============================================================ */
+.doc-page.has-docs-shell{ max-width:1180px; margin:0 auto; padding-top:34px!important; }
+.docs-shell{ display:grid; grid-template-columns:250px minmax(0,1fr); gap:44px; align-items:start; }
+.docs-side{ position:sticky; top:92px; display:flex; flex-direction:column; gap:3px; padding:14px; border:1px solid rgba(255,255,255,.08); border-radius:18px; background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01)); }
+.docs-side-label{ padding:4px 8px 10px; color:#8a8a8a; font:700 11.5px var(--font-body); letter-spacing:.09em; text-transform:uppercase; }
+.docs-link{ display:flex; align-items:center; gap:11px; width:100%; padding:7px 8px; border:0; border-radius:11px; background:transparent; color:#cfcfcf; font:600 14px var(--font-body); text-align:left; cursor:pointer; transition:background .2s ease,color .2s ease; }
+.docs-link:hover{ background:rgba(255,255,255,.05); color:#fff; }
+.docs-link.is-active{ background:rgba(255,255,255,.09); color:#fff; }
+.docs-ico{ width:28px!important; height:28px!important; margin:0!important; border-radius:8px!important; flex:none; }
+.docs-ico svg{ width:15px!important; height:15px!important; }
+.docs-sub{ display:flex; flex-direction:column; gap:1px; margin:4px 0 8px 22px; padding-left:12px; border-left:1px solid rgba(255,255,255,.1); }
+.docs-sub a{ display:block; padding:6px 8px!important; border-radius:8px; color:#9a9a9a!important; font-size:13px!important; line-height:1.35; background:transparent!important; }
+.docs-sub a::before{ display:none!important; }
+.docs-sub a:hover{ color:#fff!important; background:rgba(255,255,255,.04)!important; }
+.docs-sub a.is-active{ color:#fff!important; background:rgba(255,255,255,.06)!important; }
+.docs-mail{ display:flex; align-items:center; gap:8px; margin-top:12px; padding:10px 8px 2px; border-top:1px solid rgba(255,255,255,.07); color:#8a8a8a; font-size:12.5px; text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.docs-mail:hover{ color:#fff; }
+.docs-mail .dx-ico{ width:15px; height:15px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; }
+.has-docs-shell .dx-tabs,.has-docs-shell .dx-icon{ display:none!important; }
+.has-docs-shell .dx-hero{ text-align:left!important; padding:6px 0 10px!important; margin:0!important; max-width:none!important; }
+.has-docs-shell .dx-hero h1{ font-size:clamp(2.1rem,4vw,3.3rem)!important; line-height:1.06!important; margin:14px 0 12px!important; }
+.has-docs-shell .dx-sub{ margin-left:0!important; margin-right:0!important; max-width:640px; }
+.has-docs-shell .dx-meta{ justify-content:flex-start!important; }
+.has-docs-shell .dx-kicker{ display:inline-flex!important; align-items:center; gap:6px; padding:0!important; border:0!important; background:none!important; color:#8a8a8a!important; font:600 13px var(--font-body)!important; letter-spacing:0!important; text-transform:none!important; }
+.has-docs-shell .dx-kicker::before{ display:none!important; }
+.has-docs-shell .dx-kicker .dx-ico{ width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2; }
+.has-docs-shell .dx-kicker span:last-child{ color:#e6e6e6; }
+.has-docs-shell .hc-search,.has-docs-shell .cl-filter,.has-docs-shell .hc-quick{ margin-left:0!important; margin-right:0!important; justify-content:flex-start!important; }
+.has-docs-shell .doc-layout{ display:block!important; }
+.has-docs-shell .doc-body{ max-width:780px; }
+.has-docs-shell .dx-short{ margin-left:0!important; margin-right:0!important; }
+@media (max-width:900px){
+  .docs-shell{ grid-template-columns:1fr; gap:18px; }
+  .docs-side{ position:relative; top:0; flex-direction:row; overflow-x:auto; gap:6px; padding:8px; border-radius:14px; scrollbar-width:none; }
+  .docs-side::-webkit-scrollbar{ display:none; }
+  .docs-side-label,.docs-sub,.docs-mail{ display:none; }
+  .docs-link{ flex:none; width:auto; padding:6px 12px 6px 6px; border-radius:999px; }
+}
+
+.page:not(#page-chat) h1,.page:not(#page-chat) h2{ font-family:var(--font-body)!important; font-weight:800!important; letter-spacing:-.035em!important; }
+.page:not(#page-chat) h1 em,.page:not(#page-chat) h2 em{ font-style:normal!important; }
+.ab-tabs{ gap:8px!important; padding:0!important; border:0!important; background:transparent!important; box-shadow:none!important; }
+.ab-tabs .dp-tab{ height:38px; padding:0 15px!important; border:1px solid rgba(255,255,255,.12)!important; border-radius:999px!important; background:rgba(255,255,255,.035)!important; color:#e9e9e9!important; box-shadow:none!important; }
+.ab-tabs .dp-tab.is-active{ background:#f5f5f5!important; border-color:#f5f5f5!important; color:#0b0b0b!important; }
+.hc-start li::before,.es-steps li::before,.hx-step-n{ background:linear-gradient(150deg,#5aa9ff,#0a63f0)!important; box-shadow:0 6px 14px rgba(10,99,240,.35)!important; color:#fff!important; }
+
+/* Step-by-step thinking list */
+.ec-think-list{ list-style:none; margin:6px 0 0; padding:0; display:grid; gap:6px; }
+.ec-think-list li{ display:flex; align-items:center; gap:9px; color:var(--ec-text-3); font:13px var(--ec-font); animation:ec-step-in .35s cubic-bezier(.2,.8,.2,1) both; }
+.ec-think-list li i{ position:relative; width:14px; height:14px; flex:none; border-radius:50%; border:1.6px solid var(--ec-line-2); }
+.ec-think-list li.is-now{ color:var(--ec-text-2); }
+.ec-think-list li.is-now i{ border-color:#3ddc84; border-top-color:transparent; animation:ec-spin .8s linear infinite; }
+.ec-think-list li.is-done i{ border:0; background:#3ddc84; }
+.ec-think-list li.is-done i::after{ content:""; position:absolute; left:4.3px; top:3.4px; width:5px; height:2.8px; border-left:1.6px solid #08240f; border-bottom:1.6px solid #08240f; transform:rotate(-45deg); }
+html[data-ec-theme="light"] .ec-think-list li.is-done i{ background:#22c55e; }
+html.reduce-motion .ec-think-list li.is-now i{ animation:none; }
+.es-connector-icon.is-drive svg{ width:20px; height:20px; }
+
+.ew-chip-ai{ height:19px!important; padding:0 8px!important; margin-left:6px; border:0!important; background:var(--ai-grad)!important; color:#fff!important; font-size:10.5px!important; vertical-align:2px; }
+.ew-feature-ai{ position:relative; }
+.ew-feature-ai::before{ content:""; position:absolute; inset:-1px; padding:1.5px; border-radius:inherit; pointer-events:none; background:var(--ai-conic); animation:ai-spin 6s linear infinite; -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+.ew-feature-art-ai{ border:0!important; background:var(--ai-conic)!important; color:#fff!important; animation:ai-spin 6s linear infinite; box-shadow:0 10px 30px rgba(201,89,221,.3); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -3859,9 +4019,9 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
 
     <div class="hero">
       <div class="hero-copy reveal">
-        <div class="intro-badge">
+        <div class="intro-badge" id="statusBadge">
           <span class="intro-dot"></span>
-          elora · AI for code and everyday thinking
+          <span id="statusText">elora is online</span>
         </div>
         <h1>Meet <em>elora</em>, the AI that actually thinks it through.</h1>
         <p class="lede">Fix a bug, think through a decision, write the message you've been putting off. elora reads the whole conversation, remembers what matters about you, looks things up when the question is about now, and answers in seconds.</p>
@@ -3925,9 +4085,9 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
         <div class="xv-frame">
           <div class="xv-bar"><span class="dots-group"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span><span class="xv-url">elorahub.online</span><span class="xv-live"><i></i>Tour</span></div>
           <div class="xv-screen">
-            <video id="tourVideo" muted playsinline loop preload="none" poster="assets/elora-tour-poster.jpg" aria-label="A recorded tour of elora: asking a question, a task with files, and settings">
-              <source src="assets/elora-tour.webm" type="video/webm">
-              <source src="assets/elora-tour.mp4" type="video/mp4">
+            <video id="tourVideo" muted playsinline loop preload="none" poster="assets/elora-tour-poster-v3.jpg" aria-label="A recorded tour of elora: asking a question, a task with files, and settings">
+              <source src="assets/elora-tour-v3.webm" type="video/webm">
+              <source src="assets/elora-tour-v3.mp4" type="video/mp4">
             </video>
             <button type="button" class="xv-big" id="tourBig" aria-label="Play the tour"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></button>
           </div>
@@ -3939,9 +4099,9 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
         </div>
         <div class="xv-chapters" role="tablist" aria-label="Tour chapters">
           <button type="button" class="xv-ch is-active" data-t="0" data-end="2.6"><span class="xv-n">01</span><strong>Meet elora</strong><small>The home page</small><i><b></b></i></button>
-          <button type="button" class="xv-ch" data-t="2.6" data-end="18.3"><span class="xv-n">02</span><strong>Ask and watch it think</strong><small>Thinking trail, tables, reasoning</small><i><b></b></i></button>
-          <button type="button" class="xv-ch" data-t="18.3" data-end="35.7"><span class="xv-n">03</span><strong>Hand over a big job</strong><small>Plan, steps, web search, files</small><i><b></b></i></button>
-          <button type="button" class="xv-ch" data-t="35.7" data-end="54.1"><span class="xv-n">04</span><strong>Make it yours</strong><small>Artifacts, skills, schedules, settings</small><i><b></b></i></button>
+          <button type="button" class="xv-ch" data-t="2.6" data-end="18.1"><span class="xv-n">02</span><strong>Ask and watch it think</strong><small>Thinking trail, tables, reasoning</small><i><b></b></i></button>
+          <button type="button" class="xv-ch" data-t="18.1" data-end="35.4"><span class="xv-n">03</span><strong>Hand over a big job</strong><small>Plan, steps, web search, files</small><i><b></b></i></button>
+          <button type="button" class="xv-ch" data-t="35.4" data-end="53.7"><span class="xv-n">04</span><strong>Make it yours</strong><small>Artifacts, skills, schedules, settings</small><i><b></b></i></button>
         </div>
       </div>
     </div>
@@ -4087,7 +4247,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
             <button type="button" class="ec-dot ec-dot-min" data-window-dot="min" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 5h5"/></svg></button>
             <button type="button" class="ec-dot ec-dot-full" data-window-dot="full" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 6.5V3h3.5M7 3.5V7H3.5"/></svg></button>
           </div>
-          <button type="button" class="ec-brand" data-nav="home" title="elorahub home"><img src="assets/elorahub_logo.png" alt=""><span>elora</span></button>
+          <div class="ec-histnav" role="group" aria-label="Back and forward"><button type="button" class="ec-iconbtn ec-hist" id="navBackBtn" aria-label="Go back" title="Back" disabled><svg class="ec-i"><use href="#i-back"/></svg></button><button type="button" class="ec-iconbtn ec-hist" id="navFwdBtn" aria-label="Go forward" title="Forward" disabled><svg class="ec-i"><use href="#i-forward"/></svg></button></div>
           <div class="ec-modes ec-modes-mini" role="tablist" aria-label="Workspace mode">
             <button type="button" role="tab" class="ec-mode-tab is-active" aria-selected="true" data-workspace-mode="chat" aria-label="Chat" title="Chat"><svg class="ec-i"><use href="#i-chats"/></svg></button>
             <button type="button" role="tab" class="ec-mode-tab" aria-selected="false" data-workspace-mode="code" aria-label="Code" title="Code"><svg class="ec-i"><use href="#i-code"/></svg></button>
@@ -5520,7 +5680,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
             <span class="es-pill" data-connector-status>Checking…</span>
           </div>
           <div class="es-connector" data-connector="google">
-            <span class="es-connector-icon is-drive" aria-hidden="true"><svg viewBox="0 0 24 24"><path fill="#9a9a9a" d="M8.3 3.5h7.4l6 10.4h-7.4z"/><path fill="#d9d9d9" d="M2.3 13.9 6 7.5l3.7 6.4-3.7 6.4z"/><path fill="#7a7a7a" d="M6 20.3l3.7-6.4h12l-3.7 6.4z"/></svg></span>
+            <span class="es-connector-icon is-drive" aria-hidden="true"><svg viewBox="0 0 87.3 78"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg></span>
             <div class="es-copy"><strong>Google Drive</strong><p>Open Docs, Sheets and files you pick. Read-only.</p></div>
             <span class="es-pill" data-connector-status>Checking…</span>
           </div>
@@ -5825,6 +5985,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
   window.addEventListener("resize", moveNavPill);
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(moveNavPill);
   setTimeout(moveNavPill, 0);
+  var currentPageName = "", navReady = false;
   function applyPage(name){
     pages.forEach(function(p){ p.classList.toggle("is-active", p.id === "page-" + name); });
     document.querySelectorAll(".nav-links button, .mobile-menu button, .dp-tab").forEach(function(b){
@@ -5835,9 +5996,8 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
     document.body.classList.toggle("chat-mode", name === "chat");
     if(name === "owner" && typeof refreshOwnerConsole === "function"){ refreshOwnerConsole(); }
     window.scrollTo({top:0, behavior:"instant" in window ? "instant" : "auto"});
-    try{
-      if(history.replaceState){ history.replaceState(null, "", "#" + name); }
-    }catch(err){ /* sandboxed preview (about:srcdoc) blocks history writes — safe to ignore */ }
+    currentPageName = name;
+    if(window.EloraNav) window.EloraNav.record({ page:name }, !navReady);
     closeMobileMenu();
     moveNavPill();
     try { window.dispatchEvent(new CustomEvent("elorahub:page", { detail:name })); } catch(err){}
@@ -5867,7 +6027,83 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
 
   var initial = (location.hash || "#home").replace("#","");
   var validPages = ["home","chat","pricing","guidelines","privacy","terms","about","help","changelog","owner"];
+  // ---- Back / forward across pages, workspace pages and chats ----
+  window.EloraNav = (function(){
+    var nav = { index:0, max:0, restoring:false };
+    try { if(history.state && history.state.eh){ nav.index = nav.max = Number(history.state.i) || 0; } } catch(e){}
+    function same(a, b){ return a && b && a.page === b.page && (a.view || null) === (b.view || null) && (a.conv == null ? null : a.conv) === (b.conv == null ? null : b.conv); }
+    function buttons(){
+      var back = document.getElementById("navBackBtn"), fwd = document.getElementById("navFwdBtn");
+      if(back) back.disabled = nav.index <= 0;
+      if(fwd) fwd.disabled = nav.index >= nav.max;
+    }
+    function record(entry, replace){
+      if(nav.restoring) return;
+      try {
+        var cur = history.state && history.state.eh ? history.state.entry : null;
+        if(!replace && same(cur, entry)) return;
+        var url = location.pathname + location.search + "#" + (entry.page || "home");
+        if(replace || !cur){ history.replaceState({ eh:1, i:nav.index, entry:entry }, "", url); }
+        else { nav.index += 1; nav.max = nav.index; history.pushState({ eh:1, i:nav.index, entry:entry }, "", url); }
+      } catch(e){}
+      buttons();
+    }
+    window.addEventListener("popstate", function(e){
+      var st = e.state;
+      if(!st || !st.eh){
+        var h = (location.hash || "#home").slice(1);
+        if(validPages.indexOf(h) > -1 && h !== currentPageName){ nav.restoring = true; try { showPage(h); } finally { nav.restoring = false; } }
+        return;
+      }
+      nav.index = Number(st.i) || 0; if(nav.index > nav.max) nav.max = nav.index;
+      nav.restoring = true;
+      try {
+        var en = st.entry || {};
+        if(en.page && en.page !== currentPageName) applyPage(en.page);
+        if(en.page === "chat"){
+          if(en.view && window.EloraWorkspace) window.EloraWorkspace.openPage(en.view);
+          else {
+            if(window.EloraWorkspace) window.EloraWorkspace.closePage();
+            if(en.conv === "new"){ if(typeof resetConversation === "function" && activeConversation && activeConversation.started) resetConversation(); }
+            else if(en.conv != null && typeof openSavedConversation === "function") openSavedConversation(Number(en.conv));
+          }
+        }
+      } catch(err){}
+      nav.restoring = false;
+      buttons();
+    });
+    document.addEventListener("click", function(e){
+      var b = e.target.closest && e.target.closest("#navBackBtn,#navFwdBtn");
+      if(!b || b.disabled) return;
+      if(b.id === "navBackBtn") history.back(); else history.forward();
+    });
+    // In-page links (#section) scroll instead of changing the page.
+    document.addEventListener("click", function(e){
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if(!a) return;
+      var id = a.getAttribute("href").slice(1);
+      if(!id || validPages.indexOf(id) > -1) return;
+      var target = document.getElementById(id);
+      if(!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+    return { record:record, isRestoring:function(){ return nav.restoring; }, refresh:buttons };
+  })();
   showPage(validPages.indexOf(initial) > -1 ? initial : "home");
+  navReady = true;
+
+  // Colourful custom icon tiles — each icon gets its own colour.
+  var TILE_COLORS = { chat:"blue", chats:"blue", help:"blue", user:"blue", code:"green", terminal:"green", card:"green", "check-list":"orange", bolt:"orange", gauge:"orange", clock:"orange", pen:"orange", paperclip:"teal", file:"teal", doc:"teal", globe:"teal", cap:"teal", lock:"indigo", shield:"indigo", eye:"indigo", scale:"indigo", sliders:"graphite", gear:"graphite", artifact:"pink", layers:"pink", bookmark:"pink", folder:"yellow", star:"yellow", bulb:"yellow", book:"mint", plug:"mint", spark:"rainbow", wand:"rainbow", repeat:"mint", bell:"orange", sunrise:"yellow", binoculars:"teal", bug:"green", window:"blue", mail:"blue", database:"indigo", trash:"graphite", download:"teal", heart:"pink", phone:"indigo", slides:"orange", grid:"teal", list:"graphite" };
+  function tintIcons(root){
+    (root || document).querySelectorAll(".dx-ci, .ew-card-ico, .ew-row-ico").forEach(function(el){
+      var u = el.querySelector("use"); if(!u) return;
+      var name = (u.getAttribute("href") || "").replace("#i-", "");
+      el.setAttribute("data-tile", TILE_COLORS[name] || "graphite");
+    });
+  }
+  window.eloraTintIcons = tintIcons;
+  tintIcons(document);
 
   /* ---------------- Reveal on scroll (single orchestrated pass) ---------------- */
   var io = new IntersectionObserver(function(entries){
@@ -5955,6 +6191,43 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
     window.addEventListener("scroll", function(){ if(!ticking){ ticking = true; requestAnimationFrame(spy); } }, { passive:true });
     window.addEventListener("elorahub:page", function(){ setTimeout(spy, 60); });
     spy();
+  })();
+
+  /* ---------------- Docs: one "Resources" layout with a side menu ---------------- */
+  (function(){
+    var DOCS = [["help","Help center","help"],["changelog","What's new","star"],["guidelines","Guidelines","book"],["privacy","Privacy policy","lock"],["terms","Terms of service","doc"]];
+    DOCS.forEach(function(d){
+      var page = document.getElementById("page-" + d[0]);
+      var doc = page && page.querySelector(".doc-page");
+      if(!doc || doc.querySelector(".docs-shell")) return;
+      var shell = document.createElement("div"); shell.className = "docs-shell";
+      var side = document.createElement("aside"); side.className = "docs-side"; side.setAttribute("aria-label", "Resources");
+      var main = document.createElement("div"); main.className = "docs-main";
+      while(doc.firstChild) main.appendChild(doc.firstChild);
+      side.innerHTML = '<div class="docs-side-label">Resources</div>' + DOCS.map(function(x){
+        return '<button type="button" class="docs-link' + (x[0] === d[0] ? " is-active" : "") + '" data-docs-nav="' + x[0] + '"' + (x[0] === d[0] ? ' aria-current="page"' : "") + '><span class="dx-ci docs-ico"><svg class="dx-ico"><use href="#i-' + x[2] + '"/></svg></span><span>' + x[1] + "</span></button>";
+      }).join("") + '<a class="docs-mail" href="mailto:elorahubonline@gmail.com"><svg class="dx-ico"><use href="#i-mail"/></svg>elorahubonline@gmail.com</a>';
+      var toc = main.querySelector(".doc-toc");
+      if(toc){
+        var sub = document.createElement("div"); sub.className = "docs-sub";
+        Array.prototype.slice.call(toc.querySelectorAll("a")).forEach(function(a){ sub.appendChild(a); });
+        side.querySelector(".docs-link.is-active").insertAdjacentElement("afterend", sub);
+        toc.remove();
+      }
+      var crumb = main.querySelector(".dx-kicker");
+      if(crumb){ crumb.innerHTML = '<span>Resources</span><svg class="dx-ico"><use href="#i-chevron-right"/></svg><span></span>'; crumb.lastChild.textContent = d[1]; }
+      shell.appendChild(side); shell.appendChild(main); doc.appendChild(shell); doc.classList.add("has-docs-shell");
+    });
+    document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest("[data-docs-nav]"); if(b) showPage(b.getAttribute("data-docs-nav")); });
+    if(window.eloraTintIcons) window.eloraTintIcons(document);
+  })();
+
+  /* ---------------- Live status badge on the home page ---------------- */
+  (function(){
+    var badge = document.getElementById("statusBadge"), text = document.getElementById("statusText");
+    if(!badge) return;
+    function set(ok){ badge.classList.toggle("is-online", ok); badge.classList.toggle("is-offline", !ok); text.textContent = ok ? "elora is online" : "elora is offline right now"; }
+    fetch("/api/chat", { cache:"no-store" }).then(function(r){ set(r.ok); }).catch(function(){ set(false); });
   })();
 
   /* ---------------- Help center: live search + quick topics ---------------- */
@@ -6262,11 +6535,25 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
       signUpBtn.style.display = "none";
       var chip = document.createElement("div");
       chip.id = "userChip";
-      chip.style.cssText = "display:flex;align-items:center;gap:10px;";
-      chip.innerHTML = '<span style="font-weight:700;font-size:0.88rem;color:var(--text-1);">' +
-        escapeHtml(currentUser.name || currentUser.email) + '</span>' +
-        '<button class="btn btn-ghost" id="signOutBtn" style="font-size:0.82rem;">Sign out</button>';
+      chip.className = "nav-account";
+      var who = currentUser.name || currentUser.email || "";
+      chip.innerHTML = '<button type="button" class="nav-account-btn" id="navAccountBtn" aria-haspopup="menu" aria-expanded="false"><span class="nav-avatar">' + escapeHtml(who.slice(0, 1).toUpperCase()) + '</span><span class="nav-account-name">' + escapeHtml(who) + '</span><svg class="nav-ico" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>' +
+        '<div class="nav-account-menu" id="navAccountMenu" role="menu" hidden><div class="nav-account-who">' + escapeHtml(currentUser.email || who) + '</div>' +
+        '<button type="button" role="menuitem" data-acct-nav="chat"><svg class="nav-ico"><use href="#i-chat"/></svg>Open chat</button>' +
+        '<button type="button" role="menuitem" data-nav-settings="general"><svg class="nav-ico"><use href="#i-gear"/></svg>Settings</button>' +
+        '<button type="button" role="menuitem" data-nav-settings="usage"><svg class="nav-ico"><use href="#i-gauge"/></svg>Usage</button>' +
+        '<button type="button" role="menuitem" data-acct-nav="pricing"><svg class="nav-ico"><use href="#i-up-circle"/></svg>Plans</button>' +
+        '<div class="nav-account-sep"></div><button type="button" role="menuitem" id="signOutBtn"><svg class="nav-ico"><use href="#i-logout"/></svg>Sign out</button></div>';
       signInBtn.parentElement.insertBefore(chip, signInBtn);
+      var accBtn = document.getElementById("navAccountBtn"), accMenu = document.getElementById("navAccountMenu");
+      accBtn.addEventListener("click", function(e){ e.stopPropagation(); var open = accMenu.hidden; accMenu.hidden = !open; accBtn.setAttribute("aria-expanded", String(open)); });
+      document.addEventListener("click", function(e){ if(!chip.isConnected) return; if(!chip.contains(e.target)){ accMenu.hidden = true; accBtn.setAttribute("aria-expanded", "false"); } });
+      accMenu.addEventListener("click", function(e){
+        var b = e.target.closest("button"); if(!b || b.id === "signOutBtn") return;
+        accMenu.hidden = true;
+        if(b.hasAttribute("data-acct-nav")) showPage(b.getAttribute("data-acct-nav"));
+        else if(b.hasAttribute("data-nav-settings")){ showPage("chat"); setTimeout(function(){ openSettings(b.getAttribute("data-nav-settings")); }, 80); }
+      });
       document.getElementById("signOutBtn").addEventListener("click", async function(){
         if(supabaseReady){ await supabaseClient.auth.signOut(); }
         else { setLocalSession(null); currentUser = null; currentSession = null; renderAuthState(); }
@@ -7244,27 +7531,36 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
     row.innerHTML = '<div class="ec-think" role="status" aria-live="polite">' +
       '<span class="ec-think-orb" aria-hidden="true"><span class="ec-think-dot"></span></span>' +
       '<span class="ec-think-label typing-label">Thinking</span><span class="ec-think-time">0.0s</span></div>' +
-      '<div class="ec-think-sub"><span class="ec-think-step">Reading your message</span></div>';
+      '<div class="ec-think-sub"><ol class="ec-think-list"><li class="ec-think-step is-now"><i></i><span>Reading your message</span></li></ol></div>';
     var started = Date.now();
-    var phases = ["Reading your message", "Thinking it through", "Working out the best answer", "Writing the answer"];
+    var phases = ["Reading your message", "Thinking it through", "Working out the best answer", "Checking the details", "Writing the answer"];
     var timeEl = row.querySelector(".ec-think-time"), stepEl = row.querySelector(".ec-think-step");
     var phase = 0;
     var timer = setInterval(function(){
       if(!row.isConnected){ clearInterval(timer); return; }
       var secs = (Date.now() - started) / 1000;
       timeEl.textContent = secs.toFixed(1) + "s";
-      var next = secs < 1.2 ? 0 : secs < 3.5 ? 1 : secs < 9 ? 2 : 3;
+      var next = secs < 1.2 ? 0 : secs < 3.2 ? 1 : secs < 6.5 ? 2 : secs < 11 ? 3 : 4;
       if(next !== phase && !row.dataset.locked){ phase = next; setThinkingStep(row, phases[phase]); }
     }, 100);
     return row;
   }
+  // Thinking shows its work step by step: each new step is added under the
+  // last one, and finished steps get a tick.
   function setThinkingStep(row, text){
-    var stepEl = row && row.querySelector(".ec-think-step");
-    if(!stepEl) return;
-    var fresh = document.createElement("span");
-    fresh.className = "ec-think-step";
-    fresh.textContent = text;
-    stepEl.replaceWith(fresh);
+    var list = row && row.querySelector(".ec-think-list");
+    if(!list || !text) return;
+    var items = list.querySelectorAll("li");
+    var last = items[items.length - 1];
+    if(last && last.textContent === text) return;
+    items.forEach(function(li){ li.classList.remove("is-now"); li.classList.add("is-done"); });
+    var li = document.createElement("li");
+    li.className = "ec-think-step is-now";
+    li.innerHTML = "<i></i><span></span>";
+    li.lastChild.textContent = text;
+    list.appendChild(li);
+    while(list.children.length > 6) list.removeChild(list.firstChild);
+    if(typeof isNearBottom === "function" && isNearBottom() && typeof scrollToBottom === "function") scrollToBottom();
   }
 
   // Reveals an AI reply gradually instead of dumping the whole answer in
@@ -8594,14 +8890,18 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
   function createTaskView(goal){
     var msg = document.createElement("div");
     msg.className = "ec-msg is-ai ec-task";
-    msg.innerHTML = '<div class="ec-task-box"><div class="ec-task-head"><span class="ec-task-spin" aria-hidden="true"></span><strong class="ec-task-title">Planning the task…</strong><span class="ec-task-count"></span></div><div class="ec-trail" role="log" aria-live="polite"></div></div>';
+    msg.innerHTML = '<div class="ec-task-box"><div class="ec-task-head"><span class="ec-task-spin" aria-hidden="true"></span><strong class="ec-task-title">Planning the task…</strong><span class="ec-task-count"></span></div><div class="ec-task-bar" aria-hidden="true"><i></i></div><div class="ec-trail" role="log" aria-live="polite"></div></div>';
     chatThread.appendChild(msg);
     scrollToBottom();
     var trail = msg.querySelector(".ec-trail");
     var view = {
       msg: msg,
       setTitle: function(text){ msg.querySelector(".ec-task-title").textContent = text; },
-      setCount: function(text){ msg.querySelector(".ec-task-count").textContent = text; },
+      setCount: function(text){
+        msg.querySelector(".ec-task-count").textContent = text;
+        var m = /Step (\d+) of (\d+)/.exec(text || ""), bar = msg.querySelector(".ec-task-bar i");
+        if(m && bar) bar.style.width = Math.max(6, Math.round((Number(m[1]) - 0.5) / Number(m[2]) * 100)) + "%";
+      },
       // A trail row: verb + object, optionally expandable to show details.
       row: function(verb, object, detail){
         var row = document.createElement("div");
@@ -9552,14 +9852,14 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
 
   // Settings → Billing: subscription details, invoices, cancel and resume.
   var invoiceList = [];
-  function money(amount, currency){ return currency === "USD" ? "$" + Number(amount).toFixed(2).replace(/\.00$/, "") : Number(amount).toFixed(2) + " " + currency; }
+  function invoiceMoney(amount, currency){ return currency === "USD" || !currency ? "$" + Number(amount).toFixed(2).replace(/\.00$/, "") : Number(amount).toFixed(2) + " " + currency; }
   async function loadInvoices(){
     var host = document.getElementById("billingInvoices");
     if(!host) return;
     try { var r = await fetch("/api/pay/invoices", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } }); var d = r.ok ? await r.json() : {}; invoiceList = d.invoices || []; } catch(e){ invoiceList = []; }
     if(!invoiceList.length){ host.innerHTML = '<p class="es-hint">No invoices yet.</p>'; return; }
     host.innerHTML = '<table class="es-table"><thead><tr><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + invoiceList.map(function(inv, i){
-      return "<tr><td>" + escapeHtml(new Date(inv.created_at).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" })) + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + "</td><td>" + (inv.status === "completed" ? "Paid" : "Refunded") + '</td><td><button type="button" class="es-inline-link" data-receipt="' + i + '">Receipt</button></td></tr>';
+      return "<tr><td>" + escapeHtml(new Date(inv.created_at).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" })) + "</td><td>" + escapeHtml(invoiceMoney(inv.amount, inv.currency)) + "</td><td>" + (inv.status === "completed" ? "Paid" : "Refunded") + '</td><td><button type="button" class="es-inline-link" data-receipt="' + i + '">Receipt</button></td></tr>';
     }).join("") + "</tbody></table>";
   }
   function openReceipt(inv){
@@ -9567,7 +9867,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
     if(!w){ showToast("Allow pop-ups to open the receipt."); return; }
     var date = new Date(inv.created_at).toLocaleDateString(undefined, { day:"numeric", month:"long", year:"numeric" });
     var item = (inv.plan === "premium" ? "Premium" : "Private") + " plan — " + (inv.cycle === "yearly" ? "1 year" : "1 month") + (inv.kind === "renewal" ? " (renewal)" : "");
-    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>elorahub receipt ' + escapeHtml(inv.id) + '</title><style>body{font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:640px;margin:48px auto;padding:0 24px}h1{font-size:26px;margin:0 0 4px}.muted{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}td,th{padding:10px 0;border-bottom:1px solid #e5e5e5;text-align:left}td:last-child,th:last-child{text-align:right}.total td{font-weight:700;border-bottom:0}button{margin-top:18px;padding:10px 16px;border:0;border-radius:8px;background:#111;color:#fff;font:600 14px inherit;cursor:pointer}@media print{button{display:none}}</style></head><body><h1>elorahub</h1><div class="muted">Receipt</div><p><strong>Receipt no.</strong> ' + escapeHtml(inv.id) + "<br><strong>Date</strong> " + escapeHtml(date) + "<br><strong>Billed to</strong> " + escapeHtml(currentUser && currentUser.email || "") + "</p><table><tr><th>Item</th><th>Amount</th></tr><tr><td>" + escapeHtml(item) + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + '</td></tr><tr class="total"><td>Total ' + (inv.status === "completed" ? "paid" : "(refunded)") + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + '</td></tr></table><p class="muted">Paid by card through Bank of Georgia. Questions? elorahubonline@gmail.com</p><button onclick="window.print()">Print or save as PDF</button></body></html>');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>elorahub receipt ' + escapeHtml(inv.id) + '</title><style>body{font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:640px;margin:48px auto;padding:0 24px}h1{font-size:26px;margin:0 0 4px}.muted{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}td,th{padding:10px 0;border-bottom:1px solid #e5e5e5;text-align:left}td:last-child,th:last-child{text-align:right}.total td{font-weight:700;border-bottom:0}button{margin-top:18px;padding:10px 16px;border:0;border-radius:8px;background:#111;color:#fff;font:600 14px inherit;cursor:pointer}@media print{button{display:none}}</style></head><body><h1>elorahub</h1><div class="muted">Receipt</div><p><strong>Receipt no.</strong> ' + escapeHtml(inv.id) + "<br><strong>Date</strong> " + escapeHtml(date) + "<br><strong>Billed to</strong> " + escapeHtml(currentUser && currentUser.email || "") + "</p><table><tr><th>Item</th><th>Amount</th></tr><tr><td>" + escapeHtml(item) + "</td><td>" + escapeHtml(invoiceMoney(inv.amount, inv.currency)) + '</td></tr><tr class="total"><td>Total ' + (inv.status === "completed" ? "paid" : "(refunded)") + "</td><td>" + escapeHtml(invoiceMoney(inv.amount, inv.currency)) + '</td></tr></table><p class="muted">Paid by card through Bank of Georgia. Questions? elorahubonline@gmail.com</p><button onclick="window.print()">Print or save as PDF</button></body></html>');
     w.document.close();
   }
   document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest("[data-receipt]"); if(b && invoiceList[Number(b.getAttribute("data-receipt"))]) openReceipt(invoiceList[Number(b.getAttribute("data-receipt"))]); });
@@ -9721,6 +10021,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
   function openSavedConversation(id){
     if(replyPending) return;
     if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
+    if(window.EloraNav) window.EloraNav.record({ page:"chat", conv:id });
     var target = chatSessions.find(function(session){ return session.id === id; });
     if(!target) return;
     if(activeConversation && activeConversation.id === target.id){ setSidebarOpen(false); return; }
@@ -9760,6 +10061,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
   function resetConversation(message, removeActive){
     if(replyPending) return;
     if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
+    if(window.EloraNav && currentPageName === "chat" && activeConversation && activeConversation.started) window.EloraNav.record({ page:"chat", conv:"new" });
     if(removeActive && activeConversation){
       chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
     } else {
@@ -10122,7 +10424,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
       var list = Array.isArray(data.recentPayments) ? data.recentPayments : [];
       recent.innerHTML = list.length ? '<div style="font-weight:700;font-size:0.86rem;margin-top:6px;">Latest payments</div>' + list.map(function(o){
         var ok = o.status === "completed";
-        var color = ok ? "#4caf6e" : (/rejected|blocked|refund/.test(o.status) ? "#a0a0a0" : "#9a9a9a");
+        var color = ok ? "#4caf6e" : (/rejected|blocked|refund/.test(o.status) ? "#ef5350" : "#9a9a9a");
         var when = o.created_at ? new Date(o.created_at).toLocaleDateString(undefined, { day:"numeric", month:"short" }) : "";
         return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:0.82rem;">' +
           '<span style="width:7px;height:7px;border-radius:50%;flex:none;background:' + color + ';"></span>' +
@@ -10143,7 +10445,7 @@ html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ displa
       if(!res.ok){ list.innerHTML = '<div style="color:var(--text-3);font-size:0.88rem;">' + escapeHtml(data.message || "Couldn't load status.") + '</div>'; return; }
       list.innerHTML = data.checks.map(function(c){
         var state = c.live === true ? "ok" : (c.live === false ? "down" : (c.configured ? "unknown" : "off"));
-        var color = state === "ok" ? "#4caf6e" : state === "down" ? "#a0a0a0" : state === "off" ? "#6d6d6d" : "#9c9c9c";
+        var color = state === "ok" ? "#4caf6e" : state === "down" ? "#ef5350" : state === "off" ? "#6d6d6d" : "#f5c344";
         var label = state === "ok" ? "Live" : state === "down" ? (c.configured ? "Configured, not responding" : "Not configured") : state === "off" ? "Not configured" : "Configured";
         return '<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;">' +
           '<span style="width:9px;height:9px;border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';flex:none;"></span>' +

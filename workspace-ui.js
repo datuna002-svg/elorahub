@@ -231,6 +231,20 @@
     {id:"cat-interview",icon:"user",title:"Interview coach",desc:"Practice a job interview: realistic questions, then honest feedback on each answer.",prompt:"Run a mock job interview with me. Ask one realistic question at a time, wait for my answer, then give honest feedback and a stronger version before the next question.\n\nRole:\nCompany (optional):\n"},
     {id:"cat-regex",icon:"terminal",title:"Regex builder",desc:"Say what you need to match and get a tested regular expression with examples.",prompt:"Write a regular expression for this. Explain each part, and show 3 strings it matches and 3 it shouldn't:\n\nI need to match: "}
   ];
+  var BUILDERS=[
+    {id:"b-app",icon:"phone",title:"App builder",big:true,desc:"A complete web app in one go: screens, navigation, saved data, dark mode — planned and built step by step, ready to preview and download.",prompt:"Build a complete, working web app as a single self-contained HTML file (inline CSS and JS). Plan it first, then build it step by step: data model, screens and navigation, create / edit / delete, saving to localStorage, empty states, a polished responsive design with dark mode, and keyboard shortcuts. Finish with a short how-to-use guide.\n\nThe app: [what should it do?]\nWho uses it: [who]\nMust-have features: [list]"},
+    {id:"b-site",icon:"window",title:"Website builder Pro",big:true,desc:"A full multi-page website — home, about, services, contact — with shared styles, animations and SEO, delivered as files you can download.",prompt:"Build a complete multi-page website as separate files: index.html, about.html, services.html, contact.html, styles.css and script.js. Work step by step: plan the sitemap and design system, build each page, add responsive navigation, smooth scroll animations, a working contact form layout, SEO meta tags and accessibility. Use real-sounding copy, not lorem ipsum.\n\nThe website is for: [business or person]\nStyle: [modern / minimal / bold / playful]\nColours: [optional]"},
+    {id:"b-landing",icon:"spark",title:"Landing page builder",big:true,desc:"A high-converting landing page: hero, features, social proof, pricing, FAQ and a strong call to action.",prompt:"Build a high-converting landing page as one HTML file with inline CSS and JS. Plan the message first, then build: hero with a clear promise and CTA, features, how it works, testimonials placeholder, pricing table, FAQ accordion, final CTA and footer. Make it responsive with tasteful animations.\n\nProduct: [what are you selling?]\nAudience: [who]\nMain call to action: [e.g. Sign up, Book a call]"},
+    {id:"b-dashboard",icon:"gauge",title:"Dashboard builder",big:true,desc:"An admin dashboard with charts, stat cards, a searchable table and filters, filled with realistic sample data.",prompt:"Build an interactive dashboard as one HTML file (inline CSS and JS, charts drawn with SVG or canvas — no external libraries). Step by step: plan the metrics, generate realistic sample data, build stat cards, a line chart and a bar chart, a sortable and searchable table, date-range filters and a responsive layout with dark mode.\n\nWhat it tracks: [sales, fitness, students, website traffic…]\nKey numbers: [list]"},
+    {id:"b-game",icon:"bolt",title:"Game builder",big:true,desc:"A playable browser game with controls, scoring, levels and a start screen — runs right in the preview.",prompt:"Build a complete, playable browser game as one HTML file using canvas (inline JS and CSS). Step by step: design the rules, build the game loop, controls (keyboard and touch), scoring, increasing difficulty, a start screen, pause and game-over screens, and a saved high score.\n\nGame idea: [describe it, e.g. a space dodger, a puzzle, a platformer]"},
+    {id:"b-store",icon:"card",title:"Online store page",big:true,desc:"A shop page with product grid, filters, a working cart and a checkout form layout (no real payments).",prompt:"Build an online store front as one HTML file (inline CSS and JS). Step by step: product data, product grid with images (use placeholder gradients), search and category filters, product detail modal, a cart saved in localStorage with quantities and totals, and a checkout form layout. No real payments.\n\nThe store sells: [what]\nStore name: [name]"},
+    {id:"b-portfolio",icon:"user",title:"Portfolio builder",big:true,desc:"A personal portfolio site: intro, projects, skills, experience and contact, beautifully laid out.",prompt:"Build a personal portfolio website as one HTML file (inline CSS and JS). Step by step: hero with name and role, about, project cards with filters, skills, experience timeline, testimonials and a contact section. Responsive, fast and elegant.\n\nMy name and role: [e.g. Nika — designer]\nProjects to show: [list a few]"},
+    {id:"b-api",icon:"database",title:"REST API builder",big:true,desc:"A Node.js + Express API with routes, validation, error handling, a README and example requests.",prompt:"Build a complete REST API in Node.js with Express. Step by step: design the resources and endpoints, create package.json, server.js, routes, input validation, error handling, an in-memory or SQLite store, and a README with setup steps and example curl requests.\n\nThe API is for: [e.g. a todo app, a bookstore, a booking system]\nResources: [list]"},
+    {id:"b-bot",icon:"chat",title:"Discord bot builder",big:true,desc:"A discord.js bot with slash commands, permissions and a step-by-step setup guide.",prompt:"Build a Discord bot with discord.js v14. Step by step: plan the commands, create package.json, index.js, a commands folder with slash commands, command registration, error handling, a .env example and a README with setup instructions.\n\nWhat the bot does: [describe]\nCommands: [list]"},
+    {id:"b-extension",icon:"plug",title:"Chrome extension builder",big:true,desc:"A Manifest V3 extension with a popup, options and content script, ready to load unpacked.",prompt:"Build a Chrome extension (Manifest V3). Step by step: manifest.json, popup.html/popup.js/popup.css, a content script, an options page, storage with chrome.storage, and a README explaining how to load it unpacked.\n\nThe extension should: [describe]"},
+    {id:"b-python",icon:"terminal",title:"Python automation",big:true,desc:"A robust Python script for a boring task — with arguments, logging, error handling and instructions.",prompt:"Write a complete Python 3 automation script. Step by step: plan it, then write the code with argparse options, logging, clear error handling, and comments; add a requirements.txt if needed and usage examples.\n\nAutomate this: [describe the boring task]"},
+    {id:"b-slides",icon:"slides",title:"Slide deck builder",big:true,desc:"A beautiful presentation as one HTML file — keyboard navigation, speaker-friendly and ready to present.",prompt:"Create a presentation as one self-contained HTML file: 8–12 slides, arrow keys and on-screen buttons to move, slide counter, clean modern design, and strong headlines. Plan the story first, then build the slides step by step.\n\nTopic: [what]\nAudience: [who]\nLength: [minutes]"}
+  ];
   var TEMPLATES=[
     {id:"tpl-brief",icon:"sunrise",title:"Daily briefing",desc:"A short morning summary of the news on the topics you care about.",kind:"daily_task",cadence:"daily",prompt:"Give me a short morning briefing: the 5 most important news items today about [your topics]. One or two sentences each, with the source link."},
     {id:"tpl-monitor",icon:"binoculars",title:"Monitor a topic",desc:"Watch for news or mentions of a topic, competitor or keyword.",kind:"daily_task",cadence:"daily",prompt:"Search for news and mentions of [topic, company or keyword]. List anything new from the last 24 hours with a one-line summary and the link. If there's nothing new, say so in one line."},
@@ -254,7 +268,10 @@
     else if(view==="connectors"){ ui.custTab="connectors"; view="customize"; loadConnectorStatus().then(function(){ if(activePanel==="customize"&&ui.custTab==="connectors") renderPanel(); }); }
     activePanel=view;
     if(!pageEl||!pageBody) return;
+    if(window.EloraNav&&!window.EloraNav.isRestoring()) window.EloraNav.record({page:"chat",view:view});
     pageEl.hidden=false; if(chatMain) chatMain.classList.add("is-page");
+    var tpClose=document.getElementById("taskPanelClose"), tp=document.getElementById("taskPanel"); if(tp&&!tp.hidden&&tpClose) tpClose.click();
+    var bp=document.getElementById("browserPanel"); if(bp&&!bp.hidden){ var bc=document.getElementById("browserClose"); if(bc) bc.click(); }
     markNav(view); renderPanel(); pageEl.scrollTop=0;
     if(window.eloraSwapIn) window.eloraSwapIn(pageBody);
     closeSidebarOnPhone();
@@ -335,6 +352,9 @@
     body=body||document.getElementById("ewViewerBody"); if(!body) return;
     body.textContent=""; var frame=document.createElement("iframe"); frame.setAttribute("sandbox","allow-scripts allow-forms allow-modals"); frame.title="Preview of "+(a.title||"file"); frame.srcdoc=String(a.content||""); body.appendChild(frame);
   }
+  function selectFirstBlank(){
+    setTimeout(function(){ if(!chatInput) return; var v=chatInput.value, a=v.indexOf("["), b=v.indexOf("]",a); if(a>-1&&b>a){ chatInput.focus(); chatInput.setSelectionRange(a,b+1); } },60);
+  }
   function startMake(id){
     var m=MAKE.filter(function(x){return x.id===id;})[0]; if(!m) return;
     if(app&&app.startNewChat) app.startNewChat();
@@ -392,20 +412,28 @@
     var added=function(cid){ return state.skills.some(function(s){return s.from===cid;}); };
     if(ui.custScope==="discover"){
       var list=SKILL_CATALOG.filter(function(c){return match(c.title,c.desc);});
+      var builders=BUILDERS.filter(function(c){return match(c.title,c.desc);});
+      var card=function(c){var on=added(c.id);return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c.icon)+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(c.title)+(c.big?' <span class="ew-chip ew-chip-ai">Task</span>':'')+'</h3><p style="margin-top:4px">'+escapeHtml(c.desc)+'</p><div class="ew-card-meta" style="margin-top:6px">by elorahub</div></div><div style="display:flex;gap:6px"><button class="ew-btn ew-btn-sm" type="button" data-ew="skill-try" data-id="'+c.id+'">'+ic("chat")+'Try</button><button class="ew-add'+(on?" is-added":"")+'" type="button" data-ew="skill-add" data-id="'+c.id+'" title="'+(on?"Added to Yours":"Add to Yours")+'" aria-label="'+(on?"Added":"Add")+' '+escapeHtml(c.title)+'">'+ic(on?"check":"plus")+'</button></div></div></article>';};
+      if(!ui.custQuery){
+        var fb=BUILDERS[0];
+        html+='<section class="ew-feature ew-feature-ai"><div class="ew-feature-copy"><small>From elorahub · Big builder</small><h2>'+escapeHtml(fb.title)+'</h2><p>'+escapeHtml(fb.desc)+'</p><div class="ew-card-acts" style="padding:0"><button class="ew-btn ew-btn-main" type="button" data-ew="skill-try" data-id="'+fb.id+'">'+ic("bolt")+'Build an app</button><button class="ew-btn" type="button" data-ew="skill-add" data-id="'+fb.id+'"'+(added(fb.id)?" disabled":"")+'>'+(added(fb.id)?ic("check")+"Added":ic("plus")+"Add")+'</button></div></div><div class="ew-feature-art ew-feature-art-ai">'+ic(fb.icon)+'</div></section>';
+        builders=builders.slice(1);
+      }
+      if(builders.length) html+='<div class="ew-label">Big builders — they plan the work and build it step by step</div><div class="ew-grid2">'+builders.map(card).join("")+'</div>';
       if(!ui.custQuery){
         var f=SKILL_CATALOG[0];
         html+='<section class="ew-feature"><div class="ew-feature-copy"><small>From elorahub</small><h2>'+escapeHtml(f.title)+'</h2><p>'+escapeHtml(f.desc)+'</p><div class="ew-card-acts" style="padding:0"><button class="ew-btn ew-btn-main" type="button" data-ew="skill-add" data-id="'+f.id+'"'+(added(f.id)?" disabled":"")+'>'+(added(f.id)?ic("check")+"Added":ic("plus")+"Add")+'</button><button class="ew-btn" type="button" data-ew="skill-try" data-id="'+f.id+'">'+ic("chat")+'Try</button></div></div><div class="ew-feature-art">'+ic(f.icon)+'</div></section>';
         list=list.slice(1);
       }
-      html+='<div class="ew-label">'+(ui.custQuery?"Results":"For you")+'</div>';
-      if(!list.length) return html+emptyBlock("search","No skills match","Try a different word.");
-      html+='<div class="ew-grid2">'+list.map(function(c){var on=added(c.id);return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c.icon)+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(c.title)+'</h3><p style="margin-top:4px">'+escapeHtml(c.desc)+'</p><div class="ew-card-meta" style="margin-top:6px">by elorahub</div></div><div style="display:flex;gap:6px"><button class="ew-btn ew-btn-sm" type="button" data-ew="skill-try" data-id="'+c.id+'">'+ic("chat")+'Try</button><button class="ew-add'+(on?" is-added":"")+'" type="button" data-ew="skill-add" data-id="'+c.id+'" title="'+(on?"Added to Yours":"Add to Yours")+'" aria-label="'+(on?"Added":"Add")+' '+escapeHtml(c.title)+'">'+ic(on?"check":"plus")+'</button></div></div></article>';}).join("")+'</div>';
+      html+='<div class="ew-label">'+(ui.custQuery?"More results":"Everyday skills")+'</div>';
+      if(!list.length&&!builders.length) return html+emptyBlock("search","No skills match","Try a different word.");
+      html+='<div class="ew-grid2">'+list.map(card).join("")+'</div>';
       return html;
     }
     var mine=state.skills.filter(function(s){return match(s.title,s.prompt);});
     if(!state.skills.length) return html+emptyBlock("wand","No skills yet","Add ready-made skills from Discover, or write your own reusable prompt.",'<div class="ew-card-acts" style="justify-content:center"><button class="ew-btn ew-btn-main" type="button" data-ew="cust-scope" data-v="discover">Browse Discover</button><button class="ew-btn" type="button" data-action="show-skill-form">'+ic("plus")+'Write your own</button></div>');
     if(!mine.length) return html+emptyBlock("search","No skills match","Try a different word.");
-    html+='<div class="ew-grid2">'+mine.map(function(s){var c=SKILL_CATALOG.filter(function(x){return x.id===s.from;})[0];return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c?c.icon:"wand")+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(s.title)+'</h3><p style="margin-top:4px">'+escapeHtml(c?c.desc:String(s.prompt||"").slice(0,160))+'</p><div class="ew-card-meta" style="margin-top:6px">'+(c?"from elorahub":"by you")+'</div></div></div><div class="ew-card-acts"><button class="ew-btn ew-btn-sm ew-btn-main" type="button" data-ew="skill-try" data-id="'+escapeHtml(s.id)+'">'+ic("chat")+'Use</button><span class="ew-spacer"></span><button class="ew-iconbtn" type="button" title="Remove" aria-label="Remove '+escapeHtml(s.title)+'" data-skill-action="delete" data-id="'+escapeHtml(s.id)+'">'+ic("trash")+'</button></div></article>';}).join("")+'</div>';
+    html+='<div class="ew-grid2">'+mine.map(function(s){var c=SKILL_CATALOG.concat(BUILDERS).filter(function(x){return x.id===s.from;})[0];return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c?c.icon:"wand")+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(s.title)+'</h3><p style="margin-top:4px">'+escapeHtml(c?c.desc:String(s.prompt||"").slice(0,160))+'</p><div class="ew-card-meta" style="margin-top:6px">'+(c?"from elorahub":"by you")+'</div></div></div><div class="ew-card-acts"><button class="ew-btn ew-btn-sm ew-btn-main" type="button" data-ew="skill-try" data-id="'+escapeHtml(s.id)+'">'+ic("chat")+'Use</button><span class="ew-spacer"></span><button class="ew-iconbtn" type="button" title="Remove" aria-label="Remove '+escapeHtml(s.title)+'" data-skill-action="delete" data-id="'+escapeHtml(s.id)+'">'+ic("trash")+'</button></div></article>';}).join("")+'</div>';
     return html;
   }
   function renderStyles(){
@@ -457,8 +485,8 @@
   }
   function renderConnectors(){
     var rows=[
-      {key:"google",name:"Google Drive",icon:"G",copy:"Search and read files you choose to use in a chat. Read-only access."},
-      {key:"github",name:"GitHub",icon:"GH",copy:"Browse repositories and read files with a read-only installation."}
+      {key:"google",name:"Google Drive",icon:'<svg viewBox="0 0 87.3 78" width="22" height="20"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>',copy:"Search and read files you choose to use in a chat. Read-only access."},
+      {key:"github",name:"GitHub",icon:'<svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2.2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2.2z"/></svg>',copy:"Browse repositories and read files with a read-only installation."}
     ];
     var html='<div class="workspace-note" style="margin-bottom:16px"><strong>Read-only by design.</strong> EloraHub cannot create, change, or delete files here. Content only enters a chat after you select it, and is not sent until you press Send. Disconnect removes EloraHub access; GitHub may still require uninstalling the app from GitHub settings.</div>';
     html+='<div style="display:grid;gap:10px">'+rows.map(function(r){
@@ -521,6 +549,7 @@
       else if(activePanel==="artifacts") pageBody.innerHTML=renderArtifacts();
       else if(activePanel==="scheduled") pageBody.innerHTML=renderSchedules();
       else if(activePanel==="customize") pageBody.innerHTML=renderCustomize();
+      if(window.eloraTintIcons) window.eloraTintIcons(pageBody);
     }
     renderCounts();
   }
@@ -642,8 +671,8 @@
       else if(k==="tpl") openScheduleSheet(TEMPLATES.find(function(t){return t.id===v;})||null);
       else if(k==="cust-tab"){ui.custTab=v;if(v==="connectors")loadConnectorStatus().then(function(){if(activePanel==="customize"&&ui.custTab==="connectors")renderPanel();});renderPanel();}
       else if(k==="cust-scope"){ui.custScope=v;renderPanel();}
-      else if(k==="skill-try"){var sk=SKILL_CATALOG.concat(state.skills).find(function(x){return x.id===ew.dataset.id;});if(sk){if(app&&app.startNewChat)app.startNewChat();setChatInput(sk.prompt);}}
-      else if(k==="skill-add"){var cat=SKILL_CATALOG.find(function(x){return x.id===ew.dataset.id;});if(cat&&!state.skills.some(function(x){return x.from===cat.id;})){var t0=Date.now();state.skills.unshift({id:uid(),title:cat.title,prompt:cat.prompt,from:cat.id,createdAt:t0,updatedAt:t0});scheduleSave();renderPanel();toast("Added “"+cat.title+"” to your skills.");}}
+      else if(k==="skill-try"){var sk=SKILL_CATALOG.concat(BUILDERS,state.skills).find(function(x){return x.id===ew.dataset.id;});if(sk){var isBig=!!sk.big||BUILDERS.some(function(b){return b.id===sk.from;});if(app&&app.startNewChat)app.startNewChat();if(isBig&&app&&app.setTaskMode)app.setTaskMode(true);setChatInput(sk.prompt);selectFirstBlank();}}
+      else if(k==="skill-add"){var cat=SKILL_CATALOG.concat(BUILDERS).find(function(x){return x.id===ew.dataset.id;});if(cat&&!state.skills.some(function(x){return x.from===cat.id;})){var t0=Date.now();state.skills.unshift({id:uid(),title:cat.title,prompt:cat.prompt,from:cat.id,createdAt:t0,updatedAt:t0});scheduleSave();renderPanel();toast("Added “"+cat.title+"” to your skills.");}}
       else if(k==="style"){if(app&&app.setPreference)app.setPreference(ew.dataset.k,v);renderPanel();}
       else if(k==="edit-instructions"){if(app&&app.openSettings)app.openSettings("account");setTimeout(function(){var ta=document.getElementById("settingsInstructions");if(ta)ta.focus();},80);}
       else if(k==="open-conv"){if(app&&app.openConversation){closePage();app.openConversation(Number(ew.dataset.id));}}
@@ -775,7 +804,10 @@
       pageBody.addEventListener("input",function(e){var id=e.target.id;if(id==="ewProjSearch"){ui.projQuery=e.target.value;rerenderKeepFocus(id);}else if(id==="ewArtSearch"){ui.artQuery=e.target.value;rerenderKeepFocus(id);}else if(id==="ewCustSearch"){ui.custQuery=e.target.value;rerenderKeepFocus(id);}});
       pageBody.addEventListener("keydown",function(e){if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches(".ew-row-main")){e.preventDefault();e.target.click();}});
     }
-    document.addEventListener("click",function(e){if(e.target.closest("#newChatBtn,#chatHistoryList button,#chatHistoryList [role=listitem],.ec-brand"))closePage();});
+    document.addEventListener("click",function(e){
+      if(e.target.closest("#newChatBtn")){var wasOpen=pageEl&&!pageEl.hidden;closePage();if(wasOpen&&window.EloraNav)window.EloraNav.record({page:"chat",conv:"new"});return;}
+      if(e.target.closest("#chatHistoryList button,#chatHistoryList [role=listitem]"))closePage();
+    });
     var thread=document.getElementById("chatThread");
     if(thread){
       thread.addEventListener("click",function(e){var btn=e.target.closest("[data-workspace-save-message]");if(!btn)return;var msg=btn.closest(".ec-msg.is-ai"),bubble=msg&&msg.querySelector(".ec-msg-text");if(!bubble)return;var title=app&&app.getActiveConversationTitle?app.getActiveConversationTitle():"Elora response";var id=app&&app.getActiveConversationId?app.getActiveConversationId():null;addArtifact(title,bubble.innerText,"Elora response",id?String(id)+":"+bubble.innerText.slice(0,80):null);btn.textContent="Saved";btn.disabled=true;});
