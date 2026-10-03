@@ -11,6 +11,9 @@
     },
     "api/chat.js": {
       "maxDuration": 60
+    },
+    "api/pay/[action].js": {
+      "maxDuration": 30
     }
   }
 }

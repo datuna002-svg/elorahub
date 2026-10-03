@@ -1,6 +1,7 @@
 import { timingSafeEqual, randomUUID } from "node:crypto";
 import { getSupabaseClient, logEvent } from "../_lib/supabaseAdmin.js";
 import { runScheduledPrompt } from "../chat.js";
+import { processRenewals } from "../_payments/bog.js";
 
 function send(res, status, body) {
   res.setHeader("Cache-Control", "no-store");
@@ -43,6 +44,10 @@ function missingSchema(error) {
 export default async function handler(req, res) {
   if (req.method !== "GET") return send(res, 405, { error: "method_not_allowed" });
   if (!isAuthorized(req)) return send(res, 401, { error: "unauthorized" });
+
+  // Bank of Georgia subscriptions: charge saved cards that are due.
+  let renewals = null;
+  try { renewals = await processRenewals(); } catch (err) { await logEvent("error", "payments", `Renewal run failed: ${err.message}`); }
 
   const supabase = await getSupabaseClient();
   if (!supabase) return send(res, 503, { error: "storage_unavailable" });
