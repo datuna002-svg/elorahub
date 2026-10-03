@@ -3315,8 +3315,8 @@ html[data-ec-theme="light"] .ecp-cycle button.is-active{ color:#fff; }
 .ecp-btn:hover:not(:disabled){ background:var(--ec-active); }
 .ecp-btn:active:not(:disabled){ transform:scale(.97); }
 .ecp-btn:disabled{ opacity:.55; cursor:default; }
-.ecp-btn-main{ border-color:transparent; background:linear-gradient(135deg,#e0434f,#a3202c 60%,#7a1424); color:#fff; box-shadow:0 8px 24px rgba(197,48,62,.35),inset 0 1px 0 rgba(255,255,255,.25); }
-.ecp-btn-main:hover:not(:disabled){ background:linear-gradient(135deg,#ec5562,#b0252f 60%,#86172a); box-shadow:0 10px 30px rgba(197,48,62,.5); }
+.ecp-btn-main{ border-color:transparent; background:linear-gradient(135deg,#e0434f,#a3202c 60%,#7a1424) border-box; color:#fff; box-shadow:0 8px 24px rgba(197,48,62,.35),inset 0 1px 0 rgba(255,255,255,.25); }
+.ecp-btn-main:hover:not(:disabled){ background:linear-gradient(135deg,#ec5562,#b0252f 60%,#86172a) border-box; box-shadow:0 10px 30px rgba(197,48,62,.5); }
 .ecp-list{ display:grid; gap:9px; margin:18px 0 0; padding:16px 0 0; border-top:1px solid var(--ec-line); list-style:none; }
 .ecp-list li{ position:relative; padding-left:24px; color:var(--ec-text-2); font-size:13.5px; line-height:1.45; }
 .ecp-list li::before{ content:""; position:absolute; left:0; top:2px; width:15px; height:15px; border-radius:50%; background:rgba(197,48,62,.2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff7a85' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12.5 4 4 8-9'/%3E%3C/svg%3E") center/10px no-repeat; }
@@ -3426,7 +3426,6 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
 .ecp-soon a.ecp-btn{ display:inline-flex; align-items:center; text-decoration:none; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 <body>
     <!-- Line icons used across the chat + settings (referenced with <use href="#i-…">) -->
@@ -3762,7 +3761,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
         <details><summary>Does it remember me?</summary><p>Only when you're signed in, and only a short note of stable facts like your name and ongoing projects. You can read it or erase it anytime in Settings → Memory.</p></details>
         <details><summary>Can it browse the web?</summary><p>It can read links you paste and run a search for questions about current events. It can't log in to sites or take actions on your behalf.</p></details>
         <details><summary>What files can I attach?</summary><p>Images (up to 3&nbsp;MB) and text or source-code files (up to 200&nbsp;KB; elora reads the first ~30,000 characters). Other types, like PDFs and Word documents, are attached by name only for now.</p></details>
-        <details><summary>Where do my messages go?</summary><p>To elora's AI provider to write your reply. Your recent chats are saved in your browser. Payments are handled by Paddle — elorahub never sees your card.</p></details>
+        <details><summary>Where do my messages go?</summary><p>To elora's AI provider to write your reply. Your recent chats are saved in your browser. Card payments are handled by Bank of Georgia — elorahub never sees your card number.</p></details>
       </div>
     </div>
 
@@ -4000,7 +3999,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
               <div class="ecp-cycle" role="tablist" aria-label="Billing cycle"><span class="ecp-cycle-pill" aria-hidden="true"></span><button type="button" class="is-active" data-plans-cycle="monthly">Monthly</button><button type="button" data-plans-cycle="yearly">Yearly <em>−20%</em></button></div>
             </header>
             <div class="ecp-grid" id="plansGrid"></div>
-            <p class="ecp-foot"><svg class="ec-i"><use href="#i-shield"/></svg>Secure payments by Paddle · Cancel any time · Questions? <a href="mailto:elorahubonline@gmail.com">elorahubonline@gmail.com</a></p>
+            <p class="ecp-foot"><svg class="ec-i"><use href="#i-shield"/></svg>Secure card payments by Bank of Georgia · Cancel any time · Questions? <a href="mailto:elorahubonline@gmail.com">elorahubonline@gmail.com</a></p>
           </div>
           <div class="ecp-step ecp-pay" id="plansPay" hidden>
             <aside class="ecp-order">
@@ -4295,6 +4294,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
           <p>elorahub offers a Free plan and two paid subscriptions, Private ($15/month) and Premium ($25/month). Paid plans renew automatically each billing period until cancelled. You can cancel at any time, and your plan stays active until the end of the current billing period.</p>
           <ul>
             <li>Upload and message limits for each plan are described on the Pricing page and may be adjusted with reasonable notice.</li>
+            <li>Card payments are processed by Bank of Georgia on its secure payment page. elorahub never sees or stores your full card number; the bank keeps your card for automatic renewals until you cancel in Settings → Billing.</li>
             <li>Refunds are considered case-by-case for billing errors; general dissatisfaction after significant usage may not qualify.</li>
           </ul>
 
@@ -4702,7 +4702,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
         <div class="owner-panel" data-owner-panel="users">
           <div class="doc-body" style="margin-top:22px;">
             <h2 style="margin-top:0;">Users</h2>
-            <p>Everyone who's signed up, pulled live from Supabase. Change a plan here for support/comp purposes — it takes effect immediately, same as a real Paddle renewal would.</p>
+            <p>Everyone who's signed up, pulled live from Supabase. Change a plan here for support/comp purposes — it takes effect immediately, same as a real payment would.</p>
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0;align-items:center;">
               <input type="text" id="userSearchInput" placeholder="Search by email…" style="flex:1;min-width:220px;max-width:340px;padding:11px 14px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--line);color:var(--text-1);font-size:0.9rem;">
@@ -4747,19 +4747,19 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
           </div>
         </div>
 
-        <!-- PURCHASES (Paddle subscriptions + revenue) -->
+        <!-- PURCHASES (Bank of Georgia subscriptions + revenue) -->
         <div class="owner-panel" data-owner-panel="purchases">
           <div class="doc-body" style="margin-top:22px;">
             <h2 style="margin-top:0;">Purchases</h2>
-            <p>Active subscriptions and revenue come from Paddle, who handle the sale and pay out to your bank account on their own schedule (Paddle is the "merchant of record" — this is what makes real payments work from Georgia, since Stripe itself isn't available there).</p>
+            <p>Customers pay by card on Bank of Georgia's secure page and the money goes straight to your Bank of Georgia business account. Numbers below are live from elorahub's own subscription records.</p>
             <div style="max-width:420px;margin-top:18px;padding:22px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,0.02);">
               <div style="font-weight:700;margin-bottom:10px;">Monthly recurring revenue</div>
               <div style="font-family:var(--font-body);font-weight:800;font-size:2rem;color:var(--text-1);margin-bottom:16px;" id="payoutAvailable">—</div>
               <div style="color:var(--text-3);font-size:0.88rem;margin-bottom:4px;" id="payoutPending">&nbsp;</div>
-              <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking Paddle…</div>
-              <a href="https://vendors.paddle.com/" target="_blank" rel="noopener" class="btn btn-primary btn-block" id="managePayoutBtn" style="margin-top:16px;display:none;">Open Paddle Dashboard (payouts)</a>
+              <div style="color:var(--text-3);font-size:0.82rem;margin-top:14px;" id="payoutStatusNote">Checking…</div>
+              <div id="recentPayments" style="margin-top:16px;display:grid;gap:8px;"></div>
             </div>
-            <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Bank details and the exact next payout date/amount live on Paddle's own secure dashboard — never here. This button only shows for full-access administrator accounts, and Paddle requires its own account login regardless.</p>
+            <p style="color:var(--text-3);font-size:0.8rem;margin-top:10px;max-width:420px;">Exact amounts received (after the bank's fee) are in your Bank of Georgia business internet bank. Card numbers are never stored here.</p>
           </div>
         </div>
 
@@ -4907,21 +4907,6 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
       Don't have an account? <button id="switchToSignUp">Sign up</button>
     </div>
     <div class="modal-fineprint">By continuing, you agree to elorahub's <a data-nav="terms" data-close-modal="1">Terms of Service</a> and <a data-nav="privacy" data-close-modal="1">Privacy Policy</a>.</div>
-  </div>
-</div>
-
-<!-- ============ CHECKOUT MODAL (Paddle inline checkout, stays on elorahub) ============ -->
-<div class="modal-overlay" id="checkoutModal">
-  <div class="modal-card" style="max-width:480px;">
-    <button class="modal-close" id="checkoutModalClose" aria-label="Close">&times;</button>
-    <div class="modal-head">
-      <img src="assets/elorahub_logo.png" alt="elorahub">
-      <h3>Complete your subscription</h3>
-      <p>Card, Apple Pay, Google Pay — handled securely by Paddle, without leaving elorahub.</p>
-    </div>
-    <div id="checkoutLoading" style="text-align:center;padding:30px 0;color:var(--text-3);font-size:0.9rem;">Loading secure checkout…</div>
-    <div id="checkoutStatus" class="checkout-status" role="status" aria-live="polite" style="display:none;"></div>
-    <div id="checkoutContainer" class="checkout-container"></div>
   </div>
 </div>
 
@@ -5073,7 +5058,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
           <button type="button" class="es-btn es-btn-danger" id="settingsClearChatsBtn">Delete all chats</button>
         </div>
         <div class="es-row" data-keywords="data policy">
-          <div class="es-copy"><strong>How your data is used</strong><p>Messages are sent to elora's AI provider only to write your reply. Payments are handled by Paddle.</p></div>
+          <div class="es-copy"><strong>How your data is used</strong><p>Messages are sent to elora's AI provider only to write your reply. Card payments are handled by Bank of Georgia.</p></div>
           <button type="button" class="es-btn" data-nav="privacy" data-settings-close>Privacy policy</button>
         </div>
         <div class="es-row" data-keywords="contact email support data request delete account">
@@ -5779,144 +5764,14 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     });
   });
 
-  /* ---------------- Paddle checkout (inline — stays on elorahub) ----------------
-     Card, Apple Pay, and Google Pay all show up automatically here based on
-     what's enabled in the Paddle Dashboard and what the buyer's device/
-     browser supports — see PADDLE-SETUP.md. This code doesn't hardcode
-     which methods appear. Paddle acts as merchant of record (it's the one
-     that handles the sale and pays out to your bank), which is what makes
-     this work for a Georgia-based account — Stripe itself isn't available
-     there. */
-  var paddleConfig = null;
-  var paddleReady = false;
-  var paddleInitPromise = null;
-
-  async function ensurePaddleReady(){
-    if(paddleInitPromise) return paddleInitPromise;
-    paddleInitPromise = (async function(){
-      try {
-        var res = await fetch("/api/paddle-config", { headers:{"Accept":"application/json"} });
-        var body = await res.json();
-        paddleConfig = body && typeof body === "object" ? body : { configured:false, reason:"invalid_response" };
-      } catch(e){
-        paddleConfig = { configured:false, reason:"network_error" };
-      }
-      var required = ["private-monthly","private-yearly","premium-monthly","premium-yearly"];
-      var missing = required.filter(function(key){ return !paddleConfig.priceIds || !paddleConfig.priceIds[key]; });
-      if(!paddleConfig.configured || missing.length || !window.Paddle){
-        paddleConfig.missing = missing;
-        paddleReady = false;
-        return false;
-      }
-      try {
-        window.Paddle.Environment.set(paddleConfig.environment === "sandbox" ? "sandbox" : "production");
-        window.Paddle.Initialize({
-          token: paddleConfig.clientToken,
-          checkout: { settings: { displayMode:"inline", frameTarget:"checkout-container", frameInitialHeight:"450", frameStyle:"width:100%; min-width:312px; background-color:transparent; border:none;" } },
-          eventCallback: function(event){
-            var name = event && (event.name || event.type) || "";
-            try {
-              var evCode = String((event && event.error && (event.error.code || event.error.type)) || (event && event.data && event.data.error && event.data.error.code) || "");
-              if(!evCode){ try { var m = /transaction_[a-z_]+|not_enabled|checkout_url_not_set/.exec(JSON.stringify(event)); if(m) evCode = m[0]; } catch(err2){} }
-              var evKind = /checkout\.error/.test(name) || (event && event.error) ? "error" : /checkout\.completed/.test(name) ? "completed" : name;
-              window.dispatchEvent(new CustomEvent("elorahub:checkout", { detail:{ kind: evKind, code: evCode, name: name } }));
-            } catch(err){}
-            if(/checkout\.error/.test(name) || (event && event.error)){
-              var code = String((event.error && (event.error.code || event.error.type)) || (event.data && event.data.error && event.data.error.code) || "");
-              setCheckoutStatus(/not_enabled|checkout_url|domain/i.test(code)
-                ? "Payments are being switched on for elorahub right now — please try again a little later. Questions? elorahubonline@gmail.com"
-                : "Paddle couldn't open the checkout just now. Try again in a moment, or email elorahubonline@gmail.com.", "error");
-            } else if(/checkout\.completed/.test(name)){
-              setCheckoutStatus("Payment received — thank you! Your plan will update in a few seconds.", "");
-              setTimeout(function(){ try { window.dispatchEvent(new CustomEvent("elorahub:auth-state")); } catch(e){} }, 4000);
-            }
-          }
-        });
-        paddleReady = true;
-        return true;
-      } catch(e){
-        paddleReady = false;
-        paddleConfig.reason = "initialization_error";
-        return false;
-      }
-    })();
-    return paddleInitPromise;
-  }
-
-  var checkoutModal = document.getElementById("checkoutModal");
-  var checkoutLoading = document.getElementById("checkoutLoading");
-  var checkoutStatus = document.getElementById("checkoutStatus");
-  var checkoutContainer = document.getElementById("checkoutContainer");
-
-  function setCheckoutStatus(message, kind){
-    checkoutStatus.textContent = message || "";
-    checkoutStatus.className = "checkout-status" + (kind ? " is-" + kind : "");
-    checkoutStatus.style.display = message ? "block" : "none";
-  }
-
-  function closeCheckoutModal(){
-    checkoutModal.classList.remove("is-open");
-    document.body.style.overflow = "";
-    checkoutContainer.innerHTML = "";
-    checkoutLoading.style.display = "block";
-    setCheckoutStatus("");
-  }
-  document.getElementById("checkoutModalClose").addEventListener("click", closeCheckoutModal);
-  checkoutModal.addEventListener("click", function(e){ if(e.target === checkoutModal){ closeCheckoutModal(); } });
-
+  /* ---------------- Pricing page → the plans checkout ----------------
+     "Get Private" / "Get Premium" open the same in-app checkout as the chat
+     (Bank of Georgia), with the billing cycle chosen on this page. */
   document.querySelectorAll(".checkout-btn").forEach(function(btn){
-    btn.addEventListener("click", async function(){
-      if(!currentUser){
-        showToast("Sign in or create an account before choosing a paid plan.");
-        openModal("signin");
-        return;
-      }
+    btn.addEventListener("click", function(){
       var plan = btn.getAttribute("data-plan");
-      var originalText = btn.textContent;
-      btn.textContent = "Loading checkout…";
-      btn.disabled = true;
-
-      var ok = await ensurePaddleReady();
-      btn.textContent = originalText;
-      btn.disabled = false;
-
-      if(!ok){
-        var missingText = paddleConfig && paddleConfig.missing && paddleConfig.missing.length ? "Missing Paddle prices: " + paddleConfig.missing.join(", ") + "." : "Paddle is not configured or the checkout script could not load.";
-        showToast("Payments aren't ready yet.");
-        setCheckoutStatus(missingText + " Add the values in your deployment environment, then redeploy.", "error");
-        checkoutModal.classList.add("is-open");
-        return;
-      }
-
-      var key = plan + "-" + currentBillingCycle;
-      var priceId = paddleConfig.priceIds[key];
-      if(!priceId){
-        showToast("This billing option is not configured yet.");
-        checkoutModal.classList.add("is-open");
-        setCheckoutStatus("This billing option is not configured in Paddle yet. Choose another cycle or finish the price setup.", "error");
-        return;
-      }
-
-      checkoutModal.classList.add("is-open");
-      document.body.style.overflow = "hidden";
-      checkoutLoading.style.display = "block";
-      checkoutContainer.innerHTML = "";
-      setCheckoutStatus(paddleConfig.environment === "sandbox" ? "Sandbox checkout — use a Paddle test card. No real charge will be made." : "Secure checkout powered by Paddle.", paddleConfig.environment === "sandbox" ? "sandbox" : "");
-
-      try {
-        window.Paddle.Checkout.open({
-          items: [{ priceId: priceId, quantity: 1 }],
-          customer: currentUser && currentUser.email ? { email: currentUser.email } : undefined,
-          customData: currentUser && currentUser.email ? { elorahub_email: currentUser.email } : undefined,
-          settings: { frameTarget: "checkout-container" }
-        });
-      } catch(e){
-        checkoutLoading.style.display = "none";
-        setCheckoutStatus("Paddle could not open this checkout. Check the client token, environment, and price ID, then try again.", "error");
-        return;
-      }
-      // Paddle's inline frame replaces the loading text once it mounts.
-      setTimeout(function(){ checkoutLoading.style.display = "none"; }, 800);
+      showPage("chat");
+      setTimeout(function(){ if(window.EloraPlans) window.EloraPlans.open(plan, currentBillingCycle); }, 60);
     });
   });
 
@@ -8992,7 +8847,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
   }
 
   /* ================================================================
-     PLANS — choose a plan and pay with Paddle without leaving the chat
+     PLANS — choose a plan and pay by card with Bank of Georgia
      ================================================================ */
   var plansView = document.getElementById("plansView");
   var PLAN_LIST = [
@@ -9053,7 +8908,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     p.features.filter(function(f){ return !f[1]; }).forEach(function(f){ var li = document.createElement("li"); li.textContent = f[0]; list.appendChild(li); });
     plansView.querySelectorAll("[data-order-cycle]").forEach(function(b){ b.classList.toggle("is-active", b.getAttribute("data-order-cycle") === plansState.cycle); });
   }
-  function closeCheckoutFrame(){ try { if(window.Paddle && window.Paddle.Checkout && window.Paddle.Checkout.close) window.Paddle.Checkout.close(); } catch(e){} document.getElementById("plansFrame").textContent = ""; }
+  function closeCheckoutFrame(){ document.getElementById("plansFrame").textContent = ""; }
   var payConfig = null;
   async function loadPayConfig(){
     if(payConfig) return payConfig;
@@ -9082,23 +8937,8 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
       payBtn.disabled = false;
       return;
     }
-    frame.innerHTML = '<div class="ecp-loading"><div class="ecb-sk" style="width:55%;height:18px"></div><div class="ecb-sk"></div><div class="ecb-sk" style="width:80%"></div><div class="ecb-sk" style="height:42px;margin-top:20px"></div><div class="ecb-sk" style="height:42px"></div></div>';
-    setPlansStatus("Opening Paddle's secure checkout…");
-    var ok = await ensurePaddleReady();
-    if(!plansState.open) return;
-    if(!ok){ frame.textContent = ""; setPlansStatus("Payments aren't switched on yet. Please try again a little later — or email elorahubonline@gmail.com and we'll sort it out.", "error"); return; }
-    var priceId = paddleConfig.priceIds[plansState.plan + "-" + plansState.cycle];
-    if(!priceId){ frame.textContent = ""; setPlansStatus("This billing option isn't available yet — try the other cycle.", "error"); return; }
-    frame.textContent = "";
-    setPlansStatus(paddleConfig.environment === "sandbox" ? "Test mode — use a Paddle test card. No real charge." : "Card, Apple Pay and Google Pay — handled securely by Paddle.");
-    try {
-      window.Paddle.Checkout.open({
-        items: [{ priceId: priceId, quantity: 1 }],
-        customer: { email: currentUser.email },
-        customData: { elorahub_email: currentUser.email },
-        settings: { displayMode:"inline", frameTarget:"ec-checkout-frame", frameInitialHeight:"450", frameStyle:"width:100%; min-width:300px; background-color:transparent; border:none;" }
-      });
-    } catch(e){ setPlansStatus("Paddle couldn't open the checkout. Try again in a moment.", "error"); }
+    // Bank of Georgia isn't switched on yet (no keys) — say so kindly.
+    showPaySoon(true);
   }
   function choosePlan(id){
     plansState.plan = id;
@@ -9108,7 +8948,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     startPlanCheckout();
     plansView.querySelector(".ecp-card").scrollTop = 0;
   }
-  // Shown instead of the payment provider's own error box.
+  // Shown while card payments aren't switched on yet, or the bank's page can't open.
   function showPaySoon(notEnabled){
     closeCheckoutFrame();
     setPlansStatus("");
@@ -9118,7 +8958,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     frame.querySelector("h3").textContent = notEnabled ? "Payments are almost ready" : "The checkout didn't open";
     frame.querySelector("p").textContent = notEnabled ? "We're switching on card payments for elorahub right now. Please try again a little later — or email us and we'll set up your plan for you." : "The payment page couldn't load just now. Try again in a moment, or email us and we'll help.";
     frame.querySelector("small").textContent = "Nothing has been charged.";
-    frame.querySelector("[data-soon-retry]").addEventListener("click", function(){ startPlanCheckout(); });
+    frame.querySelector("[data-soon-retry]").addEventListener("click", function(){ payConfig = null; startPlanCheckout(); });
   }
   function backToPlans(){
     closeCheckoutFrame();
@@ -9129,8 +8969,9 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     swapIn(choose);
     renderPlans();
   }
-  function openPlans(planId){
+  function openPlans(planId, cycle){
     if(!plansView) return;
+    if(cycle === "monthly" || cycle === "yearly") plansState.cycle = cycle;
     plansState.open = true;
     plansView.hidden = false;
     document.getElementById("plansPay").hidden = true;
@@ -9211,7 +9052,7 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     if(!box) return;
     var cfg = await loadPayConfig();
     var payCopy = document.getElementById("billingPayCopy");
-    if(payCopy) payCopy.textContent = cfg && cfg.bog ? "Card payments are processed securely by Bank of Georgia. elorahub never sees or stores your card number." : "Card payments are handled securely by Paddle. elorahub never sees or stores your card details.";
+    if(payCopy) payCopy.textContent = cfg && cfg.bog ? "Card payments are processed securely by Bank of Georgia. elorahub never sees or stores your card number." : "Card payments are handled securely by Bank of Georgia. elorahub never sees or stores your card number.";
     if(!currentUser || !getAccessToken()){ box.hidden = true; return; }
     var sub = null;
     try { var r = await fetch("/api/pay/subscription", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } }); var d = r.ok ? await r.json() : {}; sub = d.subscription; } catch(e){}
@@ -9263,12 +9104,6 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
     document.addEventListener("keydown", function(e){ if(e.key === "Escape" && plansState.open) closePlans(); });
     window.addEventListener("resize", function(){ if(plansState.open) placeCyclePill(); });
     window.addEventListener("elorahub:auth-state", function(){ if(plansState.open && plansState.plan && !document.getElementById("plansSignin").hidden && currentUser && currentUser.email) startPlanCheckout(); });
-    window.addEventListener("elorahub:checkout", function(e){
-      if(!plansState.open || !plansState.plan) return;
-      var d = e.detail || {};
-      if(d.kind === "error") showPaySoon(/not_enabled|checkout_url|domain/i.test(d.code || "") || !d.code);
-      else if(d.kind === "completed"){ setPlansStatus("Payment received — thank you! Your plan is being updated…", "ok"); setTimeout(function(){ loadPlanInfo(); }, 3500); setTimeout(function(){ if(plansState.open) closePlans(); showToast("Welcome to " + (plansState.plan === "premium" ? "Premium" : "Private") + "!"); }, 6000); }
-    });
     var up = document.getElementById("sidebarUpgrade");
     if(up) up.addEventListener("click", function(){ openPlans(); });
     var sb = document.getElementById("settingsUpgradeBtn");
@@ -9605,7 +9440,6 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
       }
       document.getElementById("ownerRolesSection").style.display = myRole === "owner" ? "block" : (myRole === "administrator" ? "block" : "none");
       document.getElementById("ownerAddRoleRow").style.display = myRole === "owner" ? "flex" : "none";
-      document.getElementById("managePayoutBtn").style.display = myRole === "owner" ? "block" : "none";
       renderRoles(data.roles);
       loadOverview();
       loadLogs();
@@ -9734,7 +9568,9 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
 
   function formatMoney(cents, currency){
     if(cents == null) return "—";
-    return "$" + (cents/100).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 }) + " " + (currency||"usd").toUpperCase();
+    var cur = String(currency || "usd").toUpperCase();
+    var n = (cents/100).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+    return cur === "USD" ? "$" + n : n + " " + cur;
   }
   async function loadOverview(){
     var res = await adminFetch("/api/admin/overview");
@@ -9747,12 +9583,23 @@ html.reduce-motion .hx-orb-stage{ transform:none!important; }
 
     var payoutAvailable = document.getElementById("payoutAvailable");
     var payoutNote = document.getElementById("payoutStatusNote");
-    if(!data.paddleConnected){
-      payoutAvailable.textContent = "—";
-      payoutNote.textContent = "Paddle isn't connected yet — see PADDLE-SETUP.md.";
-    } else {
-      payoutAvailable.textContent = data.mrrCents != null ? formatMoney(data.mrrCents, data.currency) : "—";
-      payoutNote.textContent = "MRR is calculated live from active Paddle subscriptions. Exact payout amounts and dates live in the Paddle Dashboard, linked below.";
+    var recent = document.getElementById("recentPayments");
+    payoutAvailable.textContent = data.mrrCents != null ? formatMoney(data.mrrCents, data.currency) : "—";
+    if(!data.bogConnected) payoutNote.textContent = "Card payments are off until the Bank of Georgia keys are added in Vercel — see BOG-SETUP.md.";
+    else if(data.bogError) payoutNote.textContent = "Couldn't read payments yet — run supabase-schema-bog.sql in Supabase (see BOG-SETUP.md).";
+    else payoutNote.textContent = "Live from active subscriptions. Yearly plans count as 1/12 per month.";
+    if(recent){
+      var list = Array.isArray(data.recentPayments) ? data.recentPayments : [];
+      recent.innerHTML = list.length ? '<div style="font-weight:700;font-size:0.86rem;margin-top:6px;">Latest payments</div>' + list.map(function(o){
+        var ok = o.status === "completed";
+        var color = ok ? "#4caf6e" : (/rejected|blocked|refund/.test(o.status) ? "#ef5350" : "#9a9a9a");
+        var when = o.created_at ? new Date(o.created_at).toLocaleDateString(undefined, { day:"numeric", month:"short" }) : "";
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:0.82rem;">' +
+          '<span style="width:7px;height:7px;border-radius:50%;flex:none;background:' + color + ';"></span>' +
+          '<div style="flex:1;min-width:0;"><div style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(o.email || "") + '</div>' +
+          '<div style="color:var(--text-3);">' + escapeHtml((o.plan === "premium" ? "Premium" : "Private") + " · " + (o.cycle === "yearly" ? "yearly" : "monthly") + (o.kind === "renewal" ? " · renewal" : "") + " · " + when) + '</div></div>' +
+          '<div style="text-align:right;"><div style="font-weight:700;">' + escapeHtml(formatMoney(Math.round(Number(o.amount || 0) * 100), o.currency)) + '</div><div style="color:' + color + ';">' + escapeHtml(ok ? "paid" : String(o.status || "")) + '</div></div></div>';
+      }).join("") : "";
     }
   }
 

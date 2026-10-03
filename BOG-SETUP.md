@@ -40,8 +40,10 @@ Vercel → Project → Settings → Environment Variables:
 Optional price overrides: `BOG_PRICE_PRIVATE_MONTHLY`, `BOG_PRICE_PRIVATE_YEARLY`,
 `BOG_PRICE_PREMIUM_MONTHLY`, `BOG_PRICE_PREMIUM_YEARLY` (numbers, e.g. `25`).
 
-Then Deployments → Redeploy. The plans view switches from Paddle to the bank
-automatically.
+Then Deployments → Redeploy. Until the keys exist, customers who pick a plan
+see a friendly "Payments are almost ready" panel; after the redeploy they see
+"Pay securely by card" and can pay. The owner console (Purchases and Status)
+shows subscriptions, monthly revenue and the latest payments.
 
 ## 5. Tell the bank your callback address
 `https://elorahub.online/api/pay/callback`

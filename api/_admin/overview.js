@@ -1,11 +1,11 @@
 // GET -> the owner-console dashboard numbers: real sign-up count (from
-// Supabase auth) and real active-subscription counts + MRR (from Paddle).
-// Owner + administrators only. Every number here is live — nothing is
-// hardcoded/fake; anything Paddle doesn't expose through a simple API
-// call (like exact payout timing) is left null and the UI says to check
-// the Paddle Dashboard directly instead of guessing.
+// Supabase auth), active subscriptions + monthly revenue (from elorahub's
+// own Bank of Georgia records, plus any legacy Paddle subscriptions) and
+// the latest payments. Owner + administrators only. Every number is live —
+// anything that can't be read is left null and the UI shows "—".
 
 import { verifyRequester, getSupabaseClient } from "../_lib/supabaseAdmin.js";
+import { bogConfigured } from "../_payments/bog.js";
 
 const PRICE_PLAN = {
   [process.env.PADDLE_PRICE_PRIVATE_MONTHLY]: "private",
@@ -49,6 +49,8 @@ export default async function handler(req, res) {
     currency: "usd",
     supabaseConnected: false,
     paddleConnected: Boolean(process.env.PADDLE_API_KEY),
+    bogConnected: bogConfigured(),
+    recentPayments: [],
   };
 
   // --- Real sign-up count, from Supabase's own user table ---
@@ -95,6 +97,40 @@ export default async function handler(req, res) {
       result.currency = currency;
     } catch (err) {
       result.paddleError = err.message;
+    }
+  }
+
+  // --- Bank of Georgia: elorahub's own subscription + payment records ---
+  if (supabase) {
+    try {
+      const nowIso = new Date().toISOString();
+      const { data: subs, error } = await supabase
+        .from("bog_subscriptions")
+        .select("plan, cycle, status, amount, currency, current_period_end")
+        .in("status", ["active", "past_due"])
+        .gt("current_period_end", nowIso);
+      if (error) throw new Error(error.message);
+      let priv = 0, prem = 0, cents = 0, cur = null;
+      for (const sub of subs || []) {
+        if (sub.plan === "private") priv += 1;
+        if (sub.plan === "premium") prem += 1;
+        const c = Math.round(Number(sub.amount || 0) * 100);
+        cents += sub.cycle === "yearly" ? Math.round(c / 12) : c;
+        cur = cur || String(sub.currency || "USD").toLowerCase();
+      }
+      result.activePrivate = (result.activePrivate || 0) + priv;
+      result.activePremium = (result.activePremium || 0) + prem;
+      result.mrrCents = (result.mrrCents || 0) + cents;
+      if (cur && !result.paddleConnected) result.currency = cur;
+
+      const { data: orders } = await supabase
+        .from("bog_orders")
+        .select("email, plan, cycle, kind, status, amount, currency, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      result.recentPayments = orders || [];
+    } catch (err) {
+      result.bogError = err.message;
     }
   }
 

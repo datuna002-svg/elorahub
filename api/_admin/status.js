@@ -1,9 +1,10 @@
 // GET -> a live health check for every external piece elorahub depends
-// on (Supabase, Groq, Gemini, Paddle) — so a misconfigured or typo'd env
+// on (Supabase, Groq, Gemini, Bank of Georgia) — so a misconfigured or typo'd env
 // var (like the SUPABASE_UR incident) shows up immediately in the
 // console instead of silently breaking a feature. Administrator only.
 
 import { verifyRequester, getSupabaseClient } from "../_lib/supabaseAdmin.js";
+import { bogConfigured, bogToken } from "../_payments/bog.js";
 
 async function pingWithTimeout(url, options, ms) {
   const controller = new AbortController();
@@ -69,18 +70,21 @@ export default async function handler(req, res) {
     live: null, // no cheap official probe endpoint — configured is the strongest signal without spending a real request
   });
 
-  // --- Paddle (billing) ---
-  const paddleKey = process.env.PADDLE_API_KEY;
-  let paddleLive = false;
-  if (paddleKey) {
-    const r = await pingWithTimeout("https://api.paddle.com/subscriptions?per_page=1", { headers: { Authorization: `Bearer ${paddleKey}` } }, 5000);
-    paddleLive = r.ok;
+  // --- Bank of Georgia (card payments) ---
+  let bogLive = false;
+  if (bogConfigured()) {
+    try {
+      await Promise.race([bogToken(), new Promise((_, reject) => setTimeout(() => reject(new Error("timed out")), 5000))]);
+      bogLive = true;
+    } catch (_err) {
+      bogLive = false;
+    }
   }
   checks.push({
-    name: "Paddle",
-    detail: "Checkout, subscriptions, payouts",
-    configured: Boolean(paddleKey && process.env.PADDLE_CLIENT_TOKEN),
-    live: paddleLive,
+    name: "Bank of Georgia",
+    detail: "Card payments, saved cards, renewals",
+    configured: bogConfigured(),
+    live: bogLive,
   });
 
   return res.status(200).json({ checks, checkedAt: new Date().toISOString() });
