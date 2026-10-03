@@ -313,8 +313,30 @@ async function fetchLinkContext(text) {
 }
 
 export default async function handler(req, res) {
+  // GET = read-only plan summary for the account menu and Settings
+  // (Billing / Usage). Sends no message and spends nothing. Lives here
+  // rather than in its own file because Vercel Hobby caps the project at
+  // 12 serverless functions.
+  if (req.method === "GET") {
+    res.setHeader("Cache-Control", "no-store");
+    const { email } = await verifyRequester(req);
+    if (!email) {
+      return res.status(200).json({ signedIn: false, plan: "free", unlimited: false, creditsRemaining: null, creditsTotal: null, freeDailyLimit: FREE_DAILY_LIMIT });
+    }
+    const sub = await getSubscription(email);
+    const plan = sub && (sub.plan === "premium" || sub.plan === "private") ? sub.plan : "free";
+    return res.status(200).json({
+      signedIn: true,
+      plan,
+      unlimited: plan === "premium",
+      creditsRemaining: plan === "private" ? (sub.credits_remaining ?? null) : null,
+      creditsTotal: plan === "private" ? (sub.credits_total ?? null) : null,
+      freeDailyLimit: FREE_DAILY_LIMIT,
+    });
+  }
+
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Use POST." });
+    return res.status(405).json({ error: "Use GET or POST." });
   }
 
   const { messages, provider, images, preferences } = req.body || {};
@@ -455,7 +477,7 @@ export default async function handler(req, res) {
     preferences?.tone === "technical" ? "Use a technical, exact tone with precise terminology and concrete examples." : "",
     preferences?.tone === "direct" ? "Use a direct, practical tone and avoid filler." : "",
   ].filter(Boolean).join(" ");
-  const responseLanguages = { en:"English", es:"Spanish", fr:"French", de:"German", pt:"Portuguese", it:"Italian", nl:"Dutch", tr:"Turkish", ar:"Arabic", hi:"Hindi", ja:"Japanese", ko:"Korean", zh:"Chinese" };
+  const responseLanguages = { en:"English", ka:"Georgian", es:"Spanish", fr:"French", de:"German", pt:"Portuguese", it:"Italian", nl:"Dutch", tr:"Turkish", ru:"Russian", uk:"Ukrainian", ar:"Arabic", hi:"Hindi", ja:"Japanese", ko:"Korean", zh:"Chinese" };
   const responseLanguage = Object.prototype.hasOwnProperty.call(responseLanguages, preferences?.language) ? responseLanguages[preferences.language] : null;
   const languageGuide = responseLanguage ? `Use ${responseLanguage} as the default response language unless the user explicitly asks for another language. Preserve code, names, and quoted source text as appropriate.` : "";
   const preferenceGuide = [styleGuide, languageGuide].filter(Boolean).join(" ");

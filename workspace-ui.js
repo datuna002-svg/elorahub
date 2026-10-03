@@ -147,10 +147,11 @@
     renderAccount();
   }
   function setSyncText(){
-    var meta=document.getElementById("sidebarUserMeta");
+    // The account row shows the plan; sync status lives in the account menu.
+    var meta=document.getElementById("accountSyncState");
     if(meta){
       var user=currentUser();
-      meta.textContent=user ? (accessToken() ? syncMessage : "Local account · not synced") : "Sign in to sync your workspace";
+      meta.textContent=user ? (accessToken() ? syncMessage : "Local account · not synced") : "Log in to sync your workspace";
     }
   }
   function scheduleSave(){ localSave(); renderCounts(); }
@@ -162,12 +163,12 @@
     renderPinnedProjects();
   }
   function renderAccount(){
-    var user=currentUser(), name=(user && (user.name||user.email))||"Guest workspace", email=(user && user.email)||"Local workspace";
+    var user=currentUser(), name=(user && (user.name||user.email))||"Guest", email=(user && user.email)||"Not signed in";
     var nameEl=document.getElementById("sidebarUserName"), meta=document.getElementById("sidebarUserMeta"), avatar=document.getElementById("sidebarAvatar");
     var menuName=document.getElementById("accountMenuName"), menuEmail=document.getElementById("accountMenuEmail");
     var authAction=document.getElementById("accountAuthAction"), signOut=document.getElementById("accountSignOut");
     if(nameEl) nameEl.textContent=name; if(menuName) menuName.textContent=name; if(menuEmail) menuEmail.textContent=email;
-    if(avatar) avatar.textContent=(user && user.name ? user.name.slice(0,1) : user && user.email ? user.email.slice(0,1) : "E").toUpperCase();
+    if(avatar) avatar.textContent=(user && user.name ? user.name.slice(0,1) : user && user.email ? user.email.slice(0,1) : "G").toUpperCase();
     if(authAction){ authAction.hidden=!!user; }
     if(signOut){ signOut.hidden=!user; }
     if(meta) setSyncText();
@@ -346,9 +347,9 @@
     toast("Saved to Artifacts.");
   }
   function addSaveButtons(root){
-    (root||document).querySelectorAll(".msg.from-ai .response-actions").forEach(function(actions){
+    (root||document).querySelectorAll(".ec-msg.is-ai .ec-actions").forEach(function(actions){
       if(actions.querySelector("[data-workspace-save-message]")) return;
-      var btn=document.createElement("button"); btn.type="button"; btn.dataset.workspaceSaveMessage="1"; btn.textContent="Save"; btn.title="Save this response to Artifacts"; actions.appendChild(btn);
+      var btn=document.createElement("button"); btn.type="button"; btn.dataset.workspaceSaveMessage="1"; btn.title="Save to Artifacts"; btn.setAttribute("aria-label","Save to Artifacts"); btn.innerHTML='<svg class="ec-i" aria-hidden="true"><use href="#i-bookmark"/></svg>'; actions.appendChild(btn);
     });
   }
   function setChatInput(value){
@@ -527,7 +528,7 @@
     if(accountMenu)accountMenu.addEventListener("click",handleAccountAction);
     var authAction=document.getElementById("accountAuthAction"); if(authAction)authAction.addEventListener("click",function(){closeMenus();if(app&&app.openSignIn)app.openSignIn();});
     if(panel)panel.addEventListener("click",function(e){if(e.target.closest("[data-workspace-close]"))closePanel();});
-    document.addEventListener("click",function(e){if(!e.target.closest(".account-menu-wrap"))closeOne(accountMenu,accountTrigger);if(!e.target.closest(".workspace-more-wrap"))closeOne(moreMenu,moreTrigger);if(!e.target.closest(".input-shell"))closeOne(attachMenu,attachTrigger);});
+    document.addEventListener("click",function(e){if(!e.target.closest(".ec-account-wrap"))closeOne(accountMenu,accountTrigger);if(!e.target.closest(".ec-more"))closeOne(moreMenu,moreTrigger);if(!e.target.closest(".ec-plus-wrap"))closeOne(attachMenu,attachTrigger);});
     document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeMenus();if(panel&&!panel.hidden)closePanel();}});
     if(fileInput)fileInput.addEventListener("click",function(){closeMenus();});
     document.querySelectorAll("[data-attach-action]").forEach(function(btn){btn.addEventListener("click",function(){var a=btn.dataset.attachAction;closeMenus();if(a==="files"&&fileInput)fileInput.click();else if(a==="folder"&&folderInput)folderInput.click();else if(a==="dictate")startDictation();else if(a==="research")toggleResearch();});});
@@ -539,7 +540,7 @@
     if(panelBody){panelBody.addEventListener("click",handlePanelClick);panelBody.addEventListener("submit",handlePanelSubmit);panelBody.addEventListener("change",function(e){if(e.target.id==="scheduleKind")renderScheduleFields();});}
     var thread=document.getElementById("chatThread");
     if(thread){
-      thread.addEventListener("click",function(e){var btn=e.target.closest("[data-workspace-save-message]");if(!btn)return;var msg=btn.closest(".msg.from-ai"),bubble=msg&&msg.querySelector(".msg-bubble");if(!bubble)return;var title=app&&app.getActiveConversationTitle?app.getActiveConversationTitle():"Elora response";var id=app&&app.getActiveConversationId?app.getActiveConversationId():null;addArtifact(title,bubble.innerText,"Elora response",id?String(id)+":"+bubble.innerText.slice(0,80):null);btn.textContent="Saved";btn.disabled=true;});
+      thread.addEventListener("click",function(e){var btn=e.target.closest("[data-workspace-save-message]");if(!btn)return;var msg=btn.closest(".ec-msg.is-ai"),bubble=msg&&msg.querySelector(".ec-msg-text");if(!bubble)return;var title=app&&app.getActiveConversationTitle?app.getActiveConversationTitle():"Elora response";var id=app&&app.getActiveConversationId?app.getActiveConversationId():null;addArtifact(title,bubble.innerText,"Elora response",id?String(id)+":"+bubble.innerText.slice(0,80):null);btn.textContent="Saved";btn.disabled=true;});
       new MutationObserver(function(){addSaveButtons(thread);}).observe(thread,{childList:true,subtree:true}); addSaveButtons(thread);
     }
     window.addEventListener("elorahub:auth-state",function(){onAuthChange();});

@@ -1813,6 +1813,416 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   body.chat-mode .appearance-switch button{ padding:6px 9px; border:0; border-radius:7px; background:transparent; color:var(--text-3); font:600 .65rem var(--font-body); }
   body.chat-mode .appearance-switch button.is-active{ background:rgba(255,255,255,.10); color:var(--text-1); box-shadow:inset 0 1px rgba(255,255,255,.05); }
   body.chat-mode .settings-overlay .modal-close{ z-index:2; top:12px; right:14px; }
+
+/* ============================================================
+   ELORA CHAT — sidebar · transcript · composer · settings
+   Self-contained layer: chat classes are prefixed ec-, settings es-,
+   so none of the older chat layers above can leak into it.
+   Theme / font / size / width come from attributes on <html> that the
+   Settings window writes (data-ec-theme, data-ec-font, …).
+   ============================================================ */
+html{
+  --ec-bg:#171717; --ec-side:#111111; --ec-raised:#212121; --ec-raised-2:#2a2a2a;
+  --ec-hover:rgba(255,255,255,.06); --ec-active:rgba(255,255,255,.1);
+  --ec-line:rgba(255,255,255,.09); --ec-line-2:rgba(255,255,255,.15);
+  --ec-text:#ececec; --ec-text-2:#a9a9a9; --ec-text-3:#848484;
+  --ec-user:#2a2a2a; --ec-code:#0e0e0e;
+  --ec-accent:#c5303e; --ec-accent-hover:#d63f4c; --ec-accent-soft:rgba(197,48,62,.16);
+  --ec-danger:#ef5a5f;
+  --ec-shadow:0 10px 30px rgba(0,0,0,.32),0 2px 6px rgba(0,0,0,.22);
+  --ec-pop-shadow:0 16px 44px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.08);
+  --ec-scrim:rgba(0,0,0,.55);
+  --ec-font:var(--font-body,'Manrope'),ui-sans-serif,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --ec-serif:var(--font-display,'Fraunces'),Georgia,"Times New Roman",serif;
+  --ec-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --ec-chat-font:var(--ec-font); --ec-chat-size:16px; --ec-col:760px;
+}
+html[data-ec-theme="light"]{
+  --ec-bg:#fbfbfa; --ec-side:#f2f2f0; --ec-raised:#ffffff; --ec-raised-2:#f5f5f3;
+  --ec-hover:rgba(0,0,0,.05); --ec-active:rgba(0,0,0,.08);
+  --ec-line:rgba(0,0,0,.09); --ec-line-2:rgba(0,0,0,.16);
+  --ec-text:#1c1c1c; --ec-text-2:#565656; --ec-text-3:#6f6f6f;
+  --ec-user:#eeeeeb; --ec-code:#f6f6f4;
+  --ec-accent:#b4232f; --ec-accent-hover:#9c1d28; --ec-accent-soft:rgba(180,35,47,.1);
+  --ec-danger:#c4282e;
+  --ec-shadow:0 8px 24px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.06);
+  --ec-pop-shadow:0 14px 36px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.08);
+  --ec-scrim:rgba(20,20,20,.28);
+}
+html.high-contrast{ --ec-text-2:#d0d0d0; --ec-text-3:#ababab; --ec-line:rgba(255,255,255,.2); --ec-line-2:rgba(255,255,255,.32); }
+html.high-contrast[data-ec-theme="light"]{ --ec-text-2:#3a3a3a; --ec-text-3:#4f4f4f; --ec-line:rgba(0,0,0,.2); --ec-line-2:rgba(0,0,0,.34); }
+html[data-ec-font="serif"]{ --ec-chat-font:var(--ec-serif); }
+html[data-ec-font="mono"]{ --ec-chat-font:var(--ec-mono); }
+html[data-ec-size="small"]{ --ec-chat-size:15px; }
+html[data-ec-size="large"]{ --ec-chat-size:18px; }
+html[data-ec-width="narrow"]{ --ec-col:640px; }
+html[data-ec-width="wide"]{ --ec-col:960px; }
+
+#page-chat .ec-sprite{ position:absolute; width:0; height:0; overflow:hidden; }
+#page-chat [hidden],.es-overlay [hidden]{ display:none!important; }
+.ec-msg-text h1,.ec-msg-text h2,.ec-msg-text h3,.ec-msg-text h4{ font-family:inherit; color:inherit; letter-spacing:normal; }
+.ec-i{ width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ---------- app frame ---------- */
+#page-chat .ec-app{ flex:1; display:flex; width:100%; height:100vh; height:100dvh; overflow:hidden; background:var(--ec-bg); color:var(--ec-text); font-family:var(--ec-font); color-scheme:dark; }
+html[data-ec-theme="light"] #page-chat .ec-app{ color-scheme:light; }
+#page-chat .ec-app button{ font-family:inherit; }
+#page-chat .ec-app :focus-visible{ outline:2px solid var(--ec-text-3); outline-offset:1px; }
+.ec-iconbtn{ width:32px; height:32px; flex:none; display:inline-grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ec-text-2); cursor:pointer; }
+.ec-iconbtn:hover{ background:var(--ec-hover); color:var(--ec-text); }
+
+/* ---------- sidebar ---------- */
+.ec-side{ width:268px; flex:none; display:flex; flex-direction:column; height:100%; padding:10px 10px 8px; background:var(--ec-side); border-right:1px solid var(--ec-line); transition:margin-left .22s ease,transform .22s ease; }
+html.ec-side-collapsed .ec-side{ margin-left:-269px; }
+.ec-side-head{ display:flex; align-items:center; justify-content:space-between; height:40px; padding:0 2px 0 4px; margin-bottom:8px; }
+.ec-brand{ display:flex; align-items:center; gap:9px; padding:4px 6px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:650 17px/1 var(--ec-font); letter-spacing:-.01em; cursor:pointer; }
+.ec-brand:hover{ background:var(--ec-hover); }
+.ec-brand img{ width:24px; height:24px; }
+.ec-search{ display:flex; align-items:center; gap:8px; height:36px; padding:0 10px; margin:0 2px 10px; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-raised); color:var(--ec-text-3); cursor:text; }
+.ec-search:focus-within{ border-color:var(--ec-line-2); }
+.ec-search .ec-i{ width:16px; height:16px; }
+.ec-search input{ flex:1; min-width:0; height:100%; padding:0; border:0; outline:0; background:transparent; color:var(--ec-text); font:14px var(--ec-font); }
+.ec-search input::placeholder{ color:var(--ec-text-3); }
+.ec-nav{ display:flex; flex-direction:column; gap:1px; }
+.ec-nav-item{ display:flex; align-items:center; gap:10px; width:100%; height:36px; padding:0 10px; border:0; border-radius:9px; background:transparent; color:var(--ec-text); font:14px/1 var(--ec-font); text-align:left; cursor:pointer; }
+.ec-nav-item:hover,.ec-nav-item[aria-expanded="true"]{ background:var(--ec-hover); }
+.ec-nav-item:disabled{ opacity:.5; cursor:default; }
+.ec-nav-item>.ec-i{ color:var(--ec-text-2); }
+.ec-nav-new{ font-weight:600; }
+.ec-new-dot{ width:24px; height:24px; margin-left:-3px; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--ec-accent); color:#fff; }
+.ec-new-dot .ec-i{ width:15px; height:15px; stroke-width:2.3; }
+.ec-nav-new:hover .ec-new-dot{ background:var(--ec-accent-hover); }
+.ec-count{ margin-left:auto; font-size:12px; color:var(--ec-text-3); }
+.ec-count:empty{ display:none; }
+.ec-caret{ width:16px; height:16px; margin-left:auto; color:var(--ec-text-3); }
+.ec-more{ position:relative; }
+.ec-side-scroll{ flex:1; min-height:0; overflow-y:auto; margin:12px -6px 0; padding:0 6px; scrollbar-width:thin; scrollbar-color:var(--ec-line-2) transparent; }
+.ec-group{ margin-bottom:12px; }
+.ec-group-label{ padding:6px 10px 4px; font:500 12px var(--ec-font); color:var(--ec-text-3); }
+.ec-group:has(#chatHistoryList:not(:empty)) .ec-group-label{ display:none; }
+.ec-day{ padding:10px 10px 4px; font:500 12px var(--ec-font); color:var(--ec-text-3); }
+.ec-day:first-child{ padding-top:2px; }
+.ec-empty-note{ margin:0; padding:2px 10px; font-size:13px; line-height:1.5; color:var(--ec-text-3); }
+.ec-empty-note[hidden]{ display:none; }
+.ec-chat-item{ display:block; width:100%; height:34px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:13.5px/34px var(--ec-font); text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.ec-chat-item:hover{ background:var(--ec-hover); }
+.ec-chat-item.is-active{ background:var(--ec-active); }
+.ec-chat-item:disabled{ cursor:default; opacity:.6; }
+#page-chat .workspace-pinned-item{ display:flex; align-items:center; gap:10px; width:100%; min-height:0; height:34px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:13.5px var(--ec-font); text-align:left; cursor:pointer; }
+#page-chat .workspace-pinned-item:hover{ background:var(--ec-hover); color:var(--ec-text); }
+#page-chat .workspace-pinned-dot{ width:7px; height:7px; border-radius:50%; background:var(--ec-accent); box-shadow:none; }
+.ec-side-foot{ position:relative; display:flex; align-items:center; gap:2px; padding-top:8px; margin-top:4px; border-top:1px solid var(--ec-line); }
+.ec-account{ flex:1; min-width:0; display:flex; align-items:center; gap:10px; height:48px; padding:0 8px; border:0; border-radius:10px; background:transparent; color:var(--ec-text); text-align:left; cursor:pointer; }
+.ec-account:hover,.ec-account[aria-expanded="true"]{ background:var(--ec-hover); }
+.ec-avatar{ width:32px; height:32px; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--ec-text); color:var(--ec-bg); font:650 14px var(--ec-font); }
+.ec-account-copy{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.ec-account-copy strong{ font:550 14px/1.2 var(--ec-font); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ec-account-copy small{ font-size:12px; line-height:1.2; color:var(--ec-text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ---------- popovers (shared) ---------- */
+.ec-pop{ position:absolute; z-index:60; min-width:224px; padding:6px; border-radius:12px; background:var(--ec-raised); color:var(--ec-text); box-shadow:var(--ec-pop-shadow); font-family:var(--ec-font); }
+.ec-pop[hidden]{ display:none!important; }
+.ec-pop>button{ display:flex; align-items:center; gap:10px; width:100%; min-height:36px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:14px var(--ec-font); text-align:left; white-space:nowrap; cursor:pointer; }
+.ec-pop>button:hover,.ec-pop>button:focus-visible{ background:var(--ec-hover); outline:0; }
+.ec-pop>button:disabled{ opacity:.5; cursor:default; }
+.ec-pop>button>.ec-i{ color:var(--ec-text-2); }
+.ec-pop-meta{ margin-left:auto; padding-left:18px; font-size:12px; color:var(--ec-text-3); }
+.ec-pop-sep{ height:1px; margin:6px 4px; background:var(--ec-line); }
+.ec-pop-below{ top:calc(100% + 4px); left:0; }
+.ec-pop-up{ bottom:calc(100% + 8px); left:0; }
+.ec-pop-right{ left:auto; right:0; }
+.ec-pop-account{ bottom:calc(100% + 6px); left:0; right:0; min-width:0; }
+.ec-pop-identity{ display:flex; flex-direction:column; gap:2px; padding:8px 10px 10px; margin-bottom:6px; border-bottom:1px solid var(--ec-line); }
+.ec-pop-identity span{ font-size:13px; color:var(--ec-text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ec-pop-identity small{ font-size:12px; color:var(--ec-text-3); }
+.ec-pop-identity small:empty{ display:none; }
+.ec-pop-modes{ min-width:244px; }
+.ec-pop-modes>button{ padding:8px 10px; }
+.ec-mode-copy{ display:flex; flex-direction:column; gap:2px; }
+.ec-mode-copy b{ font-weight:550; font-size:14px; }
+.ec-mode-copy small{ font-size:12.5px; color:var(--ec-text-3); }
+.ec-pop .ec-check{ margin-left:auto; color:var(--ec-accent); visibility:hidden; }
+.ec-pop [aria-checked="true"] .ec-check{ visibility:visible; }
+
+/* ---------- main column ---------- */
+.ec-main{ position:relative; flex:1; min-width:0; display:flex; flex-direction:column; height:100%; background:var(--ec-bg); }
+.ec-top{ position:relative; z-index:5; height:52px; flex:none; display:flex; align-items:center; gap:4px; padding:0 12px; }
+.ec-open-side{ display:none; }
+html.ec-side-collapsed .ec-open-side{ display:inline-grid; }
+.ec-title-wrap{ position:relative; min-width:0; }
+.ec-main.is-empty .ec-title-wrap{ visibility:hidden; }
+.ec-title{ display:flex; align-items:center; gap:7px; max-width:min(52vw,560px); height:34px; padding:0 10px; border:0; border-radius:9px; background:transparent; color:var(--ec-text); font:550 14.5px var(--ec-font); cursor:pointer; }
+.ec-title:hover,.ec-title[aria-expanded="true"]{ background:var(--ec-hover); }
+.ec-title-text{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ec-title .ec-caret{ margin-left:0; }
+.ec-status{ display:none; width:7px; height:7px; flex:none; border-radius:50%; background:var(--ec-accent); }
+.ec-status.is-active{ display:inline-block; animation:ec-pulse 1.2s ease-in-out infinite; }
+.ec-top-actions{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+.ec-btn{ height:34px; display:inline-flex; align-items:center; gap:7px; padding:0 14px; border:1px solid transparent; border-radius:9px; font:550 14px var(--ec-font); white-space:nowrap; cursor:pointer; }
+.ec-btn .ec-i{ width:16px; height:16px; }
+.ec-btn-ghost{ background:transparent; color:var(--ec-text); }
+.ec-btn-ghost:hover{ background:var(--ec-hover); }
+.ec-btn-solid{ background:var(--ec-text); color:var(--ec-bg); }
+.ec-btn-solid:hover{ opacity:.88; }
+.ec-btn-outline{ background:transparent; border-color:var(--ec-line-2); color:var(--ec-text); }
+.ec-btn-outline:hover{ background:var(--ec-hover); }
+body.is-authenticated .ec-auth{ display:none; }
+.ec-main.is-empty .ec-share{ display:none; }
+
+.ec-stage{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.ec-scroll{ flex:1; min-height:0; overflow-y:auto; padding:10px 20px 28px; scrollbar-gutter:stable both-edges; scrollbar-width:thin; scrollbar-color:var(--ec-line-2) transparent; }
+.ec-thread{ width:100%; max-width:var(--ec-col); margin:0 auto; display:flex; flex-direction:column; gap:28px; font-family:var(--ec-chat-font); font-size:var(--ec-chat-size); line-height:1.65; color:var(--ec-text); }
+.ec-dock{ flex:none; padding:0 20px 10px; }
+.ec-composer,.ec-suggest,.ec-foot{ width:100%; max-width:var(--ec-col); margin-left:auto; margin-right:auto; }
+
+/* empty state: greeting + composer centered (Claude-style) */
+.ec-welcome{ display:flex; align-items:center; justify-content:center; gap:14px; padding:4px 0; text-align:center; }
+.ec-welcome-mark{ width:38px; height:38px; flex:none; }
+.ec-welcome h1{ margin:0; font:400 clamp(28px,3.6vw,38px)/1.15 var(--ec-serif); letter-spacing:-.015em; color:var(--ec-text); }
+@media (min-width:701px){
+  .ec-main.is-empty .ec-stage{ justify-content:center; padding-bottom:9vh; }
+  .ec-main.is-empty .ec-scroll{ flex:0 0 auto; overflow:visible; padding-bottom:26px; }
+  .ec-main.is-empty .ec-foot{ visibility:hidden; }
+}
+.ec-main:not(.is-empty) .ec-suggest{ display:none!important; }
+
+/* ---------- composer ---------- */
+.ec-composer{ position:relative; display:flex; flex-direction:column; padding:10px 10px 8px 14px; border:1px solid var(--ec-line-2); border-radius:20px; background:var(--ec-raised); box-shadow:var(--ec-shadow); transition:border-color .15s,box-shadow .15s; }
+.ec-composer:focus-within{ border-color:color-mix(in srgb,var(--ec-text) 30%,transparent); }
+.ec-main.is-dragging .ec-composer{ border-color:var(--ec-accent); box-shadow:0 0 0 3px var(--ec-accent-soft); }
+#page-chat #chatInput{ display:block; width:100%; min-height:28px; max-height:240px; margin:0; padding:6px 4px 4px; border:0; outline:0; resize:none; background:transparent; box-shadow:none; color:var(--ec-text); font:16px/1.5 var(--ec-font); }
+#page-chat #chatInput::placeholder{ color:var(--ec-text-3); }
+.ec-composer-bar{ display:flex; align-items:center; gap:6px; margin-top:6px; }
+.ec-plus-wrap,.ec-mode-wrap{ position:relative; }
+.ec-plus{ border:1px solid var(--ec-line-2); border-radius:10px; }
+.ec-plus[aria-expanded="true"]{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-spacer{ flex:1; }
+.ec-mode{ display:inline-flex; align-items:center; gap:4px; height:32px; padding:0 8px 0 10px; border:0; border-radius:9px; background:transparent; color:var(--ec-text-2); font:550 13.5px var(--ec-font); cursor:pointer; }
+.ec-mode:hover,.ec-mode[aria-expanded="true"]{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-mode .ec-i{ width:15px; height:15px; }
+.ec-send{ width:32px; height:32px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:10px; background:var(--ec-accent); color:#fff; cursor:pointer; opacity:.4; transition:opacity .15s,background .15s; }
+.ec-send.is-ready{ opacity:1; }
+.ec-send.is-ready:hover{ background:var(--ec-accent-hover); }
+.ec-send:disabled{ opacity:.3; cursor:default; }
+.ec-send .ec-i{ width:17px; height:17px; stroke-width:2.3; }
+.ec-attachments{ display:flex; flex-wrap:wrap; gap:8px; padding:2px 0 8px; }
+.ec-att{ position:relative; display:flex; align-items:center; gap:9px; max-width:230px; height:52px; padding:0 30px 0 8px; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-raised-2); }
+.ec-att-ext{ flex:none; width:36px; height:36px; display:grid; place-items:center; border-radius:8px; background:var(--ec-accent-soft); color:var(--ec-accent); font:700 10px var(--ec-font); letter-spacing:.04em; }
+.ec-att-name{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:var(--ec-text); }
+.ec-att-img{ width:52px; padding:0; overflow:hidden; }
+.ec-att-img img{ width:100%; height:100%; object-fit:cover; }
+.ec-att button{ position:absolute; top:4px; right:4px; width:20px; height:20px; padding:0; border:0; border-radius:50%; background:var(--ec-text); color:var(--ec-bg); font:600 14px/20px var(--ec-font); cursor:pointer; }
+.ec-suggest{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:14px; }
+.ec-chip{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 13px; border:1px solid var(--ec-line); border-radius:10px; background:transparent; color:var(--ec-text-2); font:14px var(--ec-font); cursor:pointer; }
+.ec-chip:hover{ background:var(--ec-hover); border-color:var(--ec-line-2); color:var(--ec-text); }
+.ec-chip .ec-i{ width:16px; height:16px; }
+.ec-foot{ margin:8px auto 0; font-size:12px; text-align:center; color:var(--ec-text-3); }
+
+/* ---------- messages ---------- */
+.ec-msg{ display:flex; flex-direction:column; min-width:0; animation:ec-in .24s ease both; }
+.ec-msg.is-user{ align-items:flex-end; }
+.ec-msg-text{ min-width:0; overflow-wrap:break-word; }
+.ec-msg.is-user .ec-msg-text{ max-width:min(85%,620px); padding:10px 16px; border-radius:18px; background:var(--ec-user); overflow-wrap:anywhere; }
+html.high-contrast .ec-msg.is-user .ec-msg-text{ box-shadow:inset 0 0 0 1px var(--ec-line-2); }
+.ec-msg-text>:first-child{ margin-top:0; }
+.ec-msg-text>:last-child{ margin-bottom:0; }
+.ec-msg-text p{ margin:0 0 .85em; }
+.ec-msg-text ul,.ec-msg-text ol{ margin:0 0 .85em; padding-left:1.4em; }
+.ec-msg-text li{ margin:.3em 0; }
+.ec-msg-text li::marker{ color:var(--ec-text-3); }
+.ec-msg-text h3{ margin:1.2em 0 .45em; font-size:1.05em; font-weight:650; line-height:1.4; }
+.ec-msg-text strong{ font-weight:650; }
+.ec-msg-text a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
+.ec-msg-text code{ padding:.1em .36em; border:1px solid var(--ec-line); border-radius:5px; background:var(--ec-hover); font-family:var(--ec-mono); font-size:.86em; }
+.ec-code{ margin:0 0 .9em; overflow:hidden; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-code); }
+.ec-code-head{ display:flex; align-items:center; justify-content:space-between; height:34px; padding:0 6px 0 14px; border-bottom:1px solid var(--ec-line); font:12px var(--ec-font); color:var(--ec-text-3); }
+.ec-code-copy{ display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 8px; border:0; border-radius:6px; background:transparent; color:var(--ec-text-2); font:12px var(--ec-font); cursor:pointer; }
+.ec-code-copy:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-code-copy .ec-i{ width:14px; height:14px; }
+.ec-msg-text pre{ margin:0; padding:14px 16px; overflow-x:auto; font:13.5px/1.6 var(--ec-mono); color:var(--ec-text); }
+.ec-msg-text pre code{ padding:0; border:0; background:none; font-size:inherit; }
+.ec-msg-files{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.ec-msg-files:first-child{ margin-top:0; }
+.ec-file-thumb{ display:block; max-width:180px; max-height:130px; border-radius:10px; }
+.ec-file-chip{ padding:4px 10px; border-radius:8px; background:var(--ec-hover); font-size:13px; }
+.ec-type-caret{ display:inline-block; width:7px; height:1em; margin-left:2px; vertical-align:-2px; border-radius:2px; background:var(--ec-text-2); animation:ec-pulse 1s ease-in-out infinite; }
+.ec-actions{ display:flex; align-items:center; gap:2px; margin:6px 0 0 -6px; opacity:0; transition:opacity .15s; }
+.ec-msg.is-ai:hover .ec-actions,.ec-msg.is-ai:last-child .ec-actions,.ec-actions:focus-within{ opacity:1; }
+@media (hover:none){ .ec-actions{ opacity:1; } }
+.ec-act,#page-chat .ec-actions [data-workspace-save-message]{ width:30px; height:30px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ec-text-3); cursor:pointer; }
+.ec-act:hover,#page-chat .ec-actions [data-workspace-save-message]:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-act.is-selected{ color:var(--ec-accent); }
+.ec-act .ec-i,.ec-actions [data-workspace-save-message] .ec-i{ width:16px; height:16px; }
+.ec-steps{ margin-bottom:8px; font-family:var(--ec-font); }
+.ec-steps-toggle{ display:inline-flex; align-items:center; gap:3px; max-width:100%; padding:2px 0; border:0; background:transparent; color:var(--ec-text-3); font:13.5px/1.45 var(--ec-font); text-align:left; cursor:pointer; }
+.ec-steps-toggle:hover{ color:var(--ec-text-2); }
+.ec-steps-toggle .ec-i{ width:15px; height:15px; transition:transform .15s; }
+.ec-steps-toggle[aria-expanded="true"] .ec-i{ transform:rotate(90deg); }
+.ec-steps-toggle.is-static{ cursor:default; }
+.ec-steps-toggle.is-static .ec-i{ display:none; }
+.ec-steps-list{ margin:6px 0 2px; padding:2px 0 2px 14px; border-left:2px solid var(--ec-line); list-style:none; font-size:13.5px; line-height:1.5; color:var(--ec-text-2); }
+.ec-steps-list li{ margin:3px 0; }
+.ec-steps-list[hidden]{ display:none; }
+.ec-thinking{ display:inline-flex; align-items:center; gap:10px; color:var(--ec-text-2); font:14px var(--ec-font); }
+.ec-thinking-mark{ width:22px; height:22px; animation:ec-spin 2.4s linear infinite; }
+.ec-thinking .typing-label{ animation:ec-pulse 1.6s ease-in-out infinite; }
+@keyframes ec-spin{ to{ transform:rotate(360deg); } }
+@keyframes ec-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+@keyframes ec-in{ from{ opacity:0; transform:translateY(4px); } }
+@media (prefers-reduced-motion:reduce){ .ec-msg,.ec-thinking-mark,.ec-status.is-active,.ec-thinking .typing-label{ animation:none; } }
+
+/* ---------- workspace panels (Projects, Artifacts, Scheduled, …) ---------- */
+#page-chat .workspace-overlay{ z-index:430; }
+#page-chat .workspace-scrim{ background:var(--ec-scrim); backdrop-filter:none; -webkit-backdrop-filter:none; }
+#page-chat .workspace-panel{ width:min(820px,100%); min-height:min(480px,calc(100dvh - 28px)); border:1px solid var(--ec-line); border-radius:16px; background:var(--ec-raised); color:var(--ec-text); box-shadow:var(--ec-pop-shadow); font-family:var(--ec-font); color-scheme:dark; }
+html[data-ec-theme="light"] #page-chat .workspace-panel{ color-scheme:light; }
+#page-chat .workspace-panel-head{ padding:20px 22px 16px 24px; border-bottom:1px solid var(--ec-line); background:transparent; }
+#page-chat .workspace-panel-kicker{ display:none; }
+#page-chat .workspace-panel-head h2{ margin:0; font:650 20px var(--ec-font); letter-spacing:-.01em; color:var(--ec-text); }
+#page-chat .workspace-panel-head p{ margin-top:4px; font-size:13.5px; color:var(--ec-text-2); }
+#page-chat .workspace-close{ width:32px; height:32px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ec-text-2); }
+#page-chat .workspace-close:hover{ background:var(--ec-hover); color:var(--ec-text); }
+#page-chat .workspace-panel-body{ padding:20px 24px; font-size:14px; }
+#page-chat .workspace-toolbar p,#page-chat .workspace-card p,#page-chat .workspace-card-meta,#page-chat .workspace-empty p,#page-chat .workspace-note,#page-chat .workspace-result small,#page-chat .workspace-connector-copy p{ color:var(--ec-text-2); font-size:13px; }
+#page-chat .workspace-card,#page-chat .workspace-connector-card,#page-chat .workspace-note,#page-chat .workspace-result{ border:1px solid var(--ec-line); background:var(--ec-raised-2); box-shadow:none; }
+#page-chat .workspace-card:hover{ border-color:var(--ec-line-2); background:var(--ec-raised-2); }
+#page-chat .workspace-card h3,#page-chat .workspace-empty h3,#page-chat .workspace-connector-copy strong,#page-chat .workspace-result strong,#page-chat .workspace-note strong{ color:var(--ec-text); font-size:14.5px; }
+#page-chat .workspace-empty{ border:1px dashed var(--ec-line-2); }
+#page-chat .workspace-empty-mark,#page-chat .workspace-connector-icon{ border:1px solid var(--ec-line); background:var(--ec-hover); color:var(--ec-text); }
+#page-chat .workspace-primary{ border-color:transparent; background:var(--ec-text); color:var(--ec-bg); box-shadow:none; font:550 13.5px var(--ec-font); }
+#page-chat .workspace-primary:hover{ background:var(--ec-text); opacity:.88; }
+#page-chat .workspace-secondary,#page-chat .workspace-danger,#page-chat .workspace-card-actions button{ border:1px solid var(--ec-line-2); background:transparent; color:var(--ec-text); font:550 13px var(--ec-font); }
+#page-chat .workspace-secondary:hover,#page-chat .workspace-card-actions button:hover{ background:var(--ec-hover); border-color:var(--ec-line-2); }
+#page-chat .workspace-form label,#page-chat .workspace-search-form label{ color:var(--ec-text-2); font-size:13px; font-weight:550; }
+#page-chat .workspace-form input,#page-chat .workspace-form textarea,#page-chat .workspace-form select,#page-chat .workspace-search-form input{ border:1px solid var(--ec-line-2); background:var(--ec-bg); color:var(--ec-text); font:14px var(--ec-font); }
+#page-chat .workspace-form input:focus,#page-chat .workspace-form textarea:focus,#page-chat .workspace-form select:focus,#page-chat .workspace-search-form input:focus{ border-color:var(--ec-text-3); box-shadow:none; }
+#page-chat .workspace-section-label,#page-chat .workspace-result-heading{ color:var(--ec-text-3); }
+#page-chat .workspace-panel h3,#page-chat .workspace-panel h4{ font-family:var(--ec-font); letter-spacing:normal; }
+#page-chat .workspace-primary,#page-chat .workspace-secondary,#page-chat .workspace-danger{ white-space:nowrap; }
+#page-chat .workspace-form{ margin-bottom:20px; }
+.es-window:focus{ outline:none; }
+
+/* ---------- phone / tablet ---------- */
+.ec-scrim{ display:none; }
+@media (max-width:980px){
+  .ec-side{ position:fixed; z-index:80; top:0; bottom:0; left:0; width:min(300px,86vw); margin-left:0!important; transform:translateX(-102%); box-shadow:var(--ec-pop-shadow); }
+  .ec-side.is-open{ transform:none; }
+  .ec-scrim{ display:block; position:fixed; inset:0; z-index:79; padding:0; border:0; background:var(--ec-scrim); opacity:0; pointer-events:none; transition:opacity .2s; }
+  .ec-scrim.is-visible{ opacity:1; pointer-events:auto; }
+  .ec-open-side{ display:inline-grid!important; }
+}
+@media (max-width:700px){
+  .ec-top{ padding:0 8px; }
+  .ec-btn{ height:32px; padding:0 11px; font-size:13.5px; }
+  .ec-share span{ display:none; }
+  .ec-share{ padding:0 9px; }
+  .ec-title{ max-width:calc(100vw - 120px); }
+  .ec-scroll{ padding:6px 14px 18px; }
+  .ec-dock{ padding:0 10px max(10px,env(safe-area-inset-bottom)); }
+  .ec-main.is-empty .ec-scroll{ display:flex; }
+  .ec-main.is-empty .ec-thread{ min-height:100%; justify-content:center; }
+  .ec-welcome{ flex-direction:column; gap:12px; }
+  .ec-welcome h1{ font-size:28px; }
+  .ec-suggest{ flex-wrap:nowrap; justify-content:flex-start; overflow-x:auto; margin:10px -10px 0; padding:0 10px; scrollbar-width:none; }
+  .ec-suggest::-webkit-scrollbar{ display:none; }
+  .ec-chip{ flex:none; }
+  .ec-foot{ display:none; }
+  .ec-msg.is-user .ec-msg-text{ max-width:88%; }
+  .ec-composer{ border-radius:18px; }
+}
+
+/* ---------- settings window ---------- */
+.es-overlay{ position:fixed; inset:0; z-index:500; display:none; place-items:center; padding:24px; background:var(--ec-scrim); color:var(--ec-text); font-family:var(--ec-font); color-scheme:dark; }
+html[data-ec-theme="light"] .es-overlay{ color-scheme:light; }
+.es-overlay.is-open{ display:grid; }
+.es-overlay button{ font-family:inherit; }
+.es-overlay :focus-visible{ outline:2px solid var(--ec-text-3); outline-offset:1px; }
+.es-window{ position:relative; display:flex; width:min(1080px,100%); height:min(760px,calc(100dvh - 48px)); overflow:hidden; border-radius:16px; background:var(--ec-bg); box-shadow:var(--ec-pop-shadow); animation:ec-in .18s ease both; }
+.es-nav{ width:236px; flex:none; display:flex; flex-direction:column; padding:12px; overflow-y:auto; background:var(--ec-side); border-right:1px solid var(--ec-line); }
+.es-search{ display:flex; align-items:center; gap:8px; height:36px; padding:0 10px; margin-bottom:12px; border:1px solid var(--ec-line); border-radius:9px; background:var(--ec-raised); color:var(--ec-text-3); cursor:text; }
+.es-search:focus-within{ border-color:var(--ec-line-2); }
+.es-search .ec-i{ width:16px; height:16px; }
+.es-search input{ flex:1; min-width:0; height:100%; padding:0; border:0; outline:0; background:transparent; color:var(--ec-text); font:14px var(--ec-font); }
+.es-search input::placeholder{ color:var(--ec-text-3); }
+.es-nav-label{ padding:4px 10px 6px; font-size:12px; color:var(--ec-text-3); }
+.es-tabs{ display:flex; flex-direction:column; gap:1px; }
+.es-tab{ display:flex; align-items:center; gap:10px; height:36px; padding:0 10px; border:0; border-radius:9px; background:transparent; color:var(--ec-text); font:14px var(--ec-font); text-align:left; white-space:nowrap; cursor:pointer; }
+.es-tab .ec-i{ color:var(--ec-text-2); }
+.es-tab:hover{ background:var(--ec-hover); }
+.es-tab.is-active{ background:var(--ec-active); font-weight:550; }
+.es-overlay.is-searching .es-tab.is-active{ background:transparent; font-weight:400; }
+.es-main{ flex:1; min-width:0; overflow-y:auto; padding:30px 44px 44px; }
+.es-close{ position:absolute; z-index:2; top:12px; right:12px; width:34px; height:34px; display:grid; place-items:center; padding:0; border:0; border-radius:9px; background:transparent; color:var(--ec-text-2); cursor:pointer; }
+.es-close:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.es-panel{ display:none; max-width:720px; }
+.es-panel.is-active{ display:block; }
+.es-panel h2{ margin:0 0 4px; font:650 17px var(--ec-font); letter-spacing:-.005em; color:var(--ec-text); }
+.es-panel h2:not(:first-child){ margin-top:38px; }
+.es-overlay.is-searching .es-panel h2{ display:none; }
+.es-row{ display:flex; align-items:center; justify-content:space-between; gap:24px; min-height:62px; padding:14px 0; border-bottom:1px solid var(--ec-line); }
+.es-row[hidden],.es-block[hidden],.es-noresults[hidden]{ display:none; }
+.es-copy{ min-width:0; }
+.es-copy strong{ display:block; font:550 14.5px/1.35 var(--ec-font); color:var(--ec-text); }
+.es-copy p{ margin:3px 0 0; font-size:13px; line-height:1.45; color:var(--ec-text-2); }
+.es-seg{ flex:none; display:inline-flex; gap:2px; padding:3px; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-side); }
+.es-seg button{ height:30px; padding:0 12px; border:0; border-radius:7px; background:transparent; color:var(--ec-text-2); font:550 13.5px var(--ec-font); cursor:pointer; }
+.es-seg button:hover{ color:var(--ec-text); }
+.es-seg button.is-active{ background:var(--ec-raised); color:var(--ec-text); box-shadow:0 1px 2px rgba(0,0,0,.18),0 0 0 1px var(--ec-line); }
+.es-seg-icons button{ width:36px; padding:0; display:grid; place-items:center; }
+.es-seg-icons .ec-i{ width:17px; height:17px; }
+.es-select{ position:relative; flex:none; display:inline-flex; align-items:center; }
+.es-select select{ max-width:230px; height:34px; padding:0 32px 0 12px; border:1px solid var(--ec-line); border-radius:9px; background:transparent; color:var(--ec-text); font:14px var(--ec-font); cursor:pointer; appearance:none; -webkit-appearance:none; }
+.es-select select:hover{ background:var(--ec-hover); }
+.es-select select option{ background:var(--ec-raised); color:var(--ec-text); }
+.es-select .ec-i{ position:absolute; right:9px; width:15px; height:15px; color:var(--ec-text-2); pointer-events:none; }
+.es-switch{ position:relative; flex:none; display:inline-block; width:38px; height:22px; cursor:pointer; }
+.es-switch input{ position:absolute; inset:0; z-index:1; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
+.es-switch span{ position:absolute; inset:0; border-radius:999px; background:var(--ec-line-2); transition:background .15s; }
+.es-switch span::after{ content:""; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.3); transition:transform .15s; }
+.es-switch input:checked+span{ background:var(--ec-accent); }
+.es-switch input:checked+span::after{ transform:translateX(16px); }
+.es-switch input:focus-visible+span{ outline:2px solid var(--ec-text-3); outline-offset:2px; }
+.es-input{ width:min(260px,45%); height:36px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:9px; outline:0; background:transparent; color:var(--ec-text); font:14px var(--ec-font); }
+.es-input:focus{ border-color:var(--ec-text-3); }
+.es-value{ font-size:14px; text-align:right; color:var(--ec-text-2); overflow-wrap:anywhere; }
+.es-btn{ flex:none; height:34px; padding:0 14px; border:1px solid var(--ec-line-2); border-radius:9px; background:transparent; color:var(--ec-text); font:550 13.5px var(--ec-font); white-space:nowrap; cursor:pointer; }
+.es-btn:hover{ background:var(--ec-hover); }
+.es-btn:disabled{ opacity:.5; cursor:default; }
+.es-btn-solid{ border-color:transparent; background:var(--ec-text); color:var(--ec-bg); }
+.es-btn-solid:hover{ background:var(--ec-text); opacity:.88; }
+.es-btn-danger{ border-color:color-mix(in srgb,var(--ec-danger) 45%,transparent); color:var(--ec-danger); }
+.es-btn-danger.is-confirming{ border-color:transparent; background:var(--ec-danger); color:#fff; }
+.es-plan{ display:flex; align-items:center; gap:16px; margin:14px 0 6px; padding:18px; border:1px solid var(--ec-line); border-radius:14px; background:var(--ec-raised); }
+.es-plan-mark{ width:44px; height:44px; flex:none; display:grid; place-items:center; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-side); }
+.es-plan-mark img{ width:26px; height:26px; }
+.es-plan .es-copy{ flex:1; }
+.es-block{ padding:16px 0; border-bottom:1px solid var(--ec-line); }
+.es-usage-top{ display:flex; justify-content:space-between; gap:12px; font-size:14.5px; }
+.es-usage-top strong{ font-weight:550; }
+.es-usage-top span{ color:var(--ec-text-2); }
+.es-meter{ height:8px; margin:12px 0 8px; overflow:hidden; border-radius:99px; background:var(--ec-hover); }
+.es-meter[hidden]{ display:none; }
+.es-meter i{ display:block; width:0; height:100%; border-radius:inherit; background:var(--ec-accent); transition:width .3s; }
+.es-block p{ margin:6px 0 0; font-size:13px; line-height:1.5; color:var(--ec-text-2); }
+.es-block .es-memory{ margin-top:10px; padding:12px 14px; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-raised); color:var(--ec-text); font-size:13.5px; white-space:pre-wrap; }
+.es-noresults{ margin:4px 0 0; font-size:14px; color:var(--ec-text-2); }
+@media (max-width:760px){
+  .es-overlay{ padding:0; }
+  .es-window{ flex-direction:column; width:100%; height:100dvh; border-radius:0; }
+  .es-nav{ width:auto; padding:10px 54px 6px 10px; overflow:visible; border-right:0; border-bottom:1px solid var(--ec-line); }
+  .es-nav-label{ display:none; }
+  .es-search{ margin-bottom:8px; }
+  .es-tabs{ flex-direction:row; gap:4px; margin:0 -54px 0 -10px; padding:0 10px 4px; overflow-x:auto; scrollbar-width:none; }
+  .es-tabs::-webkit-scrollbar{ display:none; }
+  .es-tab{ flex:none; height:32px; padding:0 11px; }
+  .es-tab .ec-i{ display:none; }
+  .es-main{ padding:18px 18px 34px; }
+  .es-close{ top:11px; right:10px; }
+  .es-row{ flex-wrap:wrap; gap:10px 16px; }
+  .es-copy{ flex:1 1 220px; }
+  .es-input{ width:100%; }
+  .es-plan{ flex-wrap:wrap; }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
@@ -1994,153 +2404,201 @@ body.chat-mode{ overflow:hidden; height:100vh; }
 
   <!-- ============ CHAT ============ -->
   <section class="page" id="page-chat">
-    <div class="chat-app">
-      <aside class="chat-sidebar" id="chatSidebar">
-        <div class="workspace-mark"><img src="assets/elorahub_logo.png" alt="elora"><div><strong>elora workspace</strong><span>Your quiet space to think</span></div></div>
-        <button class="chat-new" id="newChatBtn" aria-keyshortcuts="Control+K Meta+K">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          New chat <span class="shortcut">Ctrl / ⌘ K</span>
-        </button>
-        <nav class="workspace-nav" aria-label="Workspace">
-          <button type="button" class="workspace-nav-item" data-workspace-view="projects"><span class="workspace-nav-icon">▦</span><span>Projects</span><span class="workspace-nav-count" id="projectCount"></span></button>
-          <button type="button" class="workspace-nav-item" data-workspace-view="artifacts"><span class="workspace-nav-icon">◇</span><span>Artifacts</span><span class="workspace-nav-count" id="artifactCount"></span></button>
-          <button type="button" class="workspace-nav-item" data-workspace-view="scheduled"><span class="workspace-nav-icon">◷</span><span>Scheduled</span><span class="workspace-nav-count" id="scheduleCount"></span></button>
-          <button type="button" class="workspace-nav-item" data-workspace-view="customize"><span class="workspace-nav-icon">◌</span><span>Customize</span></button>
-          <div class="workspace-more-wrap">
-            <button type="button" class="workspace-nav-item" id="moreMenuTrigger" aria-haspopup="menu" aria-expanded="false"><span class="workspace-nav-icon">⋯</span><span>More</span><span class="workspace-nav-caret">⌄</span></button>
-            <div class="workspace-popover more-menu" id="moreMenu" role="menu" hidden>
-              <button type="button" role="menuitem" data-workspace-view="skills">Prompt library</button>
-              <button type="button" role="menuitem" data-workspace-view="connectors">Connectors</button>
-              <button type="button" role="menuitem" data-workspace-action="research">Research mode <span id="researchMenuState">Off</span></button>
+    <!-- Line icons used across the chat + settings (referenced with <use href="#i-…">) -->
+    <svg class="ec-sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+      <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></symbol>
+      <symbol id="i-artifact" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="3.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m10 7 5 5-5 5"/></symbol>
+      <symbol id="i-chevrons" viewBox="0 0 24 24"><path d="m8 9.5 4-4 4 4M8 14.5l4 4 4-4"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></symbol>
+      <symbol id="i-plug" viewBox="0 0 24 24"><path d="M9 3v4M15 3v4M7 7h10v4a5 5 0 0 1-10 0zM12 16v5"/></symbol>
+      <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.6 3.5 5.4 3.5 8.5s-1.1 5.9-3.5 8.5c-2.4-2.6-3.5-5.4-3.5-8.5s1.1-5.9 3.5-8.5z"/></symbol>
+      <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+      <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 3.5-4"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6M12 17h.01"/></symbol>
+      <symbol id="i-up-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.5 12 3.5-3.5 3.5 3.5M12 8.5V16"/></symbol>
+      <symbol id="i-login" viewBox="0 0 24 24"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14M10 16l4-4-4-4M14 12H4"/></symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6.5A2.5 2.5 0 0 0 4 6.5v11A2.5 2.5 0 0 0 6.5 20H10M15 16l4-4-4-4M19 12H9"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4M5 12v6.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V12"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+      <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 20-3.5-3.5L14 6a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L12 20zM9 10.5l5 5M7 20h13"/></symbol>
+      <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="m20 11.5-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></symbol>
+      <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
+      <symbol id="i-thumb-up" viewBox="0 0 24 24"><path d="M7 10v10H4.5A1.5 1.5 0 0 1 3 18.5v-7A1.5 1.5 0 0 1 4.5 10zM7 10l4-7a2.5 2.5 0 0 1 2.5 2.5V9h5.2a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.5 20H7"/></symbol>
+      <symbol id="i-thumb-down" viewBox="0 0 24 24"><path d="M17 14V4h2.5A1.5 1.5 0 0 1 21 5.5v7a1.5 1.5 0 0 1-1.5 1.5zM17 14l-4 7a2.5 2.5 0 0 1-2.5-2.5V15H5.3a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.5 4H17"/></symbol>
+      <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5 5 6v5.5c0 4.3 3 7.8 7 9 4-1.2 7-4.7 7-9V6z"/></symbol>
+      <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h3"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.9 9l5.6 2-5.6 2-1.9 5.5-1.9-5.5-5.6-2 5.6-2z"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5zM3 13l9 5 9-5"/></symbol>
+      <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/></symbol>
+      <symbol id="i-cap" viewBox="0 0 24 24"><path d="m2.5 9.5 9.5-5 9.5 5-9.5 5zM6.5 11.6V16c1.5 1.5 3.5 2.5 5.5 2.5s4-1 5.5-2.5v-4.4M21.5 9.5V15"/></symbol>
+      <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+      <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.8 2.8 0 0 0 5 0zM19 8l-2.5 6a2.8 2.8 0 0 0 5 0z"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></symbol>
+    </svg>
+
+    <div class="ec-app" id="ecApp">
+      <aside class="ec-side" id="chatSidebar" aria-label="Chats and workspace">
+        <div class="ec-side-head">
+          <button type="button" class="ec-brand" data-nav="home" title="elorahub home"><img src="assets/elorahub_logo.png" alt=""><span>elora</span></button>
+          <button type="button" class="ec-iconbtn" id="sidebarCollapseBtn" aria-label="Close sidebar" title="Close sidebar"><svg class="ec-i"><use href="#i-panel"/></svg></button>
+        </div>
+
+        <label class="ec-search" for="chatSearchInput">
+          <svg class="ec-i"><use href="#i-search"/></svg>
+          <input id="chatSearchInput" type="search" placeholder="Search chats" autocomplete="off" aria-label="Search your chats">
+        </label>
+
+        <nav class="ec-nav" aria-label="Workspace">
+          <button type="button" class="ec-nav-item ec-nav-new" id="newChatBtn" aria-keyshortcuts="Control+K Meta+K" title="New chat (Ctrl+K)">
+            <span class="ec-new-dot"><svg class="ec-i"><use href="#i-plus"/></svg></span><span>New chat</span>
+          </button>
+          <button type="button" class="ec-nav-item" data-workspace-view="projects"><svg class="ec-i"><use href="#i-folder"/></svg><span>Projects</span><span class="ec-count" id="projectCount"></span></button>
+          <button type="button" class="ec-nav-item" data-workspace-view="artifacts"><svg class="ec-i"><use href="#i-artifact"/></svg><span>Artifacts</span><span class="ec-count" id="artifactCount"></span></button>
+          <button type="button" class="ec-nav-item" data-workspace-view="scheduled"><svg class="ec-i"><use href="#i-clock"/></svg><span>Scheduled</span><span class="ec-count" id="scheduleCount"></span></button>
+          <button type="button" class="ec-nav-item" data-workspace-view="customize"><svg class="ec-i"><use href="#i-sliders"/></svg><span>Customize</span></button>
+          <div class="ec-more">
+            <button type="button" class="ec-nav-item" id="moreMenuTrigger" aria-haspopup="menu" aria-expanded="false"><svg class="ec-i"><use href="#i-more"/></svg><span>More</span><svg class="ec-i ec-caret"><use href="#i-chevron-down"/></svg></button>
+            <div class="ec-pop ec-pop-below" id="moreMenu" role="menu" hidden>
+              <button type="button" role="menuitem" data-workspace-view="skills"><svg class="ec-i"><use href="#i-book"/></svg>Prompt library</button>
+              <button type="button" role="menuitem" data-workspace-view="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Connectors</button>
+              <button type="button" role="menuitem" data-workspace-action="research"><svg class="ec-i"><use href="#i-globe"/></svg>Research mode<span class="ec-pop-meta" id="researchMenuState">On</span></button>
             </div>
           </div>
         </nav>
-        <div class="workspace-pinned" id="workspacePinned" hidden>
-          <div class="workspace-section-label">PINNED PROJECTS</div>
-          <div id="workspacePinnedList"></div>
-        </div>
-        <label class="chat-search" for="chatSearchInput">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
-          <input id="chatSearchInput" type="search" placeholder="Search recent chats" aria-label="Search recent chats on this device">
-        </label>
-        <div class="chat-history">
-          <div class="chat-history-head"><div class="chat-history-label">Recent</div><span class="history-scope">THIS DEVICE</span></div>
-          <p class="history-empty" id="chatHistoryEmpty">Your conversations will appear here and stay on this device.</p>
-          <div id="chatHistoryList" role="group" aria-label="Recent conversations"></div>
-        </div>
-        <div class="sidebar-bottom">
-          <div class="plan-meter">
-            <div class="plan-meter-top"><span>Free plan</span><span>UPGRADE</span></div>
-            <div class="meter-bar"><i></i></div>
-            <small>1 of 3 uploads used today</small>
-            <a data-nav="pricing">See what Private unlocks →</a>
+
+        <div class="ec-side-scroll">
+          <div class="ec-group" id="workspacePinned" hidden>
+            <div class="ec-group-label">Pinned</div>
+            <div id="workspacePinnedList"></div>
           </div>
-          <div class="account-menu-wrap">
-            <div class="account-menu workspace-popover" id="accountMenu" role="menu" hidden>
-              <div class="account-menu-identity"><strong id="accountMenuName">Guest workspace</strong><span id="accountMenuEmail">Local workspace</span></div>
-              <button type="button" role="menuitem" data-account-action="settings">Settings <span>⌘,</span></button>
-              <button type="button" role="menuitem" data-account-action="usage">Usage</button>
-              <button type="button" role="menuitem" data-account-action="language">Language</button>
-              <button type="button" role="menuitem" data-account-action="connectors">Apps &amp; connectors</button>
-              <button type="button" role="menuitem" data-account-action="help">Help &amp; guidelines</button>
-              <div class="account-menu-divider"></div>
-              <button type="button" role="menuitem" data-account-action="upgrade">Upgrade plan</button>
-              <button type="button" role="menuitem" id="accountAuthAction">Sign in to sync</button>
-              <button type="button" role="menuitem" data-account-action="signout" id="accountSignOut" hidden>Log out</button>
-            </div>
-            <button class="sidebar-user" id="accountMenuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">
-              <span class="sidebar-avatar" id="sidebarAvatar">E</span><span class="sidebar-user-copy"><strong id="sidebarUserName">Guest workspace</strong><span id="sidebarUserMeta">Sign in to sync your workspace</span></span><span class="account-chevron">⌄</span>
-            </button>
-            <button class="sidebar-mini-btn" id="openSettingsBtn" aria-label="Open settings" title="Settings">⚙</button>
+          <div class="ec-group">
+            <div class="ec-group-label">Recents</div>
+            <p class="ec-empty-note" id="chatHistoryEmpty">Your chats will show up here.</p>
+            <div id="chatHistoryList" role="list" aria-label="Recent chats"></div>
           </div>
+        </div>
+
+        <div class="ec-side-foot ec-account-wrap">
+          <div class="ec-pop ec-pop-account" id="accountMenu" role="menu" hidden>
+            <div class="ec-pop-identity"><span id="accountMenuEmail">Not signed in</span><strong id="accountMenuName" hidden>Guest</strong><small id="accountSyncState"></small></div>
+            <button type="button" role="menuitem" data-account-action="settings"><svg class="ec-i"><use href="#i-gear"/></svg>Settings<span class="ec-pop-meta">Ctrl+,</span></button>
+            <button type="button" role="menuitem" data-account-action="usage"><svg class="ec-i"><use href="#i-gauge"/></svg>Usage</button>
+            <button type="button" role="menuitem" data-account-action="language"><svg class="ec-i"><use href="#i-globe"/></svg>Language</button>
+            <button type="button" role="menuitem" data-account-action="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Apps &amp; connectors</button>
+            <button type="button" role="menuitem" data-account-action="help"><svg class="ec-i"><use href="#i-help"/></svg>Get help</button>
+            <div class="ec-pop-sep" role="separator"></div>
+            <button type="button" role="menuitem" data-account-action="upgrade"><svg class="ec-i"><use href="#i-up-circle"/></svg>Upgrade plan</button>
+            <button type="button" role="menuitem" id="accountAuthAction"><svg class="ec-i"><use href="#i-login"/></svg>Log in</button>
+            <button type="button" role="menuitem" data-account-action="signout" id="accountSignOut" hidden><svg class="ec-i"><use href="#i-logout"/></svg>Log out</button>
+          </div>
+          <button class="ec-account" id="accountMenuTrigger" type="button" aria-haspopup="menu" aria-expanded="false">
+            <span class="ec-avatar" id="sidebarAvatar">G</span>
+            <span class="ec-account-copy"><strong id="sidebarUserName">Guest</strong><small id="sidebarUserMeta">Not signed in</small></span>
+            <svg class="ec-i ec-caret"><use href="#i-chevrons"/></svg>
+          </button>
+          <button type="button" class="ec-iconbtn" id="openSettingsBtn" aria-label="Settings" title="Settings (Ctrl+,)"><svg class="ec-i"><use href="#i-gear"/></svg></button>
         </div>
       </aside>
-      <button class="sidebar-scrim" id="sidebarScrim" type="button" aria-label="Close chat history" aria-hidden="true" tabindex="-1"></button>
+      <button class="ec-scrim" id="sidebarScrim" type="button" aria-label="Close sidebar" tabindex="-1"></button>
 
-      <div class="chat-main">
-        <div class="chat-topbar">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <button class="icon-btn chat-mobile-toggle" id="sidebarToggle" aria-label="Open chat history" aria-controls="chatSidebar" aria-expanded="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <main class="ec-main is-empty" id="chatMain">
+        <header class="ec-top">
+          <button type="button" class="ec-iconbtn ec-open-side" id="sidebarToggle" aria-label="Open sidebar" aria-controls="chatSidebar" aria-expanded="false" title="Open sidebar"><svg class="ec-i"><use href="#i-panel"/></svg></button>
+          <div class="ec-title-wrap">
+            <button type="button" class="ec-title" id="chatTitleBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="chatTitleMenu">
+              <span class="ec-status" id="chatStatusDot" aria-hidden="true"></span><span class="ec-title-text" id="conversationTitle">New chat</span><svg class="ec-i ec-caret"><use href="#i-chevron-down"/></svg>
             </button>
-            <div class="chat-model"><span class="model-dot" id="chatStatusDot"></span><div><strong id="conversationTitle">New conversation</strong><span class="sub">elora · Adaptive reasoning</span></div><span class="smart-pill">SMART</span></div>
-          </div>
-          <div class="chat-account-actions">
-            <button class="chat-account-btn" id="chatSignInBtn">Sign in</button>
-            <button class="chat-account-btn is-primary" id="chatSignUpBtn">Join free</button>
-            <button class="chat-share-btn" id="shareChatBtn" type="button" aria-label="Share conversation" title="Share conversation">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.6 6.8-4.2M8.6 13.4l6.8 4.2"/></svg><span>Share</span>
-            </button>
-            <button class="chat-icon-action" id="openChatOptionsBtn" aria-label="Tune reply" title="Tune reply">✦</button>
-            <button class="chat-icon-action" id="forgetMeBtn" aria-label="Forget memory" title="Forget what elora remembers">⌫</button>
-            <button class="chat-icon-action" id="clearChatBtn" aria-label="Clear chat" title="Clear chat">↺</button>
-          </div>
-        </div>
-
-        <div class="chat-scroll" id="chatScroll">
-          <div class="chat-thread" id="chatThread" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
-            <section class="chat-welcome" id="chatWelcome" aria-labelledby="welcomeTitle">
-              <div class="welcome-mark"><img src="assets/elorahub_logo.png" alt=""></div>
-              <span class="welcome-kicker">ELORA · YOUR THINKING SPACE</span>
-              <h1 id="welcomeTitle">Let's get to the useful part.</h1>
-              <p>Bring the rough question, the half-formed idea, or the file you haven't had time to untangle.</p>
-            </section>
-          </div>
-        </div>
-
-        <div class="chat-suggestions" id="chatSuggestions">
-          <button class="suggestion-chip" data-fill="Look at this messy paragraph and rewrite it so it actually sounds like me.">Rewrite a draft</button>
-          <button class="suggestion-chip" data-fill="Walk me through the trade-offs before I make a decision I can't easily undo.">Think through a choice</button>
-          <button class="suggestion-chip" data-fill="Here's a file I need explained in plain language — what matters most in it?">Explain a file</button>
-          <button class="suggestion-chip" data-fill="Give me five genuinely different name ideas for a project, not five versions of the same one.">Find a fresh angle</button>
-        </div>
-
-        <div class="attach-row" id="attachRow" style="display:none;"></div>
-
-        <div class="chat-inputbar">
-          <div class="input-shell">
-            <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" style="display:none;">
-            <input type="file" id="folderInput" multiple webkitdirectory directory style="display:none;">
-            <button class="icon-btn" id="attachBtn" aria-label="Attach file or image" title="Attach file or image">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a1.5 1.5 0 01-2.12-2.12l8.49-8.48"/></svg>
-            </button>
-            <div class="workspace-popover attach-menu" id="attachMenu" role="menu" hidden>
-              <button type="button" role="menuitem" data-attach-action="files">Add files or photos</button>
-              <button type="button" role="menuitem" data-attach-action="folder">Add a folder</button>
-              <button type="button" role="menuitem" data-attach-action="dictate">Dictate a message <span>Mic</span></button>
-              <div class="account-menu-divider"></div>
-              <button type="button" role="menuitem" data-workspace-view="skills">Prompt library</button>
-              <button type="button" role="menuitem" data-workspace-view="connectors">Connectors</button>
-              <button type="button" role="menuitem" data-workspace-action="research">Research mode <span id="researchAttachState">Off</span></button>
+            <div class="ec-pop ec-pop-below" id="chatTitleMenu" role="menu" hidden>
+              <button type="button" role="menuitem" id="openChatOptionsBtn"><svg class="ec-i"><use href="#i-sliders"/></svg>Reply settings</button>
+              <button type="button" role="menuitem" id="clearChatBtn"><svg class="ec-i"><use href="#i-trash"/></svg>Delete this chat</button>
+              <button type="button" role="menuitem" id="forgetMeBtn"><svg class="ec-i"><use href="#i-eraser"/></svg>Forget what elora remembers</button>
             </div>
-            <textarea id="chatInput" rows="1" aria-label="Message elora" placeholder="Message elora…"></textarea>
-            <button class="send-btn" id="sendBtn" aria-label="Send message">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-            </button>
           </div>
-          <div class="composer-toolbar" role="toolbar" aria-label="Reply mode and settings">
-            <div class="mode-picker">
-              <button class="mode-trigger" id="modePickerTrigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="modePickerMenu">
-                <span class="mode-trigger-mark" aria-hidden="true">✦</span><span id="modePickerLabel">Balanced</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-              </button>
-              <div class="mode-menu" id="modePickerMenu" role="menu" aria-label="Choose a reply mode" hidden>
-                <button type="button" role="menuitemradio" aria-checked="true" data-composer-style="balanced"><span class="mode-option-mark">✦</span><span class="mode-option-copy"><b>Balanced</b><small>Clear and considered</small></span><span class="mode-check">✓</span></button>
-                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="concise"><span class="mode-option-mark">↯</span><span class="mode-option-copy"><b>Quick</b><small>Short and direct</small></span><span class="mode-check">✓</span></button>
-                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="deep"><span class="mode-option-mark">◉</span><span class="mode-option-copy"><b>Deep dive</b><small>More context and nuance</small></span><span class="mode-check">✓</span></button>
-                <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="technical"><span class="mode-option-mark">&lt;/&gt;</span><span class="mode-option-copy"><b>Code</b><small>Technical, with examples</small></span><span class="mode-check">✓</span></button>
+          <div class="ec-top-actions">
+            <button type="button" class="ec-btn ec-btn-ghost ec-auth" id="chatSignInBtn">Log in</button>
+            <button type="button" class="ec-btn ec-btn-solid ec-auth" id="chatSignUpBtn">Sign up</button>
+            <button type="button" class="ec-btn ec-btn-outline ec-share" id="shareChatBtn"><svg class="ec-i"><use href="#i-share"/></svg><span>Share</span></button>
+          </div>
+        </header>
+
+        <div class="ec-stage">
+          <div class="ec-scroll" id="chatScroll">
+            <div class="ec-thread" id="chatThread" role="log" aria-label="Conversation" aria-live="polite" aria-relevant="additions">
+              <section class="ec-welcome" id="chatWelcome" aria-labelledby="welcomeTitle">
+                <img class="ec-welcome-mark" src="assets/elorahub_logo.png" alt="">
+                <h1 id="welcomeTitle">How can I help?</h1>
+              </section>
+            </div>
+          </div>
+
+          <div class="ec-dock">
+            <div class="ec-composer" id="composerBox">
+              <div class="ec-attachments" id="attachRow" style="display:none;"></div>
+              <input type="file" id="fileInput" multiple accept="image/*,.txt,.md,.csv,.json,.log" hidden>
+              <input type="file" id="folderInput" multiple webkitdirectory directory hidden>
+              <textarea id="chatInput" rows="1" aria-label="Message elora" placeholder="How can I help you today?"></textarea>
+              <div class="ec-composer-bar">
+                <div class="ec-plus-wrap">
+                  <button type="button" class="ec-iconbtn ec-plus" id="attachBtn" aria-label="Add files and more" aria-haspopup="menu" aria-expanded="false" title="Add files and more"><svg class="ec-i"><use href="#i-plus"/></svg></button>
+                  <div class="ec-pop ec-pop-up" id="attachMenu" role="menu" hidden>
+                    <button type="button" role="menuitem" data-attach-action="files"><svg class="ec-i"><use href="#i-paperclip"/></svg>Add files or photos<span class="ec-pop-meta">Ctrl+U</span></button>
+                    <button type="button" role="menuitem" data-attach-action="folder"><svg class="ec-i"><use href="#i-folder"/></svg>Add folder</button>
+                    <button type="button" role="menuitem" data-attach-action="dictate"><svg class="ec-i"><use href="#i-mic"/></svg>Dictate</button>
+                    <div class="ec-pop-sep" role="separator"></div>
+                    <button type="button" role="menuitem" data-workspace-view="skills"><svg class="ec-i"><use href="#i-book"/></svg>Prompt library</button>
+                    <button type="button" role="menuitem" data-workspace-view="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Connectors</button>
+                    <button type="button" role="menuitem" data-workspace-action="research"><svg class="ec-i"><use href="#i-globe"/></svg>Research<span class="ec-pop-meta" id="researchAttachState">On</span></button>
+                    <button type="button" role="menuitem" id="composerOptionsBtn"><svg class="ec-i"><use href="#i-sliders"/></svg>Reply settings</button>
+                  </div>
+                </div>
+                <span class="ec-spacer"></span>
+                <div class="mode-picker ec-mode-wrap">
+                  <button type="button" class="ec-mode" id="modePickerTrigger" aria-haspopup="menu" aria-expanded="false" aria-controls="modePickerMenu" title="Reply mode"><span id="modePickerLabel">Balanced</span><svg class="ec-i"><use href="#i-chevron-down"/></svg></button>
+                  <div class="ec-pop ec-pop-up ec-pop-right ec-pop-modes" id="modePickerMenu" role="menu" aria-label="Reply mode" hidden>
+                    <button type="button" role="menuitemradio" aria-checked="true" data-composer-style="balanced"><span class="ec-mode-copy"><b>Balanced</b><small>Clear and considered</small></span><svg class="ec-i ec-check"><use href="#i-check"/></svg></button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="concise"><span class="ec-mode-copy"><b>Quick</b><small>Short and direct</small></span><svg class="ec-i ec-check"><use href="#i-check"/></svg></button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="deep"><span class="ec-mode-copy"><b>Deep dive</b><small>More context and nuance</small></span><svg class="ec-i ec-check"><use href="#i-check"/></svg></button>
+                    <button type="button" role="menuitemradio" aria-checked="false" data-composer-style="technical"><span class="ec-mode-copy"><b>Code</b><small>Technical, with examples</small></span><svg class="ec-i ec-check"><use href="#i-check"/></svg></button>
+                  </div>
+                </div>
+                <button type="button" class="ec-send" id="sendBtn" aria-label="Send message" title="Send (Enter)"><svg class="ec-i"><use href="#i-arrow-up"/></svg></button>
               </div>
             </div>
-            <button class="composer-tool" id="composerOptionsBtn" type="button" title="Reply settings" aria-label="Open reply settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 0 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V4a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2.9Z"/></svg></button>
-            <span class="composer-hint" id="inputFoot">Enter sends · Shift + Enter for a new line</span>
+
+            <div class="ec-suggest" id="chatSuggestions">
+              <button type="button" class="ec-chip" data-fill="Help me write "><svg class="ec-i"><use href="#i-pen"/></svg>Write</button>
+              <button type="button" class="ec-chip" data-fill="Explain this to me simply: "><svg class="ec-i"><use href="#i-cap"/></svg>Learn</button>
+              <button type="button" class="ec-chip" data-fill="Help me with this code: "><svg class="ec-i"><use href="#i-code"/></svg>Code</button>
+              <button type="button" class="ec-chip" data-fill="Help me weigh up a decision: "><svg class="ec-i"><use href="#i-scale"/></svg>Decide</button>
+              <button type="button" class="ec-chip" data-fill="Brainstorm genuinely different ideas for "><svg class="ec-i"><use href="#i-bulb"/></svg>Brainstorm</button>
+            </div>
+            <p class="ec-foot" id="inputFoot">elora can make mistakes. Double-check anything important.</p>
           </div>
         </div>
-      </div>
+      </main>
     </div>
-    <div class="workspace-overlay" id="workspaceOverlay" hidden>
+
+    <div class="workspace-overlay ec-overlay" id="workspaceOverlay" hidden>
       <button class="workspace-scrim" type="button" data-workspace-close aria-label="Close panel"></button>
       <section class="workspace-panel" role="dialog" aria-modal="true" aria-labelledby="workspacePanelTitle">
-        <header class="workspace-panel-head"><div><span class="workspace-panel-kicker" id="workspacePanelKicker">ELORAHUB WORKSPACE</span><h2 id="workspacePanelTitle">Projects</h2><p id="workspacePanelDescription">Keep related work in one place.</p></div><button type="button" class="workspace-close" data-workspace-close aria-label="Close">×</button></header>
+        <header class="workspace-panel-head"><div><span class="workspace-panel-kicker" id="workspacePanelKicker">WORKSPACE</span><h2 id="workspacePanelTitle">Projects</h2><p id="workspacePanelDescription">Keep related work in one place.</p></div><button type="button" class="workspace-close" data-workspace-close aria-label="Close"><svg class="ec-i"><use href="#i-x"/></svg></button></header>
         <div class="workspace-panel-body" id="workspacePanelBody"></div>
       </section>
     </div>
@@ -2717,63 +3175,171 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   </div>
 </div>
 
-<!-- ============ CHAT SETTINGS WORKSPACE ============ -->
-<div class="modal-overlay settings-overlay" id="settingsModal">
-  <div class="settings-card">
-    <button class="modal-close" id="settingsClose" aria-label="Close settings">&times;</button>
-    <div class="settings-head"><div class="settings-orb">✦</div><div><span class="kicker">Workspace controls</span><h3>Make elora feel like yours</h3><p>Change the atmosphere, answer style, and account details without leaving chat.</p></div></div>
-    <div class="settings-layout">
-      <nav class="settings-tabs" aria-label="Settings sections">
-        <button class="is-active" data-settings-tab="general"><span>◉</span>General</button>
-        <button data-settings-tab="profile"><span>●</span>Account</button>
-        <button data-settings-tab="subscription"><span>◇</span>Subscription</button>
-        <button data-settings-tab="chat"><span>✦</span>Chat behavior</button>
-        <button data-settings-tab="composer"><span>↗</span>Composer</button>
-        <button data-settings-tab="accessibility"><span>◌</span>Accessibility</button>
-      </nav>
-      <div class="settings-panels">
-        <section class="settings-panel is-active" data-settings-panel="general">
-          <div class="settings-panel-title"><div><h4>Appearance</h4><p>Shape the workspace without losing EloraHub's quiet graphite character.</p></div></div>
-          <div class="workspace-settings-shortcut" style="margin-top:18px;"><div><strong>Workspace tone</strong><p>Dark graphite, blended into black with a soft blurred light field.</p></div><div class="appearance-switch" role="group" aria-label="Workspace tone"><button class="is-active" type="button" data-theme-mode="graphite">Graphite</button><button type="button" data-theme-mode="deep">Deep black</button></div></div>
-          <label class="settings-field"><span>Chat font</span><select id="chatFontSelect"><option value="system">System</option><option value="inter">Inter</option><option value="mono">Monospace</option></select></label>
-          <label class="settings-field"><span>Assistant response language</span><select id="responseLanguageSelect"><option value="auto">Automatic · follow the conversation</option><option value="en">English</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="pt">Portuguese</option><option value="it">Italian</option><option value="nl">Dutch</option><option value="tr">Turkish</option><option value="ar">Arabic</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option></select></label>
-          <label class="settings-field"><span>Transcript width</span><select id="transcriptWidthSelect"><option value="narrow">Narrow</option><option value="medium" selected>Medium</option><option value="wide">Wide</option></select></label>
-          <div class="setting-group"><span class="setting-label">Ambient gradient</span><div class="range-row"><input id="gradientStrengthRange" type="range" min="0" max="100" value="58"><output id="gradientStrengthValue">58%</output></div></div>
-        </section>
-        <section class="settings-panel" data-settings-panel="profile">
-          <div class="settings-panel-title"><div><h4>Your profile</h4><p>Keep your workspace identity and memory controls in one place.</p></div><div class="profile-avatar-large">you</div></div>
-          <label class="settings-field"><span>Display name</span><input id="settingsDisplayName" type="text" placeholder="Your name"></label>
-          <label class="settings-field"><span>Email</span><input id="settingsEmail" type="email" placeholder="Sign in to add an email" disabled></label>
-          <div class="settings-info-row"><span>Long-term memory</span><strong id="settingsMemoryState">Available when signed in</strong></div>
-          <button class="settings-danger" id="settingsForgetBtn">Forget everything elora remembers</button>
-        </section>
-        <section class="settings-panel" data-settings-panel="subscription">
-          <div class="settings-panel-title"><div><h4>Your plan</h4><p>See your current access and move up when you need more room.</p></div><span class="plan-status-dot"></span></div>
-          <div class="subscription-card"><div><span class="eyebrow-plain">Current workspace</span><h4 id="settingsPlanName">Free plan</h4><p id="settingsPlanCopy">Good for trying elora with limited daily messages.</p></div><button class="btn btn-primary" data-nav="pricing" id="settingsUpgradeBtn">View plans</button></div>
-          <div class="settings-info-row"><span>Billing &amp; receipts</span><strong>Managed securely by Paddle</strong></div>
-          <div class="settings-info-row"><span>Payment details</span><strong>Never stored by elorahub</strong></div>
-        </section>
-        <section class="settings-panel" data-settings-panel="chat">
-          <div class="settings-panel-title"><div><h4>Chat behavior</h4><p>Give elora a clearer brief before it starts thinking.</p></div></div>
-          <label class="settings-field"><span>Answer style</span><select id="responseStyle"><option value="balanced">Balanced — clear and thoughtful</option><option value="concise">Concise — get to the point</option><option value="deep">Deep — unpack the reasoning</option><option value="technical">Technical — exact and structured</option></select></label>
-          <label class="settings-field"><span>Default tone</span><select id="responseTone"><option value="direct">Direct and useful</option><option value="warm">Warm and conversational</option><option value="technical">Technical and precise</option></select></label>
-          <label class="toggle-row"><span><strong>Show what elora is doing</strong><small>Display honest activity steps while a reply is prepared.</small></span><input id="activityToggle" type="checkbox" checked><i></i></label>
-          <label class="toggle-row"><span><strong>Use live web search when needed</strong><small>Let elora ground current questions with fresh sources.</small></span><input id="webSearchToggle" type="checkbox" checked><i></i></label>
-        </section>
-        <section class="settings-panel" data-settings-panel="composer">
-          <div class="settings-panel-title"><div><h4>Composer</h4><p>Make the space below your messages work the way you think.</p></div></div>
-          <label class="settings-field"><span>Default composer mode</span><select id="composerModeSelect"><option value="balanced">Balanced</option><option value="concise">Quick</option><option value="deep">Deep dive</option><option value="technical">Code</option></select></label>
-          <label class="toggle-row"><span><strong>Send with Enter</strong><small>Use Shift + Enter when you want a new line.</small></span><input id="enterToSendToggle" type="checkbox" checked><i></i></label>
-          <label class="toggle-row"><span><strong>Keep prompt ideas visible</strong><small>Show the starting prompts when a chat is empty.</small></span><input id="suggestionsToggle" type="checkbox" checked><i></i></label>
-          <label class="toggle-row"><span><strong>Focus composer after reply</strong><small>Return your cursor to the message field automatically.</small></span><input id="autoFocusToggle" type="checkbox" checked><i></i></label>
-        </section>
-        <section class="settings-panel" data-settings-panel="accessibility">
-          <div class="settings-panel-title"><div><h4>Accessibility</h4><p>Adjust the reading experience without changing your content.</p></div></div>
-          <div class="setting-group"><span class="setting-label">Chat text size</span><div class="range-row"><input id="textScaleRange" type="range" min="90" max="120" value="100"><output id="textScaleValue">100%</output></div></div>
-          <label class="toggle-row"><span><strong>High contrast messages</strong><small>Increase separation between user and assistant content.</small></span><input id="contrastToggle" type="checkbox"><i></i></label>
-          <label class="toggle-row"><span><strong>Reduce motion</strong><small>Keep transitions subtle and still.</small></span><input id="reduceMotionToggleA11y" type="checkbox"><i></i></label>
-        </section>
+<!-- ============ SETTINGS ============ -->
+<div class="es-overlay" id="settingsModal" aria-hidden="true">
+  <div class="es-window" role="dialog" aria-modal="true" aria-label="Settings">
+    <aside class="es-nav">
+      <label class="es-search">
+        <svg class="ec-i"><use href="#i-search"/></svg>
+        <input id="settingsSearch" type="search" placeholder="Search" autocomplete="off" aria-label="Search settings">
+      </label>
+      <div class="es-nav-label">Settings</div>
+      <div class="es-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" class="es-tab is-active" role="tab" data-settings-tab="general"><svg class="ec-i"><use href="#i-gear"/></svg>General</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="account"><svg class="ec-i"><use href="#i-user"/></svg>Account</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="privacy"><svg class="ec-i"><use href="#i-shield"/></svg>Privacy</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="billing"><svg class="ec-i"><use href="#i-card"/></svg>Billing</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="usage"><svg class="ec-i"><use href="#i-gauge"/></svg>Usage</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="capabilities"><svg class="ec-i"><use href="#i-spark"/></svg>Capabilities</button>
+        <button type="button" class="es-tab" role="tab" data-settings-tab="memory"><svg class="ec-i"><use href="#i-layers"/></svg>Memory</button>
+        <button type="button" class="es-tab" data-settings-link="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Connectors</button>
       </div>
+    </aside>
+
+    <div class="es-main" id="settingsMain">
+      <button type="button" class="es-close" id="settingsClose" aria-label="Close settings"><svg class="ec-i"><use href="#i-x"/></svg></button>
+      <p class="es-noresults" id="settingsNoResults" hidden>No settings match that search.</p>
+
+      <section class="es-panel is-active" data-settings-panel="general">
+        <h2>Appearance</h2>
+        <div class="es-row" data-keywords="dark light mode color">
+          <div class="es-copy"><strong>Theme</strong></div>
+          <div class="es-seg es-seg-icons" role="radiogroup" aria-label="Theme">
+            <button type="button" role="radio" data-theme-mode="system" aria-label="Match system" title="Match system"><svg class="ec-i"><use href="#i-monitor"/></svg></button>
+            <button type="button" role="radio" data-theme-mode="light" aria-label="Light" title="Light"><svg class="ec-i"><use href="#i-sun"/></svg></button>
+            <button type="button" role="radio" data-theme-mode="dark" aria-label="Dark" title="Dark"><svg class="ec-i"><use href="#i-moon"/></svg></button>
+          </div>
+        </div>
+        <div class="es-row" data-keywords="typeface">
+          <div class="es-copy"><strong>Chat font</strong></div>
+          <span class="es-select"><select id="chatFontSelect" aria-label="Chat font"><option value="system">Default</option><option value="serif">Serif</option><option value="mono">Monospace</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span>
+        </div>
+        <div class="es-row">
+          <div class="es-copy"><strong>Transcript text size</strong><p>Size of the conversation transcript text.</p></div>
+          <div class="es-seg" data-pref="textSize" role="radiogroup" aria-label="Transcript text size"><button type="button" role="radio" data-value="small">Small</button><button type="button" role="radio" data-value="medium">Medium</button><button type="button" role="radio" data-value="large">Large</button></div>
+        </div>
+        <div class="es-row">
+          <div class="es-copy"><strong>Transcript width</strong><p>Maximum width of the transcript and message box.</p></div>
+          <div class="es-seg" data-pref="transcriptWidth" role="radiogroup" aria-label="Transcript width"><button type="button" role="radio" data-value="narrow">Narrow</button><button type="button" role="radio" data-value="medium">Medium</button><button type="button" role="radio" data-value="wide">Wide</button></div>
+        </div>
+        <div class="es-row" data-keywords="animation reduce accessibility">
+          <div class="es-copy"><strong>Motion</strong><p>Reduce animation in replies and other interface elements.</p></div>
+          <div class="es-seg" data-pref="motion" role="radiogroup" aria-label="Motion"><button type="button" role="radio" data-value="system">System</button><button type="button" role="radio" data-value="reduced">Reduced</button></div>
+        </div>
+        <div class="es-row" data-keywords="accessibility contrast">
+          <div class="es-copy"><strong>High contrast</strong><p>Stronger separation between your messages and elora's.</p></div>
+          <label class="es-switch"><input type="checkbox" id="contrastToggle" aria-label="High contrast"><span></span></label>
+        </div>
+
+        <h2>Language</h2>
+        <div class="es-row" data-keywords="translate locale">
+          <div class="es-copy"><strong>Reply language</strong><p>The language elora answers in.</p></div>
+          <span class="es-select"><select id="responseLanguageSelect" aria-label="Reply language"><option value="auto">Match my message</option><option value="en">English</option><option value="ka">Georgian</option><option value="de">German</option><option value="es">Spanish</option><option value="fr">French</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="nl">Dutch</option><option value="tr">Turkish</option><option value="ru">Russian</option><option value="uk">Ukrainian</option><option value="ar">Arabic</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span>
+        </div>
+
+        <h2>Message box</h2>
+        <div class="es-row" data-keywords="composer mode style">
+          <div class="es-copy"><strong>Default reply mode</strong><p>Used for new messages. You can switch per message in the box.</p></div>
+          <span class="es-select"><select id="composerModeSelect" aria-label="Default reply mode"><option value="balanced">Balanced</option><option value="concise">Quick</option><option value="deep">Deep dive</option><option value="technical">Code</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span>
+        </div>
+        <div class="es-row" data-keywords="keyboard enter shortcut">
+          <div class="es-copy"><strong>Send with Enter</strong><p>Use Shift + Enter for a new line.</p></div>
+          <label class="es-switch"><input type="checkbox" id="enterToSendToggle" aria-label="Send with Enter"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="suggestions prompts chips">
+          <div class="es-copy"><strong>Starter ideas</strong><p>Show quick starting points under the message box in a new chat.</p></div>
+          <label class="es-switch"><input type="checkbox" id="suggestionsToggle" aria-label="Starter ideas"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="focus cursor">
+          <div class="es-copy"><strong>Return to the message box</strong><p>Put your cursor back in the message box after each reply.</p></div>
+          <label class="es-switch"><input type="checkbox" id="autoFocusToggle" aria-label="Return to the message box"><span></span></label>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="account">
+        <h2>Account</h2>
+        <div class="es-row" data-keywords="profile name">
+          <div class="es-copy"><strong>Display name</strong><p>What elora calls you.</p></div>
+          <input class="es-input" id="settingsDisplayName" type="text" maxlength="60" placeholder="Your name" autocomplete="name">
+        </div>
+        <div class="es-row" data-keywords="email login">
+          <div class="es-copy"><strong>Email</strong></div>
+          <span class="es-value" id="settingsEmail">Not signed in</span>
+        </div>
+        <div class="es-row" data-keywords="sign in sign out log in log out session">
+          <div class="es-copy"><strong id="settingsAuthLabel">Log in to sync</strong><p id="settingsAuthCopy">Keep your chats, projects and memory across devices.</p></div>
+          <button type="button" class="es-btn" id="settingsAuthBtn">Log in</button>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="privacy">
+        <h2>Privacy</h2>
+        <div class="es-row" data-keywords="delete history chats clear">
+          <div class="es-copy"><strong>Chats on this device</strong><p>Recent chats are saved in this browser so you can come back to them.</p></div>
+          <button type="button" class="es-btn es-btn-danger" id="settingsClearChatsBtn">Delete all chats</button>
+        </div>
+        <div class="es-row" data-keywords="data policy">
+          <div class="es-copy"><strong>How your data is used</strong><p>Messages are sent to elora's AI provider only to write your reply. Payments are handled by Paddle.</p></div>
+          <button type="button" class="es-btn" data-nav="privacy" data-settings-close>Privacy policy</button>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="billing">
+        <h2>Billing</h2>
+        <div class="es-plan">
+          <div class="es-plan-mark"><img src="assets/elorahub_logo.png" alt=""></div>
+          <div class="es-copy"><strong id="settingsPlanName">Free plan</strong><p id="settingsPlanCopy">Try elora with a daily message limit.</p></div>
+          <button type="button" class="es-btn es-btn-solid" data-nav="pricing" data-settings-close id="settingsUpgradeBtn">View plans</button>
+        </div>
+        <div class="es-row" data-keywords="payment card receipt invoice">
+          <div class="es-copy"><strong>Payments and receipts</strong><p>Handled securely by Paddle. elorahub never sees or stores your card details.</p></div>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="usage">
+        <h2>Usage</h2>
+        <div class="es-block" data-keywords="credits messages limit">
+          <div class="es-usage-top"><strong id="settingsUsageTitle">Messages</strong><span id="settingsUsageValue">—</span></div>
+          <div class="es-meter" id="settingsUsageMeter" hidden><i id="settingsUsageBar"></i></div>
+          <p id="settingsUsageCopy">Loading your usage…</p>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="capabilities">
+        <h2>Capabilities</h2>
+        <div class="es-row" data-keywords="internet search current research">
+          <div class="es-copy"><strong>Web search</strong><p>Let elora look things up when you ask about something current.</p></div>
+          <label class="es-switch"><input type="checkbox" id="webSearchToggle" aria-label="Web search"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="steps activity thinking">
+          <div class="es-copy"><strong>Show what elora did</strong><p>Show a short line above each reply, like "Recalled memory · Searched the web".</p></div>
+          <label class="es-switch"><input type="checkbox" id="activityToggle" aria-label="Show what elora did"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="length detail">
+          <div class="es-copy"><strong>Answer style</strong></div>
+          <span class="es-select"><select id="responseStyle" aria-label="Answer style"><option value="balanced">Balanced</option><option value="concise">Concise</option><option value="deep">In depth</option><option value="technical">Technical</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span>
+        </div>
+        <div class="es-row" data-keywords="voice personality">
+          <div class="es-copy"><strong>Tone</strong></div>
+          <span class="es-select"><select id="responseTone" aria-label="Tone"><option value="direct">Direct</option><option value="warm">Warm</option><option value="technical">Precise</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span>
+        </div>
+      </section>
+
+      <section class="es-panel" data-settings-panel="memory">
+        <h2>Memory</h2>
+        <div class="es-row" data-keywords="remember context">
+          <div class="es-copy"><strong>Memory across chats</strong><p>elora keeps a short note of stable facts — your name, projects and preferences — so you don't have to repeat them.</p></div>
+          <span class="es-value" id="settingsMemoryState">Log in to use</span>
+        </div>
+        <div class="es-block" data-keywords="remember summary">
+          <div class="es-usage-top"><strong>What elora remembers</strong></div>
+          <p class="es-memory" id="settingsMemorySummary">Log in to let elora remember useful context across chats.</p>
+        </div>
+        <div class="es-row" data-keywords="forget delete memory">
+          <div class="es-copy"><strong>Forget everything</strong><p>Permanently clears what elora remembers about you.</p></div>
+          <button type="button" class="es-btn es-btn-danger" id="settingsForgetBtn">Forget</button>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -3343,37 +3909,80 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(seconds < 86400) return Math.floor(seconds / 3600) + "h";
     return Math.floor(seconds / 86400) + "d";
   }
+  // Recents are grouped under day labels (Today, Yesterday, …) like a
+  // normal chat app, newest first.
+  function conversationDayGroup(ts){
+    var now = new Date();
+    var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    var day = 86400000;
+    if(ts >= startOfToday) return "Today";
+    if(ts >= startOfToday - day) return "Yesterday";
+    if(ts >= startOfToday - 6 * day) return "Previous 7 days";
+    if(ts >= startOfToday - 29 * day) return "Previous 30 days";
+    return "Older";
+  }
   function renderConversationList(){
     if(!chatHistoryList) return;
     var query = chatSearchInput ? chatSearchInput.value.trim().toLowerCase() : "";
-    var matches = chatSessions.filter(function(session){ return !query || session.title.toLowerCase().includes(query); });
+    var matches = chatSessions.filter(function(session){ return !query || session.title.toLowerCase().includes(query); })
+      .sort(function(a, b){ return (b.updatedAt || 0) - (a.updatedAt || 0); });
     chatHistoryList.textContent = "";
+    var lastGroup = null;
     matches.forEach(function(session){
+      var group = conversationDayGroup(session.updatedAt || Date.now());
+      if(group !== lastGroup){
+        var label = document.createElement("div");
+        label.className = "ec-day";
+        label.textContent = group;
+        chatHistoryList.appendChild(label);
+        lastGroup = group;
+      }
+      var isActive = !!(activeConversation && session.id === activeConversation.id);
       var item = document.createElement("button");
       item.type = "button";
-      item.className = "chat-session-item" + (activeConversation && session.id === activeConversation.id ? " active-conv" : "");
+      item.className = "ec-chat-item" + (isActive ? " is-active" : "");
+      item.setAttribute("role", "listitem");
       item.dataset.chatSession = String(session.id);
       item.title = session.title;
+      item.textContent = session.title;
       item.disabled = replyPending;
-      if(activeConversation && session.id === activeConversation.id) item.setAttribute("aria-current", "page");
-      var mark = document.createElement("span"); mark.className = "session-mark"; mark.setAttribute("aria-hidden", "true"); mark.textContent = "e";
-      var title = document.createElement("span"); title.className = "session-title"; title.textContent = session.title;
-      var age = document.createElement("small"); age.textContent = conversationAge(session.updatedAt);
-      item.append(mark, title, age);
+      if(isActive) item.setAttribute("aria-current", "page");
       chatHistoryList.appendChild(item);
     });
     if(chatHistoryEmpty){
       chatHistoryEmpty.hidden = matches.length > 0;
-      if(!chatSessions.length) chatHistoryEmpty.textContent = "Your conversations will appear here and stay on this device.";
-      else if(!matches.length) chatHistoryEmpty.textContent = "No recent conversations match that search.";
+      if(!chatSessions.length) chatHistoryEmpty.textContent = "Your chats will show up here.";
+      else if(!matches.length) chatHistoryEmpty.textContent = "No chats match that search.";
     }
   }
   if(chatSearchInput) chatSearchInput.addEventListener("input", renderConversationList);
+  var chatMain = document.getElementById("chatMain");
+  function greetingText(){
+    var hour = new Date().getHours();
+    var part = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 18 ? "Good afternoon" : "Good evening";
+    var name = currentUser && (currentUser.name || String(currentUser.email || "").split("@")[0]);
+    return name ? part + ", " + name : part;
+  }
+  // A new chat shows the greeting with the message box centered under it;
+  // once a message is sent the box docks to the bottom of the screen.
+  function setChatEmpty(empty){
+    if(chatMain) chatMain.classList.toggle("is-empty", !!empty);
+    if(chatInput) chatInput.placeholder = empty ? "How can I help you today?" : "Reply to elora…";
+  }
   function renderChatWelcome(){
     if(!chatThread || !chatWelcomeTemplate) return;
     chatThread.innerHTML = "";
-    chatThread.appendChild(chatWelcomeTemplate.cloneNode(true));
+    var welcome = chatWelcomeTemplate.cloneNode(true);
+    var heading = welcome.querySelector("h1");
+    if(heading) heading.textContent = greetingText();
+    chatThread.appendChild(welcome);
+    setChatEmpty(true);
   }
+  window.addEventListener("elorahub:auth-state", function(){
+    var heading = document.querySelector("#chatThread #welcomeTitle");
+    if(heading) heading.textContent = greetingText();
+  });
+  (function(){ var heading = document.getElementById("welcomeTitle"); if(heading) heading.textContent = greetingText(); })();
 
   function clearPrivateChatView(){
     conversationHistory = [];
@@ -3390,9 +3999,13 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(chatSuggestions){ chatSuggestions.style.display = "flex"; }
   }
 
+  function syncSendState(){
+    if(sendBtn) sendBtn.classList.toggle("is-ready", !!chatInput.value.trim() || attachedFiles.length > 0);
+  }
   function autoGrow(){
     chatInput.style.height = "auto";
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + "px";
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 240) + "px";
+    syncSendState();
   }
   chatInput.addEventListener("input", autoGrow);
 
@@ -3404,11 +4017,12 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   });
   sendBtn.addEventListener("click", sendMessage);
 
-  document.querySelectorAll(".suggestion-chip").forEach(function(chip){
+  document.querySelectorAll("#chatSuggestions [data-fill]").forEach(function(chip){
     chip.addEventListener("click", function(){
       chatInput.value = chip.getAttribute("data-fill");
       autoGrow();
       chatInput.focus();
+      try { chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length); } catch(e){}
     });
   });
 
@@ -3437,7 +4051,27 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     });
   }
 
-  document.getElementById("attachBtn").addEventListener("click", function(){ fileInput.click(); });
+  // The "+" button opens the attach menu (wired in workspace-ui.js);
+  // "Add files or photos" in that menu, Ctrl+U, or dragging files onto
+  // the chat all lead to the same file input below.
+  if(chatMain){
+    var dragDepth = 0;
+    chatMain.addEventListener("dragenter", function(e){
+      if(!e.dataTransfer || Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") === -1) return;
+      e.preventDefault(); dragDepth++; chatMain.classList.add("is-dragging");
+    });
+    chatMain.addEventListener("dragover", function(e){
+      if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], "Files") > -1) e.preventDefault();
+    });
+    chatMain.addEventListener("dragleave", function(){ dragDepth = Math.max(0, dragDepth - 1); if(!dragDepth) chatMain.classList.remove("is-dragging"); });
+    chatMain.addEventListener("drop", function(e){
+      dragDepth = 0; chatMain.classList.remove("is-dragging");
+      if(!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+      e.preventDefault();
+      try { fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event("change")); }
+      catch(err){ showToast("Couldn't attach those files here — use + → Add files instead."); }
+    });
+  }
   fileInput.addEventListener("change", async function(){
     var files = Array.prototype.slice.call(fileInput.files);
     fileInput.value = "";
@@ -3470,12 +4104,17 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   });
 
   function renderAttachments(){
-    if(attachedFiles.length === 0){ attachRow.style.display = "none"; attachRow.innerHTML=""; return; }
+    if(attachedFiles.length === 0){ attachRow.style.display = "none"; attachRow.innerHTML=""; syncSendState(); return; }
     attachRow.style.display = "flex";
     attachRow.innerHTML = attachedFiles.map(function(entry, i){
-      var icon = entry.isImage ? "🖼️" : (entry.unsupported ? "📄" : "📝");
-      return '<span class="attach-chip">' + icon + ' ' + escapeHtml(entry.name) + ' <button data-idx="' + i + '" aria-label="Remove file">&times;</button></span>';
+      var remove = '<button type="button" data-idx="' + i + '" aria-label="Remove ' + escapeAttr(entry.name) + '">&times;</button>';
+      if(entry.isImage && entry.dataUrl && /^data:image\//.test(entry.dataUrl)){
+        return '<div class="ec-att ec-att-img" title="' + escapeAttr(entry.name) + '"><img src="' + entry.dataUrl + '" alt="' + escapeAttr(entry.name) + '">' + remove + '</div>';
+      }
+      var ext = (String(entry.name).split(".").pop() || "file").slice(0, 4).toUpperCase();
+      return '<div class="ec-att" title="' + escapeAttr(entry.name) + '"><span class="ec-att-ext">' + escapeHtml(ext) + '</span><span class="ec-att-name">' + escapeHtml(entry.name) + '</span>' + remove + '</div>';
     }).join("");
+    syncSendState();
     attachRow.querySelectorAll("button").forEach(function(btn){
       btn.addEventListener("click", function(){
         attachedFiles.splice(parseInt(btn.getAttribute("data-idx"),10), 1);
@@ -3489,6 +4128,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     d.textContent = str;
     return d.innerHTML;
   }
+  function escapeAttr(str){ return escapeHtml(str).replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
 
   // Turns elora's raw markdown-flavored reply into real HTML: fenced code
   // blocks, inline `code`, **bold**, *italic*, bullet/numbered lists, and
@@ -3525,7 +4165,10 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       }
       var headingMatch = trimmed.match(/^(#{1,4})\s+(.*)$/);
       if(headingMatch && lines.length === 1){
-        return '<p style="font-weight:700;margin-top:2px;">' + headingMatch[2] + "</p>";
+        return "<h3>" + headingMatch[2] + "</h3>";
+      }
+      if(lines.length > 1 && /^#{1,4}\s+/.test(lines[0].trim())){
+        return "<h3>" + lines[0].trim().replace(/^#{1,4}\s+/, "") + "</h3><p>" + lines.slice(1).join("<br>") + "</p>";
       }
       return "<p>" + block.split("\n").join("<br>") + "</p>";
     }).join("");
@@ -3537,128 +4180,177 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     chatScroll.scrollTop = chatScroll.scrollHeight;
   }
 
-  function addResponseTools(body, sourceText){
-    var tools = document.createElement("div");
-    tools.className = "response-actions";
-    tools.innerHTML = '<button type="button" data-copy-message="1">Copy</button><button type="button" data-message-reaction="up">Helpful</button><button type="button" data-message-reaction="down">Not quite</button>';
-    tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
-    body.appendChild(tools);
+  var LOGO_SRC = (document.querySelector(".brand img") || document.querySelector(".ec-brand img")).getAttribute("src");
+  function icon(name){ return '<svg class="ec-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+
+  // Code blocks get a small header with a Copy button.
+  function enhanceCodeBlocks(root){
+    root.querySelectorAll("pre").forEach(function(pre){
+      if(pre.parentNode && pre.parentNode.classList && pre.parentNode.classList.contains("ec-code")) return;
+      var wrap = document.createElement("div");
+      wrap.className = "ec-code";
+      var head = document.createElement("div");
+      head.className = "ec-code-head";
+      head.innerHTML = '<span>code</span><button type="button" class="ec-code-copy" data-copy-code>' + icon("copy") + '<span>Copy</span></button>';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(head);
+      wrap.appendChild(pre);
+    });
   }
 
+  function addResponseTools(msg, sourceText){
+    enhanceCodeBlocks(msg);
+    var tools = document.createElement("div");
+    tools.className = "ec-actions";
+    tools.innerHTML =
+      '<button type="button" class="ec-act" data-copy-message="1" aria-label="Copy reply" title="Copy">' + icon("copy") + '</button>' +
+      '<button type="button" class="ec-act" data-message-reaction="up" aria-label="Good reply" title="Good reply">' + icon("thumb-up") + '</button>' +
+      '<button type="button" class="ec-act" data-message-reaction="down" aria-label="Bad reply" title="Bad reply">' + icon("thumb-down") + '</button>';
+    tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
+    msg.appendChild(tools);
+  }
+
+  function copyToClipboard(value, okMessage){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(value).then(function(){ showToast(okMessage); }, function(){ showToast("Couldn't copy — select the text instead."); });
+    } else { showToast("Select the text to copy it."); }
+  }
   document.addEventListener("click", function(e){
-    var copy = e.target.closest && e.target.closest("[data-copy-message]");
-    if(copy){
-      var value = copy.dataset.copyText || "";
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(value).then(function(){ showToast("Response copied to clipboard."); }); }
-      else { showToast("Select the response text to copy it."); }
+    if(!e.target.closest) return;
+    var copy = e.target.closest("[data-copy-message]");
+    if(copy){ copyToClipboard(copy.dataset.copyText || "", "Copied."); return; }
+    var codeCopy = e.target.closest("[data-copy-code]");
+    if(codeCopy){
+      var block = codeCopy.closest(".ec-code");
+      var pre = block && block.querySelector("pre");
+      if(pre) copyToClipboard(pre.textContent, "Code copied.");
       return;
     }
-    var reaction = e.target.closest && e.target.closest("[data-message-reaction]");
-    if(reaction){ reaction.classList.add("is-selected"); showToast(reaction.getAttribute("data-message-reaction") === "up" ? "Thanks — I'll keep that direction." : "Thanks — I'll use a different approach next time."); }
+    var stepsToggle = e.target.closest(".ec-steps-toggle");
+    if(stepsToggle && !stepsToggle.classList.contains("is-static")){
+      var list = stepsToggle.parentNode.querySelector(".ec-steps-list");
+      var open = stepsToggle.getAttribute("aria-expanded") !== "true";
+      stepsToggle.setAttribute("aria-expanded", String(open));
+      if(list) list.hidden = !open;
+      return;
+    }
+    var reaction = e.target.closest("[data-message-reaction]");
+    if(reaction){
+      var row = reaction.parentNode;
+      if(row) row.querySelectorAll("[data-message-reaction]").forEach(function(btn){ btn.classList.toggle("is-selected", btn === reaction); });
+      showToast(reaction.getAttribute("data-message-reaction") === "up" ? "Thanks for the feedback." : "Thanks — elora will try a different approach.");
+    }
   });
 
-  function addMessage(role, html, meta){
+  function buildMessage(role){
     var msg = document.createElement("div");
-    msg.className = "msg " + (role === "user" ? "from-user" : "from-ai") + " msg-enter";
-    var avatar = document.createElement("div");
-    avatar.className = "avatar";
-    if(role === "user"){
-      avatar.textContent = "you";
-    } else {
-      avatar.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora">';
-    }
-    var body = document.createElement("div");
-    body.className = "msg-body";
-    var bubble = document.createElement("div");
-    bubble.className = "msg-bubble";
-    bubble.innerHTML = html;
-    if(role !== "user"){
-      var head = document.createElement("div");
-      head.className = "response-head";
-      head.innerHTML = "<i></i><span>elora response</span>";
-      body.appendChild(head);
-    }
-    var metaEl = document.createElement("div");
-    metaEl.className = "msg-meta";
-    metaEl.innerHTML = meta || "";
-    body.appendChild(bubble);
-    body.appendChild(metaEl);
-    if(role !== "user") addResponseTools(body, bubble.textContent || "");
-    msg.appendChild(avatar);
-    msg.appendChild(body);
-    chatThread.appendChild(msg);
-    scrollToBottom();
-    requestAnimationFrame(function(){ requestAnimationFrame(function(){ msg.classList.add("msg-enter-active"); }); });
-    return msg;
+    msg.className = "ec-msg " + (role === "user" ? "is-user" : "is-ai");
+    var text = document.createElement("div");
+    text.className = "ec-msg-text";
+    msg.appendChild(text);
+    return { msg: msg, text: text };
   }
 
-  // Reveals an AI reply gradually (like the homepage demo) instead of
-  // dumping the whole answer in at once. `escape` controls whether the
-  // text still needs HTML-escaping (real API replies do; the local
-  // simulation fallback already contains safe, pre-escaped fragments).
+  function addMessage(role, html){
+    var parts = buildMessage(role);
+    parts.text.innerHTML = html;
+    if(role !== "user") addResponseTools(parts.msg, parts.text.textContent || "");
+    chatThread.appendChild(parts.msg);
+    scrollToBottom();
+    return parts.msg;
+  }
+
+  // "Recalled memory · Searched the web · 1.4s ›" — a short, honest line
+  // built only from the steps the server reported for this reply.
+  function summarizeSteps(steps){
+    var out = [];
+    (steps || []).forEach(function(step){
+      var text = String(step);
+      if(/^Recalled/i.test(text)) out.push("Recalled memory");
+      else if(/^Searched the web/i.test(text)) out.push("Searched the web");
+      else if(/^Read the linked page/i.test(text)) out.push("Read a linked page");
+      else if(/^Thought it through/i.test(text)) return;
+      else out.push(text.length > 40 ? text.slice(0, 38) + "…" : text);
+    });
+    return out;
+  }
+  function buildStepsLine(steps, seconds){
+    var summary = summarizeSteps(steps);
+    var label = summary.length ? summary.join(" · ") + " · " + seconds.toFixed(1) + "s" : "Thought for " + seconds.toFixed(1) + "s";
+    var wrap = document.createElement("div");
+    wrap.className = "ec-steps";
+    var toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "ec-steps-toggle";
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.innerHTML = "<span></span>" + icon("chevron-right");
+    toggle.firstChild.textContent = label;
+    wrap.appendChild(toggle);
+    if(summary.length){
+      var list = document.createElement("ol");
+      list.className = "ec-steps-list";
+      list.hidden = true;
+      (steps || []).forEach(function(step){ var li = document.createElement("li"); li.textContent = String(step); list.appendChild(li); });
+      wrap.appendChild(list);
+    } else {
+      toggle.classList.add("is-static");
+      toggle.disabled = true;
+    }
+    return wrap;
+  }
+
+  // Reveals an AI reply gradually instead of dumping the whole answer in
+  // at once. `escape` controls whether the text still needs HTML-escaping
+  // (real API replies do; static notices are already safe).
   function isNearBottom(){
     return chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 140;
   }
-  function addMessageTyped(fullText, meta, escape){
-    var msg = document.createElement("div");
-    msg.className = "msg from-ai msg-enter";
-    var avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora">';
-    var body = document.createElement("div");
-    body.className = "msg-body";
-    var head = document.createElement("div");
-    head.className = "response-head";
-    head.innerHTML = "<i></i><span>elora response</span>";
-    body.appendChild(head);
-    var bubble = document.createElement("div");
-    bubble.className = "msg-bubble";
+  function addMessageTyped(fullText, stepsLine, escape){
+    var parts = buildMessage("ai");
+    if(stepsLine) parts.msg.insertBefore(stepsLine, parts.text);
     var caret = document.createElement("span");
-    caret.className = "type-caret";
-    bubble.appendChild(caret);
-    var metaEl = document.createElement("div");
-    metaEl.className = "msg-meta";
-    metaEl.innerHTML = meta || "";
-    body.appendChild(bubble);
-    body.appendChild(metaEl);
-    msg.appendChild(avatar);
-    msg.appendChild(body);
-    chatThread.appendChild(msg);
-    requestAnimationFrame(function(){ requestAnimationFrame(function(){ msg.classList.add("msg-enter-active"); }); });
+    caret.className = "ec-type-caret";
+    parts.text.appendChild(caret);
+    chatThread.appendChild(parts.msg);
 
     return new Promise(function(resolve){
       var total = fullText.length;
-      if(total === 0){ bubble.removeChild(caret); resolve(msg); return; }
+      if(total === 0){ caret.remove(); resolve(parts.msg); return; }
       var revealed = 0;
-      // Reveal in proportionally bigger steps for longer replies, so every
-      // answer finishes typing in roughly the same couple of seconds
-      // instead of long ones dragging on forever.
+      // Bigger steps for longer replies, so every answer finishes typing
+      // in roughly the same couple of seconds.
       var step = Math.max(1, Math.ceil(total / 130));
+      if(document.documentElement.classList.contains("reduce-motion")) step = total;
       var timer = setInterval(function(){
         var stickToBottom = isNearBottom();
         revealed = Math.min(total, revealed + step);
         var slice = fullText.slice(0, revealed);
         var atEnd = revealed >= total;
-        // Mid-typing, show plain escaped text — parsing partial, unclosed
-        // markdown (a dangling "**" mid-stream) looks broken. Once the
-        // full reply has landed, render it properly as markdown.
-        bubble.innerHTML = escape ? (atEnd ? mdToHtml(slice) : escapeHtml(slice).replace(/\n/g, "<br>")) : slice;
-        if(!atEnd){ bubble.appendChild(caret); }
+        // Mid-typing, show plain escaped text — partial markdown (a
+        // dangling "**") looks broken. Render markdown once complete.
+        parts.text.innerHTML = escape ? (atEnd ? mdToHtml(slice) : escapeHtml(slice).replace(/\n/g, "<br>")) : slice;
+        if(!atEnd){ parts.text.appendChild(caret); }
         if(stickToBottom){ scrollToBottom(); }
         if(atEnd){
           clearInterval(timer);
           caret.remove();
-          addResponseTools(body, fullText);
-          resolve(msg);
+          addResponseTools(parts.msg, fullText);
+          if(stickToBottom){ scrollToBottom(); }
+          resolve(parts.msg);
         }
       }, 20);
     });
   }
 
-  var LOGO_SRC = document.querySelector(".brand img").getAttribute("src");
-  document.querySelectorAll("#chatThread .msg.from-ai .avatar").forEach(function(av){
-    av.innerHTML = '<img src="' + LOGO_SRC + '" alt="elora">';
-  });
+  // Re-draws a saved chat from its stored messages, so chats saved before
+  // a redesign still show up in the current look.
+  function renderHistory(history){
+    chatThread.innerHTML = "";
+    (history || []).forEach(function(item){
+      if(item.role === "user") addMessage("user", escapeHtml(String(item.content || "")).replace(/\n/g, "<br>"));
+      else addMessage("assistant", mdToHtml(String(item.content || "")));
+    });
+  }
 
   /* ---------------- Heuristic reply engine ----------------
      This is a front-end preview simulation: it parses the message
@@ -3773,121 +4465,330 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   }
   function preSentence(arr){ return pick(arr); }
 
-  /* ---------------- Workspace preferences + settings ---------------- */
+  /* ---------------- Preferences + Settings window ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, reduceMotion:false, enterToSend:true, suggestions:true, autoFocus:true, textScale:100, contrast:false, themeMode:"graphite", chatFont:"system", transcriptWidth:"medium", gradientStrength:58, responseLanguage:"auto" };
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, enterToSend:true, suggestions:true, autoFocus:true, contrast:false, themeMode:"dark", chatFont:"system", textSize:"medium", transcriptWidth:"medium", motion:"system", responseLanguage:"auto", sidebarCollapsed:false };
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
+  // Carry over settings saved by the previous chat design.
+  if(["system","light","dark"].indexOf(chatPreferences.themeMode) === -1) chatPreferences.themeMode = "dark";
+  if(["system","serif","mono"].indexOf(chatPreferences.chatFont) === -1) chatPreferences.chatFont = "system";
+  if(["small","medium","large"].indexOf(chatPreferences.textSize) === -1){
+    var oldScale = Number(chatPreferences.textScale || 100);
+    chatPreferences.textSize = oldScale <= 95 ? "small" : oldScale >= 110 ? "large" : "medium";
+  }
+  if(["narrow","medium","wide"].indexOf(chatPreferences.transcriptWidth) === -1) chatPreferences.transcriptWidth = "medium";
+  if(["system","reduced"].indexOf(chatPreferences.motion) === -1) chatPreferences.motion = chatPreferences.reduceMotion ? "reduced" : "system";
   function saveChatPreferences(){ try { localStorage.setItem("elorahub_chat_preferences", JSON.stringify(chatPreferences)); } catch(e){} }
+
+  var systemDark = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function resolvedTheme(){
+    if(chatPreferences.themeMode === "light") return "light";
+    if(chatPreferences.themeMode === "system") return systemDark && !systemDark.matches ? "light" : "dark";
+    return "dark";
+  }
   function applyTheme(){
-    document.documentElement.setAttribute("data-theme", "ember");
-    document.documentElement.setAttribute("data-ui-tone", chatPreferences.themeMode === "deep" ? "deep" : "graphite");
-    document.documentElement.style.setProperty("--chat-text-size", ((Number(chatPreferences.textScale || 100) / 100) + "rem"));
-    document.documentElement.style.setProperty("--chat-gradient-opacity", (Math.max(0,Math.min(100,Number(chatPreferences.gradientStrength == null ? 58 : chatPreferences.gradientStrength))/100)*0.24).toFixed(3));
-    document.documentElement.style.setProperty("--chat-transcript-width", ({narrow:"720px",medium:"980px",wide:"1200px"}[chatPreferences.transcriptWidth] || "980px"));
-    document.documentElement.style.setProperty("--chat-font-family", ({system:"var(--font-body)",inter:"Inter, var(--font-body)",mono:"ui-monospace, SFMono-Regular, Menlo, monospace"}[chatPreferences.chatFont] || "var(--font-body)"));
-    document.documentElement.classList.toggle("reduce-motion", !!chatPreferences.reduceMotion);
-    document.documentElement.classList.toggle("high-contrast", !!chatPreferences.contrast);
+    var root = document.documentElement;
+    root.setAttribute("data-theme", "ember");
+    root.setAttribute("data-ec-theme", resolvedTheme());
+    root.setAttribute("data-ec-font", chatPreferences.chatFont);
+    root.setAttribute("data-ec-size", chatPreferences.textSize);
+    root.setAttribute("data-ec-width", chatPreferences.transcriptWidth);
+    root.classList.toggle("reduce-motion", chatPreferences.motion === "reduced");
+    root.classList.toggle("high-contrast", !!chatPreferences.contrast);
+    root.classList.toggle("ec-side-collapsed", !!chatPreferences.sidebarCollapsed);
   }
   applyTheme();
-  function setThemeMode(mode){ chatPreferences.themeMode = mode === "deep" ? "deep" : "graphite"; saveChatPreferences(); applyTheme(); syncAppearanceButtons(); }
-  function syncAppearanceButtons(){ document.querySelectorAll("[data-theme-mode]").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-theme-mode") === (chatPreferences.themeMode || "graphite")); }); }
+  if(systemDark){
+    var onSystemTheme = function(){ if(chatPreferences.themeMode === "system") applyTheme(); };
+    if(systemDark.addEventListener) systemDark.addEventListener("change", onSystemTheme);
+    else if(systemDark.addListener) systemDark.addListener(onSystemTheme);
+  }
+  function setThemeMode(mode){
+    chatPreferences.themeMode = ["system","light","dark"].indexOf(mode) > -1 ? mode : "dark";
+    saveChatPreferences(); applyTheme(); syncSettingsForm();
+  }
 
+  // ---- plan + usage (read-only GET /api/chat; spends nothing) ----
+  var planInfo = null;
+  function planLabel(){ var plan = planInfo && planInfo.plan; return plan === "premium" ? "Premium" : plan === "private" ? "Private" : "Free"; }
+  function renderPlanInfo(){
+    var meta = document.getElementById("sidebarUserMeta");
+    if(meta) meta.textContent = currentUser ? planLabel() + " plan" : "Not signed in";
+    var name = document.getElementById("settingsPlanName");
+    var copy = document.getElementById("settingsPlanCopy");
+    var plan = planInfo && planInfo.plan || "free";
+    if(name) name.textContent = planLabel() + " plan";
+    if(copy) copy.textContent = plan === "premium" ? "Unlimited messages with elora." : plan === "private" ? "A monthly allowance of messages, refilled when your plan renews." : "Try elora with a daily message limit. Upgrade for more.";
+    var title = document.getElementById("settingsUsageTitle");
+    var value = document.getElementById("settingsUsageValue");
+    var meter = document.getElementById("settingsUsageMeter");
+    var bar = document.getElementById("settingsUsageBar");
+    var text = document.getElementById("settingsUsageCopy");
+    if(!value || !text) return;
+    if(!planInfo){ value.textContent = "—"; if(meter) meter.hidden = true; text.textContent = "Couldn't load your usage right now."; return; }
+    if(title) title.textContent = planLabel() + " plan";
+    if(plan === "premium"){
+      value.textContent = "Unlimited"; if(meter) meter.hidden = true;
+      text.textContent = "No message limit on your plan.";
+    } else if(plan === "private" && planInfo.creditsTotal){
+      var left = Math.max(0, Number(planInfo.creditsRemaining) || 0), total = Number(planInfo.creditsTotal) || 0;
+      value.textContent = left + " of " + total + " left";
+      if(meter){ meter.hidden = false; bar.style.width = Math.max(0, Math.min(100, total ? left / total * 100 : 0)).toFixed(1) + "%"; }
+      text.textContent = "Messages left this billing period. They refill when your plan renews.";
+    } else {
+      value.textContent = "Up to " + (planInfo.freeDailyLimit || 20) + " a day"; if(meter) meter.hidden = true;
+      text.textContent = currentUser ? "The free plan has a daily message limit. Upgrade for more." : "Log in and upgrade for more messages.";
+    }
+  }
+  async function loadPlanInfo(){
+    try {
+      var res = await fetch("/api/chat", { cache:"no-store", headers: getAccessToken() ? { Authorization:"Bearer " + getAccessToken() } : {} });
+      planInfo = res.ok ? await res.json() : null;
+    } catch(e){ planInfo = null; }
+    renderPlanInfo();
+  }
+  window.addEventListener("elorahub:auth-state", function(){ renderPlanInfo(); loadPlanInfo(); });
+  renderPlanInfo();
+
+  // ---- memory (what elora remembers) ----
+  async function loadMemorySummary(){
+    var box = document.getElementById("settingsMemorySummary");
+    var state = document.getElementById("settingsMemoryState");
+    if(state) state.textContent = currentUser ? "On" : "Log in to use";
+    if(!box) return;
+    if(!currentUser || !getAccessToken()){ box.textContent = "Log in to let elora remember useful context across chats."; return; }
+    box.textContent = "Loading…";
+    try {
+      var res = await fetch("/api/memory", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } });
+      var data = res.ok ? await res.json() : null;
+      box.textContent = data && data.summary ? data.summary : "Nothing yet. As you chat, elora saves stable facts — like your name, projects and preferences.";
+    } catch(e){ box.textContent = "Couldn't load memory right now."; }
+  }
+  async function forgetMemory(){
+    if(!currentUser || !getAccessToken()){ showToast("Log in first — memory only applies to signed-in accounts."); return false; }
+    try {
+      var res = await fetch("/api/memory", { method:"DELETE", headers:{ Authorization:"Bearer " + getAccessToken() } });
+      showToast(res.ok ? "Done — elora no longer remembers anything about you." : "Couldn't clear that just now. Try again in a moment.");
+      return res.ok;
+    } catch(e){ showToast("Couldn't reach the server. Try again in a moment."); return false; }
+  }
+
+  // ---- settings window ----
   var settingsModal = document.getElementById("settingsModal");
+  var settingsSearch = document.getElementById("settingsSearch");
+  var activeSettingsTab = "general";
+  var settingsReturnFocus = null;
+  var LEGACY_TABS = { profile:"account", subscription:"usage", chat:"capabilities", composer:"general", accessibility:"general" };
+  function setSeg(group, value){
+    group.querySelectorAll("[data-value],[data-theme-mode]").forEach(function(btn){
+      var on = (btn.getAttribute("data-value") || btn.getAttribute("data-theme-mode")) === value;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-checked", String(on));
+    });
+  }
   function syncSettingsForm(){
-    var displayName = document.getElementById("settingsDisplayName");
-    var email = document.getElementById("settingsEmail");
-    var style = document.getElementById("responseStyle");
-    var tone = document.getElementById("responseTone");
-    var activity = document.getElementById("activityToggle");
-    var webSearch = document.getElementById("webSearchToggle");
-    var reduce = document.getElementById("reduceMotionToggle");
-    var reduceA11y = document.getElementById("reduceMotionToggleA11y");
-    var glow = document.getElementById("glowRange");
-    var composerMode = document.getElementById("composerModeSelect");
-    var enter = document.getElementById("enterToSendToggle");
-    var suggestions = document.getElementById("suggestionsToggle");
-    var autoFocus = document.getElementById("autoFocusToggle");
-    var contrast = document.getElementById("contrastToggle");
-    var textScale = document.getElementById("textScaleRange");
-    var chatFont = document.getElementById("chatFontSelect");
-    var responseLanguage = document.getElementById("responseLanguageSelect");
-    var transcriptWidth = document.getElementById("transcriptWidthSelect");
-    var gradientStrength = document.getElementById("gradientStrengthRange");
-    if(displayName) displayName.value = (currentUser && currentUser.name) || "";
-    if(email){ email.value = (currentUser && currentUser.email) || "Sign in to sync your profile"; }
-    if(style) style.value = chatPreferences.style;
-    if(tone) tone.value = chatPreferences.tone;
-    if(activity) activity.checked = chatPreferences.activity !== false;
-    if(webSearch) webSearch.checked = chatPreferences.webSearch !== false;
-    if(reduce) reduce.checked = !!chatPreferences.reduceMotion;
-    if(reduceA11y) reduceA11y.checked = !!chatPreferences.reduceMotion;
-    if(glow){ glow.value = chatPreferences.glow; document.getElementById("glowValue").textContent = chatPreferences.glow + "%"; }
-    if(composerMode) composerMode.value = chatPreferences.style;
-    if(enter) enter.checked = chatPreferences.enterToSend !== false;
-    if(suggestions) suggestions.checked = chatPreferences.suggestions !== false;
-    if(autoFocus) autoFocus.checked = chatPreferences.autoFocus !== false;
-    if(contrast) contrast.checked = !!chatPreferences.contrast;
-    if(textScale){ textScale.value = chatPreferences.textScale || 100; document.getElementById("textScaleValue").textContent = (chatPreferences.textScale || 100) + "%"; }
-    if(chatFont) chatFont.value = chatPreferences.chatFont || "system";
-    if(responseLanguage) responseLanguage.value = chatPreferences.responseLanguage || "auto";
-    if(transcriptWidth) transcriptWidth.value = chatPreferences.transcriptWidth || "medium";
-    if(gradientStrength){ gradientStrength.value = chatPreferences.gradientStrength == null ? 58 : chatPreferences.gradientStrength; document.getElementById("gradientStrengthValue").textContent = gradientStrength.value + "%"; }
-    syncAppearanceButtons();
-    var memory = document.getElementById("settingsMemoryState");
-    if(memory) memory.textContent = currentUser ? "On for this account" : "Available when signed in";
-    var sidebarName = document.getElementById("sidebarUserName");
-    var sidebarMeta = document.getElementById("sidebarUserMeta");
-    if(sidebarName) sidebarName.textContent = (currentUser && (currentUser.name || currentUser.email)) || "Guest workspace";
-    if(sidebarMeta) sidebarMeta.textContent = currentUser ? "Synced workspace" : "Sign in to sync chats";
+    var byId = function(id){ return document.getElementById(id); };
+    var themeGroup = settingsModal.querySelector('[aria-label="Theme"]');
+    if(themeGroup) setSeg(themeGroup, chatPreferences.themeMode);
+    settingsModal.querySelectorAll(".es-seg[data-pref]").forEach(function(group){ setSeg(group, chatPreferences[group.getAttribute("data-pref")]); });
+    byId("chatFontSelect").value = chatPreferences.chatFont;
+    byId("contrastToggle").checked = !!chatPreferences.contrast;
+    byId("responseLanguageSelect").value = chatPreferences.responseLanguage || "auto";
+    byId("composerModeSelect").value = chatPreferences.style;
+    byId("enterToSendToggle").checked = chatPreferences.enterToSend !== false;
+    byId("suggestionsToggle").checked = chatPreferences.suggestions !== false;
+    byId("autoFocusToggle").checked = chatPreferences.autoFocus !== false;
+    byId("webSearchToggle").checked = chatPreferences.webSearch !== false;
+    byId("activityToggle").checked = chatPreferences.activity !== false;
+    byId("responseStyle").value = chatPreferences.style;
+    byId("responseTone").value = chatPreferences.tone;
+    var nameField = byId("settingsDisplayName");
+    if(document.activeElement !== nameField) nameField.value = (currentUser && currentUser.name) || "";
+    byId("settingsEmail").textContent = (currentUser && currentUser.email) || "Not signed in";
+    byId("settingsAuthLabel").textContent = currentUser ? "Log out" : "Log in to sync";
+    byId("settingsAuthCopy").textContent = currentUser ? "Sign out of elorahub on this device." : "Keep your chats, projects and memory across devices.";
+    byId("settingsAuthBtn").textContent = currentUser ? "Log out" : "Log in";
+    byId("settingsForgetBtn").disabled = !currentUser;
+    renderPlanInfo();
+  }
+  function showSettingsTab(tab){
+    activeSettingsTab = tab;
+    settingsModal.querySelectorAll("[data-settings-tab]").forEach(function(btn){
+      var on = btn.getAttribute("data-settings-tab") === tab;
+      btn.classList.toggle("is-active", on);
+      btn.setAttribute("aria-selected", String(on));
+    });
+    settingsModal.querySelectorAll("[data-settings-panel]").forEach(function(panel){ panel.classList.toggle("is-active", panel.getAttribute("data-settings-panel") === tab); });
+    var main = document.getElementById("settingsMain");
+    if(main) main.scrollTop = 0;
+    if(tab === "memory") loadMemorySummary();
+    if(tab === "billing" || tab === "usage") loadPlanInfo();
+  }
+  function clearSettingsSearch(){
+    if(!settingsSearch) return;
+    settingsSearch.value = "";
+    settingsModal.classList.remove("is-searching");
+    settingsModal.querySelectorAll(".es-row,.es-block").forEach(function(row){ row.hidden = false; });
+    document.getElementById("settingsNoResults").hidden = true;
   }
   function openSettings(tab){
+    tab = LEGACY_TABS[tab] || tab || "general";
+    if(!settingsModal.querySelector('[data-settings-panel="' + tab + '"]')) tab = "general";
+    if(!settingsModal.classList.contains("is-open")) settingsReturnFocus = document.activeElement;
+    clearSettingsSearch();
     syncSettingsForm();
+    showSettingsTab(tab);
     settingsModal.classList.add("is-open");
-    if(tab){ document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.classList.toggle("is-active", btn.getAttribute("data-settings-tab") === tab); }); document.querySelectorAll(".settings-panel").forEach(function(panel){ panel.classList.toggle("is-active", panel.getAttribute("data-settings-panel") === tab); }); }
+    settingsModal.setAttribute("aria-hidden", "false");
+    // Desktop: cursor goes to Search (like the reference). Phones: don't pop the keyboard.
+    setTimeout(function(){
+      if(window.innerWidth > 760 && settingsSearch) settingsSearch.focus();
+      else { var win = settingsModal.querySelector(".es-window"); if(win){ win.setAttribute("tabindex", "-1"); win.focus({ preventScroll:true }); } }
+    }, 0);
   }
-  function closeSettings(){ settingsModal.classList.remove("is-open"); }
-  document.getElementById("openSettingsBtn").addEventListener("click", function(){ openSettings("general"); });
-  document.getElementById("openChatOptionsBtn").addEventListener("click", function(){ openSettings("chat"); });
+  function closeSettings(){
+    if(!settingsModal.classList.contains("is-open")) return;
+    settingsModal.classList.remove("is-open");
+    settingsModal.setAttribute("aria-hidden", "true");
+    if(settingsReturnFocus && settingsReturnFocus.focus && document.body.contains(settingsReturnFocus)) settingsReturnFocus.focus();
+  }
+  if(settingsSearch){
+    settingsSearch.addEventListener("input", function(){
+      var query = settingsSearch.value.trim().toLowerCase();
+      if(!query){ clearSettingsSearch(); showSettingsTab(activeSettingsTab); return; }
+      settingsModal.classList.add("is-searching");
+      var any = false;
+      settingsModal.querySelectorAll("[data-settings-panel]").forEach(function(panel){
+        var panelHit = false;
+        panel.querySelectorAll(".es-row,.es-block").forEach(function(row){
+          var hit = (row.textContent + " " + (row.getAttribute("data-keywords") || "")).toLowerCase().indexOf(query) > -1;
+          row.hidden = !hit;
+          if(hit) panelHit = true;
+        });
+        panel.classList.toggle("is-active", panelHit);
+        if(panelHit) any = true;
+      });
+      settingsModal.querySelectorAll("[data-settings-tab]").forEach(function(btn){ btn.classList.remove("is-active"); });
+      document.getElementById("settingsNoResults").hidden = any;
+    });
+  }
+  settingsModal.querySelectorAll("[data-settings-tab]").forEach(function(btn){
+    btn.addEventListener("click", function(){ clearSettingsSearch(); showSettingsTab(btn.getAttribute("data-settings-tab")); });
+  });
+  settingsModal.querySelectorAll("[data-settings-link='connectors']").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      closeSettings();
+      var opener = document.querySelector('#moreMenu [data-workspace-view="connectors"]');
+      if(opener) opener.click();
+    });
+  });
+  settingsModal.querySelectorAll("[data-settings-close]").forEach(function(btn){ btn.addEventListener("click", closeSettings); });
   document.getElementById("settingsClose").addEventListener("click", closeSettings);
   settingsModal.addEventListener("click", function(e){ if(e.target === settingsModal) closeSettings(); });
-  document.querySelectorAll(".settings-tabs button").forEach(function(btn){ btn.addEventListener("click", function(){ openSettings(btn.getAttribute("data-settings-tab")); }); });
-  document.querySelectorAll("[data-nav=pricing]").forEach(function(btn){ btn.addEventListener("click", closeSettings); });
+
+  settingsModal.querySelectorAll(".es-seg[data-pref] [data-value]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      chatPreferences[btn.parentNode.getAttribute("data-pref")] = btn.getAttribute("data-value");
+      saveChatPreferences(); applyTheme(); syncSettingsForm();
+    });
+  });
+  document.querySelectorAll("[data-theme-mode]").forEach(function(btn){ btn.addEventListener("click", function(){ setThemeMode(btn.getAttribute("data-theme-mode")); }); });
+  function bindPref(id, key, after){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener("change", function(){
+      chatPreferences[key] = el.type === "checkbox" ? el.checked : el.value;
+      saveChatPreferences();
+      if(after) after(el);
+    });
+  }
+  bindPref("chatFontSelect", "chatFont", applyTheme);
+  bindPref("contrastToggle", "contrast", applyTheme);
+  bindPref("responseLanguageSelect", "responseLanguage");
+  bindPref("enterToSendToggle", "enterToSend");
+  bindPref("autoFocusToggle", "autoFocus");
+  bindPref("webSearchToggle", "webSearch", function(){ if(window.dispatchEvent) window.dispatchEvent(new CustomEvent("elorahub:preferences")); });
+  bindPref("activityToggle", "activity");
+  bindPref("responseTone", "tone");
+  bindPref("suggestionsToggle", "suggestions", function(el){ chatSuggestions.style.display = el.checked ? "flex" : "none"; });
+  bindPref("responseStyle", "style", function(){ syncSettingsForm(); syncComposerModes(); });
+  bindPref("composerModeSelect", "style", function(){ syncSettingsForm(); syncComposerModes(); });
   document.getElementById("settingsDisplayName").addEventListener("input", function(){
     if(!currentUser) currentUser = { name:"", email:null };
     currentUser.name = this.value.trim();
     try { localStorage.setItem("elorahub_display_name", currentUser.name); } catch(e){}
-    syncSettingsForm();
+    var sidebarName = document.getElementById("sidebarUserName");
+    if(sidebarName) sidebarName.textContent = currentUser.name || currentUser.email || "Guest";
+    var heading = document.querySelector("#chatThread #welcomeTitle");
+    if(heading) heading.textContent = greetingText();
   });
-  document.getElementById("responseStyle").addEventListener("change", function(){ chatPreferences.style = this.value; saveChatPreferences(); });
-  document.getElementById("responseTone").addEventListener("change", function(){ chatPreferences.tone = this.value; saveChatPreferences(); });
-  document.getElementById("activityToggle").addEventListener("change", function(){ chatPreferences.activity = this.checked; saveChatPreferences(); });
-  document.getElementById("webSearchToggle").addEventListener("change", function(){ chatPreferences.webSearch = this.checked; saveChatPreferences(); });
-  document.getElementById("reduceMotionToggleA11y").addEventListener("change", function(){ chatPreferences.reduceMotion = this.checked; saveChatPreferences(); applyTheme(); });
-  document.getElementById("composerModeSelect").addEventListener("change", function(){ chatPreferences.style = this.value; document.getElementById("responseStyle").value = this.value; saveChatPreferences(); syncComposerModes(); });
-  document.getElementById("enterToSendToggle").addEventListener("change", function(){ chatPreferences.enterToSend = this.checked; saveChatPreferences(); });
-  document.getElementById("suggestionsToggle").addEventListener("change", function(){ chatPreferences.suggestions = this.checked; chatSuggestions.style.display = this.checked && conversationHistory.length < 2 ? "flex" : "none"; saveChatPreferences(); });
-  document.getElementById("autoFocusToggle").addEventListener("change", function(){ chatPreferences.autoFocus = this.checked; saveChatPreferences(); });
-  document.getElementById("contrastToggle").addEventListener("change", function(){ chatPreferences.contrast = this.checked; saveChatPreferences(); applyTheme(); });
-  document.getElementById("textScaleRange").addEventListener("input", function(){ chatPreferences.textScale = Number(this.value); document.getElementById("textScaleValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
-  document.getElementById("chatFontSelect").addEventListener("change", function(){ chatPreferences.chatFont = this.value; saveChatPreferences(); applyTheme(); });
-  document.getElementById("responseLanguageSelect").addEventListener("change", function(){ chatPreferences.responseLanguage = this.value; saveChatPreferences(); });
-  document.getElementById("transcriptWidthSelect").addEventListener("change", function(){ chatPreferences.transcriptWidth = this.value; saveChatPreferences(); applyTheme(); });
-  document.getElementById("gradientStrengthRange").addEventListener("input", function(){ chatPreferences.gradientStrength = Number(this.value); document.getElementById("gradientStrengthValue").textContent = this.value + "%"; saveChatPreferences(); applyTheme(); });
-  document.querySelectorAll("[data-theme-mode]").forEach(function(btn){ btn.addEventListener("click", function(){ setThemeMode(btn.getAttribute("data-theme-mode")); }); });
-  document.getElementById("settingsUpgradeBtn").addEventListener("click", closeSettings);
-  document.getElementById("settingsForgetBtn").addEventListener("click", function(){ document.getElementById("forgetMeBtn").click(); });
-  document.addEventListener("keydown", function(e){ if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"){ e.preventDefault(); document.getElementById("newChatBtn").click(); } if(e.key === "Escape"){ closeSettings(); closeModeMenu(true); } });
+  document.getElementById("settingsAuthBtn").addEventListener("click", function(){
+    closeSettings();
+    if(currentUser){ var out = document.getElementById("signOutBtn"); if(out) out.click(); }
+    else { document.getElementById("openSignIn").click(); }
+  });
+  document.getElementById("settingsForgetBtn").addEventListener("click", async function(){
+    var btn = this; btn.disabled = true;
+    if(await forgetMemory()) loadMemorySummary();
+    btn.disabled = !currentUser;
+  });
+  // Two-step delete so one stray click can't wipe every chat.
+  var clearChatsBtn = document.getElementById("settingsClearChatsBtn");
+  var clearChatsTimer = 0;
+  clearChatsBtn.addEventListener("click", function(){
+    if(replyPending){ showToast("Wait for the current reply to finish first."); return; }
+    if(!clearChatsBtn.classList.contains("is-confirming")){
+      clearChatsBtn.classList.add("is-confirming");
+      clearChatsBtn.textContent = "Click again to delete";
+      clearTimeout(clearChatsTimer);
+      clearChatsTimer = setTimeout(function(){ clearChatsBtn.classList.remove("is-confirming"); clearChatsBtn.textContent = "Delete all chats"; }, 4000);
+      return;
+    }
+    clearTimeout(clearChatsTimer);
+    clearChatsBtn.classList.remove("is-confirming");
+    clearChatsBtn.textContent = "Delete all chats";
+    chatSessions = [];
+    resetConversation("All chats on this device were deleted.", true);
+  });
+
+  document.getElementById("openSettingsBtn").addEventListener("click", function(){ openSettings("general"); });
+  document.getElementById("openChatOptionsBtn").addEventListener("click", function(){ closeTitleMenu(); openSettings("capabilities"); });
+  document.getElementById("composerOptionsBtn").addEventListener("click", function(){ var menu = document.getElementById("attachMenu"); if(menu) menu.hidden = true; openSettings("capabilities"); });
   document.getElementById("chatSignInBtn").addEventListener("click", function(){ document.getElementById("openSignIn").click(); });
   document.getElementById("chatSignUpBtn").addEventListener("click", function(){ document.getElementById("openSignUp").click(); });
   document.getElementById("shareChatBtn").addEventListener("click", shareConversation);
-  document.getElementById("composerOptionsBtn").addEventListener("click", function(){ openSettings("composer"); });
+
+  // ---- chat title menu (Reply settings / Delete chat / Forget memory) ----
+  var chatTitleBtn = document.getElementById("chatTitleBtn");
+  var chatTitleMenu = document.getElementById("chatTitleMenu");
+  function closeTitleMenu(){ if(chatTitleMenu) chatTitleMenu.hidden = true; if(chatTitleBtn) chatTitleBtn.setAttribute("aria-expanded", "false"); }
+  if(chatTitleBtn && chatTitleMenu){
+    chatTitleBtn.addEventListener("click", function(){
+      var opening = chatTitleMenu.hidden;
+      chatTitleMenu.hidden = !opening;
+      chatTitleBtn.setAttribute("aria-expanded", String(opening));
+    });
+    chatTitleMenu.addEventListener("click", function(e){ if(e.target.closest("button")) closeTitleMenu(); });
+    document.addEventListener("click", function(e){ if(!e.target.closest(".ec-title-wrap")) closeTitleMenu(); });
+  }
+
+  // ---- keyboard shortcuts ----
+  document.addEventListener("keydown", function(e){
+    var mod = e.metaKey || e.ctrlKey;
+    var inChat = document.body.classList.contains("chat-mode");
+    if(mod && e.key.toLowerCase() === "k" && inChat){ e.preventDefault(); document.getElementById("newChatBtn").click(); }
+    else if(mod && e.key === "," && inChat){ e.preventDefault(); openSettings("general"); }
+    else if(mod && e.key.toLowerCase() === "u" && inChat && !settingsModal.classList.contains("is-open")){ e.preventDefault(); fileInput.click(); }
+    if(e.key === "Escape"){ closeSettings(); closeModeMenu(true); closeTitleMenu(); }
+  });
+
   function conversationTranscript(){
-    return Array.from(document.querySelectorAll("#chatThread .msg")).map(function(msg){
-      var bubble = msg.querySelector(".msg-bubble");
+    return Array.from(document.querySelectorAll("#chatThread .ec-msg")).map(function(msg){
+      var bubble = msg.querySelector(".ec-msg-text");
       var text = bubble ? bubble.innerText.trim() : "";
       if(!text) return "";
-      return (msg.classList.contains("from-user") ? "You" : "elora") + ":\n" + text;
+      return (msg.classList.contains("is-user") ? "You" : "elora") + ":\n" + text;
     }).filter(Boolean).join("\n\n");
   }
   async function shareConversation(){
@@ -3997,11 +4898,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       }
 
       var data = await res.json();
-      if(data.unlimited && inputFoot){
-        inputFoot.textContent = "Unlimited messages — Premium plan.";
-      } else if(data.creditsRemaining != null && inputFoot){
-        inputFoot.textContent = data.creditsRemaining + " credit" + (data.creditsRemaining === 1 ? "" : "s") + " left this billing period.";
-      }
+      // Keep Settings → Usage current without an extra request.
+      if(planInfo && data.creditsRemaining != null){ planInfo.creditsRemaining = data.creditsRemaining; renderPlanInfo(); }
       return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null };
     } catch(err){
       return { text: "The elora AI service could not be reached. This chat needs its server-side model provider connected before it can generate a real answer.", real: false, serviceError: true };
@@ -4014,20 +4912,21 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(!text && attachedFiles.length === 0) return;
 
     var filesForReply = attachedFiles.slice();
-    var userHtml = escapeHtml(text).replace(/\n/g, "<br>");
+    var userHtml = text ? escapeHtml(text).replace(/\n/g, "<br>") : "";
     if(attachedFiles.length){
-      userHtml += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">' +
+      userHtml += '<div class="ec-msg-files">' +
         attachedFiles.map(function(entry){
-          if(entry.isImage && entry.dataUrl){
-            return '<img src="' + entry.dataUrl + '" alt="' + escapeHtml(entry.name) + '" style="max-width:140px;max-height:100px;border-radius:8px;display:block;">';
+          if(entry.isImage && entry.dataUrl && /^data:image\//.test(entry.dataUrl)){
+            return '<img class="ec-file-thumb" src="' + entry.dataUrl + '" alt="' + escapeAttr(entry.name) + '">';
           }
-          return '<span style="font-size:0.78rem;background:rgba(255,255,255,0.08);padding:4px 9px;border-radius:8px;">📎 ' + escapeHtml(entry.name) + '</span>';
+          return '<span class="ec-file-chip">' + escapeHtml(entry.name) + '</span>';
         }).join("") +
         '</div>';
     }
     var welcomePanel = document.getElementById("chatWelcome");
     if(welcomePanel) welcomePanel.remove();
-    addMessage("user", userHtml, "You · just now");
+    setChatEmpty(false);
+    addMessage("user", userHtml);
     conversationHistory.push({ role: "user", content: text });
     beginActiveConversation(text, filesForReply);
     chatInput.value = "";
@@ -4038,58 +4937,47 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     setReplyPending(true);
 
     var typingRow = document.createElement("div");
-    typingRow.className = "msg from-ai";
-    typingRow.innerHTML = '<div class="avatar avatar-thinking"><img src="' + LOGO_SRC + '" alt="elora"></div>' +
-      '<div class="msg-body"><div class="activity-inline" role="status" aria-live="polite"><span class="activity-pulse"></span><span class="typing-label">Thinking</span><span class="activity-detail">Working through the useful next step.</span></div></div>';
+    typingRow.className = "ec-msg is-ai ec-thinking-row";
+    typingRow.innerHTML = '<div class="ec-thinking" role="status" aria-live="polite"><img class="ec-thinking-mark" src="' + LOGO_SRC + '" alt=""><span class="typing-label">Thinking</span></div>';
     chatThread.appendChild(typingRow);
     scrollToBottom();
     saveActiveConversation();
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
 
     var startTime = Date.now();
-    var minDelay = 900; // keep the typing state from flashing on a very fast reply
+    var minDelay = 700; // keep the thinking state from flashing on a very fast reply
 
     getReply(text, filesForReply).then(function(result){
       var elapsed = Date.now() - startTime;
       var wait = Math.max(0, minDelay - elapsed);
       setTimeout(function(){
-        // If the backend reported real steps (memory recalled, web
-        // searched, a link read, etc.), play them back quickly in the
-        // typing indicator so it's visible what actually happened —
-        // each one is a real thing that happened server-side above,
-        // not a decorative animation.
         var label = typingRow.querySelector(".typing-label");
-        var detail = typingRow.querySelector(".activity-detail");
-        var activityIcon = typingRow.querySelector(".activity-icon");
-        var stepsToShow = (result.steps && result.steps.length > 1) ? result.steps : null;
-        var fallbackSteps = ["Reading your message", "Checking conversation context", "Reasoning through the best answer", "Writing a clear reply"];
-        var activityIcons = ["⌁", "◉", "✦", "↗"];
+        // Only steps the server actually reported for this reply (memory
+        // recalled, web searched, a link read) — never decorative ones.
+        var realSteps = (result.steps || []).filter(function(step){ return !/^Thought it through/i.test(String(step)); });
 
         function reveal(){
           if(typingRow.parentNode){ typingRow.parentNode.removeChild(typingRow); }
-          var thinkSeconds = (Date.now() - startTime) / 1000;
-          var tag = '<span class="thinking-tag"><span class="think-dot"></span> thought for ' + thinkSeconds.toFixed(1) + 's</span>';
+          var seconds = (Date.now() - startTime) / 1000;
+          var stepsLine = chatPreferences.activity !== false && result.real ? buildStepsLine(result.steps, seconds) : null;
           conversationHistory.push({ role: "assistant", content: result.text });
-          addMessageTyped(result.text, tag, result.real).then(function(){
+          addMessageTyped(result.text, stepsLine, result.real).then(function(){
             if(chatStatusDot){ chatStatusDot.classList.remove("is-active"); }
             saveActiveConversation();
             setReplyPending(false);
+            if(chatPreferences.autoFocus !== false && window.innerWidth > 760 && !settingsModal.classList.contains("is-open")) chatInput.focus();
           });
         }
 
-        if(!chatPreferences.activity){ reveal(); return; }
-        if(!stepsToShow){ stepsToShow = fallbackSteps; }
-
+        if(chatPreferences.activity === false || !realSteps.length){ reveal(); return; }
+        // Briefly replay what actually happened, then show the answer.
         var i = 0;
-        function nextStep(){
-          if(i >= stepsToShow.length){ reveal(); return; }
-          label.textContent = stepsToShow[i];
-          if(detail) detail.textContent = i === stepsToShow.length - 1 ? "Turning the useful parts into a response you can act on." : "Working through the details instead of guessing from the surface.";
-          if(activityIcon) activityIcon.textContent = activityIcons[i % activityIcons.length];
+        (function nextStep(){
+          if(i >= realSteps.length){ reveal(); return; }
+          if(label) label.textContent = summarizeSteps([realSteps[i]])[0] || String(realSteps[i]);
           i++;
-          setTimeout(nextStep, 520);
-        }
-        nextStep();
+          setTimeout(nextStep, 420);
+        })();
       }, wait);
     });
   }
@@ -4109,9 +4997,7 @@ body.chat-mode{ overflow:hidden; height:100vh; }
   function saveActiveConversation(){
     if(!activeConversation || !activeConversation.started) return;
     activeConversation.history = conversationHistory.map(function(item){ return { role:item.role, content:item.content }; });
-    var savedThread = chatThread.cloneNode(true);
-    savedThread.querySelectorAll('img[src^="data:"]').forEach(function(image){ var note=document.createElement("span"); note.textContent="Image attachment: "+(image.alt||"image"); image.replaceWith(note); });
-    activeConversation.threadHtml = savedThread.innerHTML.slice(0,150000);
+    activeConversation.threadHtml = ""; // chats are re-drawn from history (see renderHistory)
     activeConversation.updatedAt = Date.now();
     chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
     chatSessions.unshift(activeConversation);
@@ -4145,7 +5031,8 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     renderAttachments();
     chatInput.value = "";
     autoGrow();
-    chatThread.innerHTML = target.threadHtml;
+    if(conversationHistory.length){ setChatEmpty(false); renderHistory(conversationHistory); }
+    else { renderChatWelcome(); }
     chatSuggestions.style.display = conversationHistory.length === 0 && chatPreferences.suggestions !== false ? "flex" : "none";
     updateConversationTitle();
     renderConversationList();
@@ -4182,62 +5069,63 @@ body.chat-mode{ overflow:hidden; height:100vh; }
     if(message) showToast(message);
   }
   document.getElementById("newChatBtn").addEventListener("click", function(){
-    resetConversation("New conversation started. What are we working on?");
+    resetConversation();
     setSidebarOpen(false);
     if(window.innerWidth > 760){ chatInput.focus(); }
   });
   document.getElementById("clearChatBtn").addEventListener("click", function(){
-    resetConversation("Cleared. I'm ready whenever you are.", true);
+    resetConversation("Chat deleted.", true);
     if(window.innerWidth > 760){ chatInput.focus(); }
   });
   var forgetMeBtn = document.getElementById("forgetMeBtn");
   if(forgetMeBtn){
     forgetMeBtn.addEventListener("click", async function(){
-      if(!currentUser || !getAccessToken()){
-        showToast("Sign in first — memory only applies to signed-in accounts.");
-        return;
-      }
       forgetMeBtn.disabled = true;
-      try {
-        var res = await fetch("/api/memory", {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + getAccessToken() },
-        });
-        if(res.ok){
-          showToast("Done — elora no longer remembers anything about you.");
-        } else {
-          showToast("Couldn't clear that just now. Try again in a moment.");
-        }
-      } catch(e){
-        showToast("Couldn't reach the server. Try again in a moment.");
-      }
+      await forgetMemory();
       forgetMeBtn.disabled = false;
     });
   }
 
-  /* ---------------- Mobile sidebar ---------------- */
+  /* ---------------- Sidebar ----------------
+     Desktop: a column you can hide (state remembered).
+     Phone/tablet (≤980px): a drawer that slides over the chat. */
   var sidebar = document.getElementById("chatSidebar");
   var sidebarToggle = document.getElementById("sidebarToggle");
+  var sidebarCollapseBtn = document.getElementById("sidebarCollapseBtn");
   var sidebarScrim = document.getElementById("sidebarScrim");
+  function isDrawerLayout(){ return window.innerWidth <= 980; }
   function setSidebarOpen(open){
     if(!sidebar) return;
-    var mobile = window.innerWidth <= 980;
-    var isOpen = mobile && !!open;
+    var drawer = isDrawerLayout();
+    var isOpen = drawer && !!open;
+    var hidden = drawer ? !isOpen : !!chatPreferences.sidebarCollapsed;
     sidebar.classList.toggle("is-open", isOpen);
-    sidebar.setAttribute("aria-hidden", mobile && !isOpen ? "true" : "false");
-    sidebar.inert = mobile && !isOpen;
-    if(sidebarToggle){
-      sidebarToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-      sidebarToggle.setAttribute("aria-label", isOpen ? "Close chat history" : "Open chat history");
-    }
+    sidebar.inert = hidden;
+    sidebar.setAttribute("aria-hidden", hidden ? "true" : "false");
+    if(sidebarToggle) sidebarToggle.setAttribute("aria-expanded", hidden ? "false" : "true");
     if(sidebarScrim){
       sidebarScrim.classList.toggle("is-visible", isOpen);
-      sidebarScrim.setAttribute("aria-hidden", isOpen ? "false" : "true");
       sidebarScrim.tabIndex = isOpen ? 0 : -1;
     }
   }
+  function setSidebarCollapsed(collapsed){
+    chatPreferences.sidebarCollapsed = !!collapsed;
+    saveChatPreferences();
+    applyTheme();
+    setSidebarOpen(false);
+  }
   if(sidebarToggle){
-    sidebarToggle.addEventListener("click", function(){ setSidebarOpen(!sidebar.classList.contains("is-open")); });
+    sidebarToggle.addEventListener("click", function(){
+      if(isDrawerLayout()) setSidebarOpen(!sidebar.classList.contains("is-open"));
+      else setSidebarCollapsed(false);
+    });
+  }
+  if(sidebarCollapseBtn){
+    sidebarCollapseBtn.addEventListener("click", function(){
+      if(isDrawerLayout()) setSidebarOpen(false);
+      else setSidebarCollapsed(true);
+      if(sidebarToggle) sidebarToggle.focus();
+    });
   }
   if(sidebarScrim){ sidebarScrim.addEventListener("click", function(){ setSidebarOpen(false); }); }
   document.addEventListener("keydown", function(e){
@@ -4246,20 +5134,14 @@ body.chat-mode{ overflow:hidden; height:100vh; }
       if(sidebarToggle) sidebarToggle.focus();
     }
   });
-  document.querySelectorAll(".plan-meter a").forEach(function(b){
-    b.addEventListener("click", function(){ setSidebarOpen(false); });
-  });
-  setSidebarOpen(false);
-  // Widening past the mobile breakpoint (e.g. rotating a tablet, or the
-  // window being resized) could otherwise leave the sidebar's off-canvas
-  // "is-open" state stuck mid-transition, rendering as a stray sliver of
-  // content over the chat — drop it whenever we're back on the desktop
-  // side-by-side layout.
+  // Close the drawer after picking something in it.
   if(sidebar){
-    window.addEventListener("resize", function(){
-      if(window.innerWidth > 980){ setSidebarOpen(false); }
+    sidebar.addEventListener("click", function(e){
+      if(isDrawerLayout() && e.target.closest("[data-workspace-view], [data-nav], .workspace-pinned-item")) setSidebarOpen(false);
     });
   }
+  setSidebarOpen(false);
+  window.addEventListener("resize", function(){ setSidebarOpen(sidebar && sidebar.classList.contains("is-open") && isDrawerLayout()); });
 
   /* ---------------- Owner console (real, server-verified) ----------------
      Every screen below is decided by the server, not the browser: the
