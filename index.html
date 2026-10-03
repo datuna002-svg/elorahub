@@ -6,6 +6,11 @@
 <title>elorahub — an AI that thinks before it speaks</title>
 <meta name="description" content="elorahub.online — elora AI. Deep reasoning, fast replies, and a chat built to actually understand you.">
 <link rel="icon" href="assets/elorahub_logo.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0e0e0e">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="elorahub">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -3475,6 +3480,251 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 .ec-table td,.ec-table th{ overflow-wrap:anywhere; }
 .chat-mock-head .dot{ background:#5f5f5f!important; box-shadow:none!important; }
 @media (max-width:760px){ #userChip>span:first-child{ display:none!important; } #userChip .btn{ padding:8px 14px!important; } }
+
+/* ============================================================
+   WORKSPACE PAGES — Projects, Artifacts, Scheduled tasks, Customize
+   open as full pages in the main area (like Claude), not pop-ups.
+   ============================================================ */
+.ec-main.is-page .ec-stage{ display:none!important; }
+.ec-main.is-page .ec-title-wrap,.ec-main.is-page .ec-top-actions{ visibility:hidden; }
+.ew-page{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; font-family:var(--ec-font); color:var(--ec-text); }
+.ew-page[hidden]{ display:none!important; }
+.ew-inner{ max-width:980px; margin:0 auto; padding:18px 36px 90px; }
+.ew-head{ display:flex; align-items:center; gap:10px; margin:6px 0 18px; }
+.ew-head h1{ flex:1; min-width:0; margin:0; font:400 36px/1.15 var(--ec-serif); letter-spacing:-.015em; color:var(--ec-text); }
+.ew-sub{ margin:-8px 0 22px; color:var(--ec-text-2); font-size:14.5px; line-height:1.55; }
+.ew-btn{ display:inline-flex; align-items:center; justify-content:center; gap:7px; height:36px; padding:0 14px; border:1px solid var(--ec-line-2); border-radius:10px; background:var(--ec-raised); color:var(--ec-text); font:600 13.5px var(--ec-font); white-space:nowrap; cursor:pointer; text-decoration:none; }
+.ew-btn:hover{ background:var(--ec-raised-2); border-color:var(--ec-line-2); }
+.ew-btn .ec-i{ width:16px; height:16px; }
+.ew-btn-main{ border-color:transparent; background:var(--ec-accent); color:var(--ec-on-accent); }
+.ew-btn-main:hover{ background:var(--ec-accent-hover); }
+.ew-btn-sm{ height:30px; padding:0 11px; font-size:12.5px; border-radius:8px; }
+.ew-btn:disabled{ opacity:.45; cursor:default; }
+.ew-iconbtn{ width:36px; height:36px; flex:none; display:grid; place-items:center; padding:0; border:0; border-radius:10px; background:transparent; color:var(--ec-text-2); cursor:pointer; }
+.ew-iconbtn:hover,.ew-iconbtn.is-on{ background:var(--ec-hover); color:var(--ec-text); }
+.ew-bar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0 0 18px; }
+.ew-tabs{ display:flex; gap:2px; padding:3px; border-radius:11px; background:var(--ec-hover); }
+.ew-tab{ height:30px; padding:0 13px; border:0; border-radius:8px; background:transparent; color:var(--ec-text-2); font:600 13px var(--ec-font); cursor:pointer; white-space:nowrap; }
+.ew-tab:hover{ color:var(--ec-text); }
+.ew-tab.is-active{ background:var(--ec-raised-2); color:var(--ec-text); box-shadow:0 1px 2px rgba(0,0,0,.25); }
+html[data-ec-theme="light"] .ew-tab.is-active{ background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+.ew-plain-tabs{ display:flex; gap:4px; }
+.ew-plain-tabs .ew-tab{ background:transparent; box-shadow:none; }
+.ew-plain-tabs .ew-tab.is-active{ background:var(--ec-active); }
+.ew-spacer{ flex:1; }
+.ew-search{ display:flex; align-items:center; gap:8px; height:36px; min-width:220px; padding:0 11px; border:1px solid var(--ec-line-2); border-radius:10px; background:var(--ec-raised); color:var(--ec-text-3); }
+.ew-search input{ flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--ec-text); font:14px var(--ec-font); }
+.ew-search:focus-within{ border-color:color-mix(in srgb,var(--ec-text) 35%,transparent); }
+.ew-label{ margin:26px 0 12px; color:var(--ec-text-3); font:600 13px var(--ec-font); }
+.ew-label:first-child{ margin-top:4px; }
+/* "Make something new" cards */
+.ew-make{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.ew-make-card{ display:flex; flex-direction:column; padding:0; overflow:hidden; border:1px solid var(--ec-line); border-radius:14px; background:var(--ec-raised); color:var(--ec-text); text-align:left; cursor:pointer; transition:border-color .15s,transform .15s; }
+.ew-make-card:hover{ border-color:var(--ec-line-2); transform:translateY(-2px); }
+.ew-make-card strong{ display:flex; align-items:center; gap:8px; padding:11px 13px 12px; font:600 14px var(--ec-font); }
+.ew-make-card small{ margin-left:auto; color:var(--ec-text-3); font-size:11.5px; font-weight:500; }
+.ew-art{ position:relative; height:104px; display:grid; place-items:center; background:linear-gradient(180deg,color-mix(in srgb,var(--ec-text) 7%,transparent),color-mix(in srgb,var(--ec-text) 2%,transparent)); border-bottom:1px solid var(--ec-line); }
+.ew-art i{ display:block; }
+.ew-art-doc{ width:58px; height:74px; padding:10px 8px; border-radius:6px; background:color-mix(in srgb,var(--ec-text) 82%,transparent); box-shadow:0 6px 16px rgba(0,0,0,.3); }
+.ew-art-doc i{ height:4px; margin:0 0 5px; border-radius:2px; background:color-mix(in srgb,var(--ec-bg) 55%,transparent); }
+.ew-art-doc i:first-child{ width:70%; height:6px; background:var(--ec-bg); }
+.ew-art-doc i:nth-child(4){ width:60%; }
+.ew-art-slides{ width:96px; height:60px; padding:9px; border-radius:7px; background:color-mix(in srgb,var(--ec-text) 16%,var(--ec-raised)); border:1px solid var(--ec-line-2); display:grid; grid-template-columns:1fr 34px; gap:7px; box-shadow:0 6px 16px rgba(0,0,0,.3); }
+.ew-art-slides i{ border-radius:3px; background:color-mix(in srgb,var(--ec-text) 70%,transparent); }
+.ew-art-slides i:first-child{ height:6px; align-self:start; }
+.ew-art-slides i:nth-child(2){ grid-row:span 2; background:color-mix(in srgb,var(--ec-text) 30%,transparent); }
+.ew-art-slides i:nth-child(3){ height:4px; width:70%; align-self:end; opacity:.6; }
+.ew-art-site{ width:100px; height:68px; border-radius:7px; overflow:hidden; border:1px solid var(--ec-line-2); background:color-mix(in srgb,var(--ec-text) 9%,var(--ec-raised)); box-shadow:0 6px 16px rgba(0,0,0,.3); }
+.ew-art-site i:first-child{ height:11px; background:color-mix(in srgb,var(--ec-text) 18%,transparent); }
+.ew-art-site i:nth-child(2){ width:56%; height:6px; margin:10px auto 6px; border-radius:3px; background:color-mix(in srgb,var(--ec-text) 75%,transparent); }
+.ew-art-site i:nth-child(3){ width:36%; height:9px; margin:0 auto; border-radius:5px; background:color-mix(in srgb,var(--ec-text) 40%,transparent); }
+.ew-art-app{ width:46px; height:78px; padding:9px 6px; border-radius:10px; border:2px solid color-mix(in srgb,var(--ec-text) 45%,transparent); background:var(--ec-raised); box-shadow:0 6px 16px rgba(0,0,0,.3); }
+.ew-art-app i{ height:9px; margin-bottom:5px; border-radius:3px; background:color-mix(in srgb,var(--ec-text) 22%,transparent); }
+.ew-art-app i:first-child{ height:5px; width:60%; background:color-mix(in srgb,var(--ec-text) 70%,transparent); }
+/* Lists and cards */
+.ew-list{ border-top:1px solid var(--ec-line); }
+.ew-row{ display:flex; align-items:center; gap:13px; padding:12px 6px; border-bottom:1px solid var(--ec-line); }
+.ew-row:hover{ background:var(--ec-hover); }
+.ew-row-ico{ width:38px; height:38px; flex:none; display:grid; place-items:center; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-raised); color:var(--ec-text-2); }
+.ew-row-main{ flex:1; min-width:0; cursor:pointer; }
+.ew-row-main strong{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 14.5px var(--ec-font); color:var(--ec-text); }
+.ew-row-main small{ display:block; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ec-text-3); font-size:12.5px; }
+.ew-row-time{ flex:none; color:var(--ec-text-3); font-size:12.5px; }
+.ew-row-acts{ display:flex; gap:2px; flex:none; }
+.ew-row-acts .ew-iconbtn{ width:32px; height:32px; }
+.ew-row-acts .ew-iconbtn .ec-i{ width:16px; height:16px; }
+.ew-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; }
+.ew-grid2{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.ew-card{ position:relative; display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid var(--ec-line); border-radius:14px; background:var(--ec-raised); color:var(--ec-text); }
+.ew-card:hover{ border-color:var(--ec-line-2); }
+.ew-card h3{ margin:0; font:600 15px/1.35 var(--ec-font); color:var(--ec-text); }
+.ew-card p{ margin:0; color:var(--ec-text-2); font-size:13.5px; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.ew-card-meta{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; color:var(--ec-text-3); font-size:12.5px; }
+.ew-card-meta .ec-i{ width:14px; height:14px; }
+.ew-card-acts{ display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; padding-top:6px; }
+.ew-card-top{ display:flex; align-items:flex-start; gap:12px; }
+.ew-card-ico{ width:36px; height:36px; flex:none; display:grid; place-items:center; border-radius:10px; background:var(--ec-hover); color:var(--ec-text); }
+.ew-card-click{ cursor:pointer; }
+.ew-chip{ display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border:1px solid var(--ec-line); border-radius:999px; color:var(--ec-text-2); font:600 11.5px var(--ec-font); }
+.ew-chip.is-green{ border-color:rgba(61,220,132,.35); color:var(--ec-green); }
+.ew-chip.is-green::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--ec-green); box-shadow:0 0 6px rgba(61,220,132,.7); }
+.ew-convs{ display:grid; gap:2px; margin-top:2px; }
+.ew-convs button{ display:flex; align-items:center; gap:8px; height:30px; padding:0 8px; border:0; border-radius:7px; background:transparent; color:var(--ec-text-2); font:13px var(--ec-font); text-align:left; cursor:pointer; }
+.ew-convs button:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ew-convs button span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ew-convs .ec-i{ width:14px; height:14px; flex:none; }
+.ew-empty{ display:grid; justify-items:center; gap:8px; padding:46px 20px; border:1px dashed var(--ec-line-2); border-radius:14px; text-align:center; color:var(--ec-text-2); }
+.ew-empty .ec-i{ width:26px; height:26px; color:var(--ec-text-3); }
+.ew-empty h3{ margin:4px 0 0; font:600 15.5px var(--ec-font); color:var(--ec-text); }
+.ew-empty p{ margin:0; max-width:380px; font-size:13.5px; line-height:1.5; }
+.ew-wave{ height:14px; margin:30px 0 26px; color:var(--ec-line-2); }
+.ew-wave svg{ display:block; width:100%; height:14px; }
+.ew-feature{ display:flex; align-items:center; gap:20px; padding:24px 26px; margin-bottom:22px; border:1px solid var(--ec-line); border-radius:16px; background:linear-gradient(120deg,color-mix(in srgb,var(--ec-text) 8%,var(--ec-raised)),var(--ec-raised)); }
+.ew-feature-copy{ flex:1; min-width:0; }
+.ew-feature small{ color:var(--ec-text-3); font-size:12.5px; }
+.ew-feature h2{ margin:4px 0 6px; font:400 28px/1.2 var(--ec-serif); }
+.ew-feature p{ margin:0 0 14px; color:var(--ec-text-2); font-size:14px; line-height:1.5; max-width:520px; }
+.ew-feature-art{ width:110px; height:110px; flex:none; display:grid; place-items:center; border-radius:24px; border:1px solid var(--ec-line-2); background:var(--ec-bg); color:var(--ec-text); }
+.ew-feature-art .ec-i{ width:46px; height:46px; stroke-width:1.4; }
+.ew-add{ width:32px; height:32px; flex:none; display:grid; place-items:center; padding:0; border:1px solid var(--ec-line-2); border-radius:9px; background:transparent; color:var(--ec-text); cursor:pointer; }
+.ew-add:hover{ background:var(--ec-hover); }
+.ew-add.is-added{ color:var(--ec-green); border-color:rgba(61,220,132,.35); }
+.ew-style-opt{ cursor:pointer; text-align:left; font:inherit; }
+.ew-style-opt.is-on{ border-color:color-mix(in srgb,var(--ec-text) 55%,transparent); box-shadow:0 0 0 1px color-mix(in srgb,var(--ec-text) 40%,transparent) inset; }
+.ew-style-opt .ew-check{ position:absolute; top:14px; right:14px; width:20px; height:20px; display:none; place-items:center; border-radius:50%; background:var(--ec-accent); color:var(--ec-on-accent); }
+.ew-style-opt.is-on .ew-check{ display:grid; }
+.ew-style-opt .ew-check .ec-i{ width:12px; height:12px; stroke-width:2.6; }
+/* Sheet (modal form / viewer) */
+.ew-sheet{ position:fixed; inset:0; z-index:120; display:grid; place-items:center; padding:20px; background:var(--ec-scrim); font-family:var(--ec-font); color:var(--ec-text); animation:ec-in .15s ease both; }
+.ew-sheet[hidden]{ display:none; }
+.ew-sheet-card{ position:relative; width:min(560px,100%); max-height:calc(100dvh - 40px); overflow:auto; padding:22px; border:1px solid var(--ec-line-2); border-radius:16px; background:var(--ec-bg); box-shadow:var(--ec-pop-shadow); }
+.ew-sheet-card.is-wide{ width:min(880px,100%); }
+.ew-sheet-card h2{ margin:0 40px 4px 0; font:600 18px var(--ec-font); }
+.ew-sheet-card>p{ margin:0 0 16px; color:var(--ec-text-2); font-size:13.5px; line-height:1.5; }
+.ew-sheet-x{ position:absolute; top:14px; right:14px; }
+.ew-form{ display:grid; gap:12px; }
+.ew-form[hidden]{ display:none!important; }
+.ew-card-tools{ display:flex; gap:0; margin:-6px -6px 0 0; }
+.ew-card-tools .ew-iconbtn{ width:30px; height:30px; }
+.ew-card-tools .ew-iconbtn .ec-i{ width:15px; height:15px; }
+.ew-form label{ display:grid; gap:6px; color:var(--ec-text-2); font:600 12.5px var(--ec-font); }
+.ew-form input,.ew-form textarea,.ew-form select{ width:100%; padding:10px 12px; border:1px solid var(--ec-line-2); border-radius:10px; background:var(--ec-raised); color:var(--ec-text); font:14px var(--ec-font); outline:0; }
+.ew-form textarea{ min-height:110px; resize:vertical; line-height:1.5; }
+.ew-form input:focus,.ew-form textarea:focus,.ew-form select:focus{ border-color:color-mix(in srgb,var(--ec-text) 40%,transparent); }
+.ew-form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.ew-form-acts{ display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+.ew-note{ padding:11px 13px; border:1px solid var(--ec-line); border-radius:10px; background:var(--ec-hover); color:var(--ec-text-2); font-size:12.5px; line-height:1.5; }
+.ew-viewer{ max-height:min(64dvh,620px); overflow:auto; padding:14px 16px; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-raised); }
+.ew-viewer iframe{ display:block; width:100%; height:min(60dvh,560px); border:0; border-radius:8px; background:#fff; }
+.ew-switch{ position:relative; display:inline-block; width:36px; height:21px; flex:none; }
+.ew-switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:1; }
+.ew-switch span{ position:absolute; inset:0; border-radius:999px; background:var(--ec-line-2); transition:background .15s; }
+.ew-switch span::after{ content:""; position:absolute; top:3px; left:3px; width:15px; height:15px; border-radius:50%; background:#fff; transition:transform .15s; }
+.ew-switch input:checked+span{ background:var(--ec-accent); }
+.ew-switch input:checked+span::after{ transform:translateX(15px); background:var(--ec-on-accent); }
+.ec-nav-item.is-current{ background:var(--ec-active); color:var(--ec-text); }
+@media (max-width:860px){ .ew-make{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:700px){
+  .ew-inner{ padding:8px 16px 80px; }
+  .ew-head h1{ font-size:29px; }
+  .ew-grid2{ grid-template-columns:1fr; }
+  .ew-search{ min-width:0; flex:1 1 100%; }
+  .ew-feature{ flex-direction:column; align-items:flex-start; padding:20px; }
+  .ew-feature-art{ display:none; }
+  .ew-row-time{ display:none; }
+  .ew-form-row{ grid-template-columns:1fr; }
+  .ew-btn{ height:40px; }
+}
+
+/* Account menu (Claude-style) */
+.ec-pop-account{ max-width:300px; }
+.ec-pop-plan{ min-height:46px!important; }
+.ec-pop-plan-copy{ display:flex; flex-direction:column; gap:1px; line-height:1.2; }
+.ec-pop-plan-copy strong{ font-weight:600; font-size:14px; }
+.ec-pop-plan-copy small{ color:var(--ec-text-3); font-size:12px; }
+.ec-pop-plan-check{ margin-left:auto; color:var(--ec-text)!important; }
+.ec-pop-subwrap{ position:relative; }
+.ec-pop-subwrap>button{ display:flex; align-items:center; gap:10px; width:100%; min-height:36px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--ec-text); font:14px var(--ec-font); text-align:left; cursor:pointer; }
+.ec-pop-subwrap>button:hover,.ec-pop-subwrap>button[aria-expanded="true"]{ background:var(--ec-hover); }
+.ec-pop-subwrap>button>.ec-i{ color:var(--ec-text-2); }
+.ec-pop-meta-ico{ margin-left:auto; width:15px!important; height:15px!important; }
+.ec-pop-sub{ left:calc(100% + 10px); bottom:-6px; top:auto; min-width:210px; }
+@media (max-width:700px){ .ec-pop-sub{ left:auto; right:0; bottom:calc(100% + 6px); } .ec-pop-subwrap>button{ min-height:42px; font-size:15px; } }
+.ec-pop.is-scrolling .ec-pop-sub{ position:fixed; }
+
+/* ============================================================
+   CODE THEMES — syntax colours for code blocks (Settings → Code)
+   ============================================================ */
+html,[data-code-theme="elora-dark"]{ --tk-bg:#0e0e0e; --tk-text:#e4e4e4; --tk-kw:#ffffff; --tk-str:#b3b3b3; --tk-com:#6b6b6b; --tk-num:#d2d2d2; --tk-fn:#f4f4f4; --tk-type:#cdcdcd; --tk-tag:#ffffff; --tk-attr:#a2a2a2; --tk-add-bg:rgba(61,220,132,.12); --tk-add:#9ce9bb; --tk-del-bg:rgba(255,255,255,.05); --tk-del:#7b7b7b; }
+[data-code-theme="green-night"]{ --tk-bg:#0c1310; --tk-text:#d5e6da; --tk-kw:#5fe39b; --tk-str:#a9dcbc; --tk-com:#587063; --tk-num:#9ad1b0; --tk-fn:#ecfff2; --tk-type:#c2e8d0; --tk-tag:#5fe39b; --tk-attr:#8db9a0; --tk-add-bg:rgba(95,227,155,.14); --tk-add:#9ff0c1; --tk-del-bg:rgba(255,255,255,.04); --tk-del:#6e7f75; }
+[data-code-theme="soft-contrast"]{ --tk-bg:#1b1b1b; --tk-text:#dedede; --tk-kw:#ffffff; --tk-str:#a5d7b7; --tk-com:#7b7b7b; --tk-num:#e2e2e2; --tk-fn:#ffffff; --tk-type:#d0d0d0; --tk-tag:#ffffff; --tk-attr:#b4b4b4; --tk-add-bg:rgba(61,220,132,.13); --tk-add:#a6ecc2; --tk-del-bg:rgba(255,255,255,.05); --tk-del:#858585; }
+[data-code-theme="elora-light"]{ --tk-bg:#f6f6f5; --tk-text:#1e1e1e; --tk-kw:#000000; --tk-str:#565656; --tk-com:#9c9c9c; --tk-num:#2c2c2c; --tk-fn:#000000; --tk-type:#333333; --tk-tag:#000000; --tk-attr:#666666; --tk-add-bg:#e3f5ea; --tk-add:#146c38; --tk-del-bg:#efefef; --tk-del:#8a8a8a; }
+[data-code-theme="green-paper"]{ --tk-bg:#f3f8f4; --tk-text:#1c2b22; --tk-kw:#11793d; --tk-str:#2e6a45; --tk-com:#8ca596; --tk-num:#1e5b37; --tk-fn:#0b3b20; --tk-type:#23543a; --tk-tag:#11793d; --tk-attr:#4f7d62; --tk-add-bg:#dcf2e4; --tk-add:#11793d; --tk-del-bg:#eeeeee; --tk-del:#8b8b8b; }
+[data-code-theme="paper"]{ --tk-bg:#fbfaf7; --tk-text:#262626; --tk-kw:#111111; --tk-str:#5c5c5c; --tk-com:#a5a5a5; --tk-num:#3b3b3b; --tk-fn:#111111; --tk-type:#3a3a3a; --tk-tag:#111111; --tk-attr:#6e6e6e; --tk-add-bg:#e6f4ea; --tk-add:#1b6b3a; --tk-del-bg:#f0efec; --tk-del:#8d8d8d; }
+.ec-code,.ec-code pre{ background:var(--tk-bg)!important; }
+.ec-code pre,.ec-code code{ color:var(--tk-text); }
+.ec-code .ec-code-head{ background:color-mix(in srgb,var(--tk-text) 4%,var(--tk-bg)); color:color-mix(in srgb,var(--tk-text) 55%,var(--tk-bg)); border-bottom-color:color-mix(in srgb,var(--tk-text) 10%,transparent); }
+.ec-code .ec-code-head button{ color:color-mix(in srgb,var(--tk-text) 70%,var(--tk-bg)); }
+.tk-kw{ color:var(--tk-kw); font-weight:600; } .tk-str{ color:var(--tk-str); } .tk-com{ color:var(--tk-com); font-style:italic; } .tk-num{ color:var(--tk-num); }
+.tk-fn{ color:var(--tk-fn); } .tk-type{ color:var(--tk-type); } .tk-tag{ color:var(--tk-tag); } .tk-attr{ color:var(--tk-attr); }
+.tk-add{ background:var(--tk-add-bg); color:var(--tk-add); } .tk-del{ background:var(--tk-del-bg); color:var(--tk-del); text-decoration:line-through; }
+.es-code-themes{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:4px 0 6px; }
+.es-code-theme .es-select{ width:100%; }
+.es-code-theme .es-select select{ width:100%; }
+.es-code-sample{ margin-top:10px; padding:10px 0; border:1px solid var(--ec-line); border-radius:10px; background:var(--tk-bg); color:var(--tk-text); font:12.5px/1.75 var(--ec-mono); overflow:hidden; }
+.es-dl{ display:flex; gap:10px; padding:0 12px; white-space:pre; }
+.es-dl .n{ width:14px; flex:none; text-align:right; color:var(--tk-com); }
+.es-dl .m{ width:10px; flex:none; color:var(--tk-com); }
+.es-dl code{ font:inherit; background:none!important; padding:0!important; border:0!important; color:var(--tk-text); }
+.es-dl.is-del{ background:var(--tk-del-bg); } .es-dl.is-del code,.es-dl.is-del code span{ color:var(--tk-del)!important; text-decoration:line-through; font-weight:400; }
+.es-dl.is-add{ background:var(--tk-add-bg); } .es-dl.is-add .m,.es-dl.is-add .n{ color:var(--tk-add); }
+/* Usage (Claude-style) */
+.es-usage-hero{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.es-usage-hero h2{ margin:0!important; }
+.es-plan-tag{ padding:3px 10px; border:1px solid var(--ec-line-2); border-radius:999px; color:var(--ec-text-2); font:600 12px var(--ec-font); }
+.es-callout{ display:flex; align-items:center; gap:12px; padding:12px 14px; margin-bottom:18px; border:1px solid var(--ec-line); border-radius:12px; background:var(--ec-hover); color:var(--ec-text); font-size:14px; }
+.es-callout[hidden]{ display:none; }
+.es-callout span{ flex:1; }
+.es-pace{ margin:0 0 14px; font:600 21px/1.35 var(--ec-font); letter-spacing:-.01em; color:var(--ec-text); }
+.es-meters{ display:grid; gap:2px; margin:18px 0 26px; border-top:1px solid var(--ec-line); }
+.es-meter-row{ display:grid; grid-template-columns:minmax(150px,1fr) 2fr auto; align-items:center; gap:18px; padding:14px 0; border-bottom:1px solid var(--ec-line); }
+.es-meter-row[hidden]{ display:none; }
+.es-meter-copy strong{ display:block; font:600 14px var(--ec-font); }
+.es-meter-copy small{ color:var(--ec-text-3); font-size:12.5px; }
+.es-meter2{ height:6px; border-radius:99px; background:var(--ec-hover); overflow:hidden; }
+.es-meter2[hidden]{ visibility:hidden; display:block; }
+.es-meter2 i{ display:block; width:0; height:100%; border-radius:inherit; background:var(--ec-text); transition:width .4s ease; }
+.es-meter-val{ min-width:78px; text-align:right; color:var(--ec-text-2); font-size:13px; font-variant-numeric:tabular-nums; }
+/* Billing (Claude-style) */
+.es-bill-plan{ display:flex; align-items:center; gap:16px; padding:6px 0 18px; border-bottom:1px solid var(--ec-line); }
+.es-bill-ico{ width:52px; height:52px; flex:none; display:grid; place-items:center; border:1px solid var(--ec-line-2); border-radius:14px; background:var(--ec-raised); }
+.es-bill-ico img{ width:30px; height:30px; object-fit:contain; }
+.es-bill-plan .es-copy strong{ font-size:16px; }
+.es-bill-plan .es-copy small{ display:block; color:var(--ec-text-2); font-size:13px; }
+.es-h3{ margin:24px 0 6px; font:650 15px var(--ec-font); color:var(--ec-text); }
+.es-table{ width:100%; min-width:0!important; border-collapse:collapse; font-size:13.5px; }
+.es-table th{ padding:10px 8px 10px 0; text-align:left; color:var(--ec-text-2); font-weight:600; border-bottom:1px solid var(--ec-line); }
+.es-table td{ padding:11px 8px 11px 0; border-bottom:1px solid var(--ec-line); color:var(--ec-text); }
+.es-inline-link{ padding:0; border:0; background:none; color:var(--ec-text); font:inherit; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.es-inline-link:hover{ color:var(--ec-accent-hover); }
+/* Privacy disclosures */
+.es-disclose{ border-bottom:1px solid var(--ec-line); }
+.es-disclose summary{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 0; list-style:none; cursor:pointer; font:600 14.5px var(--ec-font); color:var(--ec-text); }
+.es-disclose summary::-webkit-details-marker{ display:none; }
+.es-disclose summary .ec-i{ width:16px; height:16px; color:var(--ec-text-3); transition:transform .2s ease; }
+.es-disclose[open] summary .ec-i{ transform:rotate(90deg); }
+.es-disclose ul{ margin:0 0 14px; padding-left:18px; display:grid; gap:6px; color:var(--ec-text-2); font-size:13.5px; line-height:1.55; }
+/* Browser off: hide its buttons */
+html.ec-no-browser #browserToggleBtn,html.ec-no-browser #browserMenuItem{ display:none!important; }
+@media (max-width:700px){ .es-code-themes{ grid-template-columns:1fr; } .es-meter-row{ grid-template-columns:1fr auto; } .es-meter2{ grid-column:1 / -1; order:3; } .es-pace{ font-size:18px; } }
+.es-table th,.es-table td{ font-family:var(--ec-font)!important; text-align:left!important; }
+.es-table td:last-child,.es-table th:last-child{ text-align:right!important; }
+/* Success states in grey and white too (green is only the "thinking / live" light) */
+.es-pill.is-on{ border-color:var(--ec-line-2)!important; background:var(--ec-hover)!important; color:var(--ec-text)!important; }
+.es-status.is-ok{ background:var(--ec-hover)!important; color:var(--ec-text)!important; }
+.ecb-lock.is-secure,.ecb-result small{ color:var(--ec-text-2)!important; }
+.ecp-status.is-ok{ border-color:var(--ec-line-2)!important; background:var(--ec-hover)!important; color:var(--ec-text)!important; }
+.ec-pay-banner.is-ok{ border-color:var(--ec-line-2)!important; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -3486,7 +3736,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
       <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></symbol>
       <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2.5h7.5A2.5 2.5 0 0 1 21 10v7.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></symbol>
       <symbol id="i-artifact" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="3.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></symbol>
-      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol><symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r=".9"/><circle cx="4.8" cy="12" r=".9"/><circle cx="4.8" cy="17.5" r=".9"/></symbol><symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M5 17a7 7 0 0 1 14 0M3 20h18M12 3v3M4.9 8.9l1.6 1.6M19.1 8.9l-1.6 1.6"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><path d="M5 5h11v14H6.5A1.5 1.5 0 0 1 5 17.5z"/><path d="M16 9h3v8.5a1.5 1.5 0 0 1-3 0M8 9h5M8 12.5h5M8 16h3"/></symbol><symbol id="i-binoculars" viewBox="0 0 24 24"><circle cx="7" cy="16" r="3.5"/><circle cx="17" cy="16" r="3.5"/><path d="M10.5 16h3M5 12.5 7 5h3l.5 7.5M19 12.5 17 5h-3l-.5 7.5"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="m4.5 7 7.5 6 7.5-6"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 17.5h2"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></symbol><symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 4l3 3-3 3M4 11V9.5A2.5 2.5 0 0 1 6.5 7H20M7 20l-3-3 3-3M20 13v1.5A2.5 2.5 0 0 1 17.5 17H4"/></symbol><symbol id="i-wand" viewBox="0 0 24 24"><path d="m4 20 11-11M14 4v2M19 9h2M18 5l-1.5 1.5M10 5l1 1M18 13l1 1"/></symbol><symbol id="i-slides" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="12" rx="2"/><path d="M12 17v3M8.5 20h7M7 9h6M7 12h4"/></symbol><symbol id="i-window" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9h17M6.5 6.8h.01M9 6.8h.01"/></symbol><symbol id="i-feedback" viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17h-8l-4 3.5V17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z"/><path d="M8.5 10.5h7"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
       <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
       <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
       <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
@@ -3888,13 +4138,28 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
         <div class="ec-side-foot ec-account-wrap">
           <div class="ec-pop ec-pop-account" id="accountMenu" role="menu" hidden>
             <div class="ec-pop-identity"><span id="accountMenuEmail">Not signed in</span><strong id="accountMenuName" hidden>Guest</strong><small id="accountSyncState"></small></div>
+            <button type="button" role="menuitem" class="ec-pop-plan" data-account-action="upgrade"><span class="ec-pop-plan-copy"><strong>Personal</strong><small id="accountMenuPlan">Free plan</small></span><svg class="ec-i ec-pop-plan-check"><use href="#i-check"/></svg></button>
+            <div class="ec-pop-sep" role="separator"></div>
             <button type="button" role="menuitem" data-account-action="settings"><svg class="ec-i"><use href="#i-gear"/></svg>Settings<span class="ec-pop-meta">Ctrl+,</span></button>
             <button type="button" role="menuitem" data-account-action="usage"><svg class="ec-i"><use href="#i-gauge"/></svg>Usage</button>
             <button type="button" role="menuitem" data-account-action="language"><svg class="ec-i"><use href="#i-globe"/></svg>Language</button>
-            <button type="button" role="menuitem" data-account-action="connectors"><svg class="ec-i"><use href="#i-plug"/></svg>Apps &amp; connectors</button>
             <button type="button" role="menuitem" data-account-action="help"><svg class="ec-i"><use href="#i-help"/></svg>Get help</button>
+            <button type="button" role="menuitem" data-account-action="feedback"><svg class="ec-i"><use href="#i-feedback"/></svg>Give feedback</button>
             <div class="ec-pop-sep" role="separator"></div>
             <button type="button" role="menuitem" data-account-action="upgrade"><svg class="ec-i"><use href="#i-up-circle"/></svg>Upgrade plan</button>
+            <button type="button" role="menuitem" data-account-action="apps"><svg class="ec-i"><use href="#i-phone"/></svg>Get apps and extensions</button>
+            <button type="button" role="menuitem" data-account-action="changelog"><svg class="ec-i"><use href="#i-star"/></svg>View changelog</button>
+            <div class="ec-pop-subwrap">
+              <button type="button" role="menuitem" data-account-action="learn" aria-haspopup="menu" aria-expanded="false"><svg class="ec-i"><use href="#i-info"/></svg>Learn more<svg class="ec-i ec-pop-meta-ico"><use href="#i-chevron-right"/></svg></button>
+              <div class="ec-pop ec-pop-sub" id="learnMenu" role="menu" hidden>
+                <button type="button" role="menuitem" data-account-page="about"><svg class="ec-i"><use href="#i-info"/></svg>About elorahub</button>
+                <button type="button" role="menuitem" data-account-page="help"><svg class="ec-i"><use href="#i-help"/></svg>Help center</button>
+                <button type="button" role="menuitem" data-account-page="guidelines"><svg class="ec-i"><use href="#i-book"/></svg>Guidelines</button>
+                <button type="button" role="menuitem" data-account-page="privacy"><svg class="ec-i"><use href="#i-shield"/></svg>Privacy policy</button>
+                <button type="button" role="menuitem" data-account-page="terms"><svg class="ec-i"><use href="#i-doc"/></svg>Terms of service</button>
+              </div>
+            </div>
+            <div class="ec-pop-sep" role="separator"></div>
             <button type="button" role="menuitem" id="accountAuthAction"><svg class="ec-i"><use href="#i-login"/></svg>Log in</button>
             <button type="button" role="menuitem" data-account-action="signout" id="accountSignOut" hidden><svg class="ec-i"><use href="#i-logout"/></svg>Log out</button>
           </div>
@@ -3996,6 +4261,9 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
             <p class="ec-foot" id="inputFoot">elora can make mistakes. Double-check anything important.</p>
           </div>
         </div>
+        <section class="ew-page" id="workspacePage" hidden aria-label="Workspace">
+          <div class="ew-inner" id="workspacePageBody"></div>
+        </section>
       </main>
 
       <aside class="ec-progress" id="taskPanel" aria-label="Task progress" hidden>
@@ -5096,53 +5364,89 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 
       <section class="es-panel" data-settings-panel="privacy">
         <h2>Privacy</h2>
+        <p class="es-lead">elorahub only uses your data to run the service. It's never sold and never used to train AI models. Read the <button type="button" class="es-inline-link" data-nav="privacy" data-settings-close>Privacy policy</button> for the details.</p>
+        <details class="es-disclose" data-keywords="security protect encryption safe">
+          <summary>How we protect your data<svg class="ec-i"><use href="#i-chevron-right"/></svg></summary>
+          <ul>
+            <li>Everything between you and elorahub travels over an encrypted connection (HTTPS).</li>
+            <li>Sign-in is handled by Supabase — elorahub never sees your password.</li>
+            <li>Data saved to your account is locked so only you, and the server acting for you, can read it.</li>
+            <li>Card details go straight to Bank of Georgia. elorahub never sees or stores your card number.</li>
+            <li>Chats are kept in this browser and, when you're logged in, synced to your account.</li>
+          </ul>
+        </details>
+        <details class="es-disclose" data-keywords="data use providers ai training sell">
+          <summary>How we use your data<svg class="ec-i"><use href="#i-chevron-right"/></svg></summary>
+          <ul>
+            <li>Your messages go to elora's AI providers (Groq and Google Gemini) only to write the reply.</li>
+            <li>If Memory is on, elora keeps short facts you share so answers fit you better. Turn it off any time.</li>
+            <li>Message counts are used to apply your plan's limits.</li>
+            <li>elorahub doesn't sell your data or use your chats to train AI models.</li>
+            <li>You can export everything below, or ask us to delete your account.</li>
+          </ul>
+        </details>
+
+        <h2>Preferences</h2>
         <div class="es-row" data-keywords="memory remember personalization">
           <div class="es-copy"><strong>Memory across chats</strong><p>Let elora remember stable facts about you between chats. Turn off to keep every chat separate.</p></div>
           <label class="es-switch"><input type="checkbox" id="memoryToggle" aria-label="Memory across chats"><span></span></label>
         </div>
+        <div class="es-row" data-keywords="location region time zone local weather near me">
+          <div class="es-copy"><strong>Location for local answers</strong><p>Share your time zone (like <span id="privacyZone">Asia/Tbilisi</span>) so elora gets local time, weather and "near me" questions right. Never your exact location.</p></div>
+          <label class="es-switch"><input type="checkbox" id="shareZoneToggle" aria-label="Location for local answers"><span></span></label>
+        </div>
+
+        <h2>Your data</h2>
         <div class="es-row" data-keywords="export download data backup json">
-          <div class="es-copy"><strong>Export your data</strong><p>Download your chats, projects, saved artifacts and settings from this device as a file.</p></div>
-          <button type="button" class="es-btn" id="settingsExportBtn">Export</button>
+          <div class="es-copy"><strong>Export data</strong><p>Download your chats, projects, saved artifacts and settings from this device as a file.</p></div>
+          <button type="button" class="es-btn" id="settingsExportBtn">Export data</button>
         </div>
         <div class="es-row" data-keywords="delete history chats clear">
           <div class="es-copy"><strong>Chats on this device</strong><p>Recent chats are saved in this browser so you can come back to them.</p></div>
           <button type="button" class="es-btn es-btn-danger" id="settingsClearChatsBtn">Delete all chats</button>
         </div>
-        <div class="es-row" data-keywords="data policy">
-          <div class="es-copy"><strong>How your data is used</strong><p>Messages are sent to elora's AI provider only to write your reply. Card payments are handled by Bank of Georgia.</p></div>
-          <button type="button" class="es-btn" data-nav="privacy" data-settings-close>Privacy policy</button>
-        </div>
         <div class="es-row" data-keywords="contact email support data request delete account">
-          <div class="es-copy"><strong>Questions about your data</strong><p>Ask for a copy of your data or to delete your account.</p></div>
-          <a class="es-btn" href="mailto:elorahubonline@gmail.com?subject=elorahub%20privacy%20request">elorahubonline@gmail.com</a>
+          <div class="es-copy"><strong>Delete your account</strong><p>Ask for a copy of your data or for your account to be deleted.</p></div>
+          <a class="es-btn" href="mailto:elorahubonline@gmail.com?subject=elorahub%20privacy%20request">Email us</a>
         </div>
       </section>
 
       <section class="es-panel" data-settings-panel="billing">
-        <h2>Billing</h2>
-        <div class="es-plan">
-          <div class="es-plan-mark"><img src="assets/elorahub_logo.png" alt=""></div>
-          <div class="es-copy"><strong id="settingsPlanName">Free plan</strong><p id="settingsPlanCopy">Try elora with a daily message limit.</p></div>
-          <button type="button" class="es-btn es-btn-solid" id="settingsUpgradeBtn">View plans</button>
+        <div class="es-bill-plan">
+          <div class="es-bill-ico"><img src="assets/elorahub_logo.png" alt=""></div>
+          <div class="es-copy"><strong id="settingsPlanName">Free plan</strong><small id="billingCycleLabel"></small><p id="settingsPlanCopy">Try elora with a daily message limit.</p></div>
+          <button type="button" class="es-btn" id="settingsUpgradeBtn">Adjust plan</button>
         </div>
-        <div class="es-block es-sub" id="billingSub" hidden data-keywords="subscription renew cancel card">
-          <div class="es-usage-top"><strong id="billingSubTitle">Your subscription</strong><span class="es-pill" id="billingSubPill">Active</span></div>
+        <div id="billingSub" hidden data-keywords="subscription renew cancel card invoice receipt">
+          <h3 class="es-h3">Payment</h3>
+          <div class="es-row">
+            <div class="es-copy"><strong id="billingSubTitle">Your subscription</strong><p id="billingCardCopy">Your card is saved with Bank of Georgia and charged for renewals.</p></div>
+            <span class="es-pill" id="billingSubPill">Active</span>
+          </div>
           <dl class="es-kv" id="billingSubInfo"></dl>
-          <div class="es-actions-row"><button type="button" class="es-btn" id="billingCancelBtn">Cancel subscription</button><button type="button" class="es-btn es-btn-solid" id="billingResumeBtn" hidden>Keep my subscription</button></div>
-          <p class="es-hint" id="billingSubHint"></p>
+          <h3 class="es-h3">Invoices</h3>
+          <div class="es-invoices" id="billingInvoices"><p class="es-hint">Loading…</p></div>
+          <h3 class="es-h3">Cancellation</h3>
+          <div class="es-row">
+            <div class="es-copy"><strong id="billingCancelLabel">Cancel plan</strong><p id="billingSubHint"></p></div>
+            <div class="es-actions-row" style="margin:0"><button type="button" class="es-btn es-btn-danger" id="billingCancelBtn">Cancel</button><button type="button" class="es-btn es-btn-solid" id="billingResumeBtn" hidden>Keep my plan</button></div>
+          </div>
         </div>
+        <h3 class="es-h3">Help</h3>
         <div class="es-row" data-keywords="payment card receipt invoice">
-          <div class="es-copy"><strong>Payments and receipts</strong><p id="billingPayCopy">Card payments are handled securely by the payment provider. elorahub never sees or stores your card details.</p></div>
+          <div class="es-copy"><strong>Payments and receipts</strong><p id="billingPayCopy">Card payments are handled securely by Bank of Georgia. elorahub never sees or stores your card number.</p></div>
           <a class="es-btn" href="mailto:elorahubonline@gmail.com?subject=elorahub%20billing">Billing help</a>
         </div>
       </section>
 
       <section class="es-panel" data-settings-panel="usage">
-        <h2>Usage</h2>
-        <div class="es-block" data-keywords="credits messages limit">
-          <div class="es-usage-top"><strong id="settingsUsageTitle">Messages</strong><span id="settingsUsageValue">—</span></div>
-          <div class="es-meter" id="settingsUsageMeter" hidden><i id="settingsUsageBar"></i></div>
-          <p id="settingsUsageCopy">Loading your usage…</p>
+        <div class="es-usage-hero"><h2>Your usage</h2><span class="es-plan-tag" id="usagePlanTag">Free</span></div>
+        <div class="es-callout" id="usageCallout" hidden data-keywords="upgrade plans more messages"><svg class="ec-i"><use href="#i-crown"/></svg><span id="usageCalloutText">Get more messages, uploads and memory with Private or Premium.</span><button type="button" class="es-btn" data-usage-plans>See plans</button></div>
+        <p class="es-pace" id="usagePace">Loading your usage…</p>
+        <div class="es-actions-row" id="usageActions"><button type="button" class="es-btn es-btn-solid" data-usage-plans id="usageUpgradeBtn">Upgrade plan</button></div>
+        <div class="es-meters" data-keywords="credits messages limit today month reset">
+          <div class="es-meter-row" id="usageRowToday"><div class="es-meter-copy"><strong>Today</strong><small id="usageTodayReset">Resets at midnight</small></div><div class="es-meter2" id="usageTodayMeter"><i id="usageTodayBar"></i></div><span class="es-meter-val" id="usageTodayVal">—</span></div>
+          <div class="es-meter-row" id="usageRowPeriod" hidden><div class="es-meter-copy"><strong>This billing period</strong><small id="usagePeriodReset">Refills when your plan renews</small></div><div class="es-meter2"><i id="usagePeriodBar"></i></div><span class="es-meter-val" id="usagePeriodVal">—</span></div>
         </div>
         <h2>On this device</h2>
         <div class="es-stats" data-keywords="stats chats messages artifacts projects">
@@ -5183,6 +5487,14 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
         <div class="es-row" data-keywords="tasks agent steps multi-step progress">
           <div class="es-copy"><strong>Task mode</strong><p>Show the Task button in the message box. Tasks plan the work, run it step by step and show progress.</p></div>
           <label class="es-switch"><input type="checkbox" id="taskModeToggle" aria-label="Task mode"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="run code preview python javascript website execute">
+          <div class="es-copy"><strong>Run code and previews</strong><p>Show Run and Preview on code blocks, so you can run Python and JavaScript or see a website right in the chat.</p></div>
+          <label class="es-switch"><input type="checkbox" id="runCodeToggle" aria-label="Run code and previews"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="browser web pages open sites links">
+          <div class="es-copy"><strong>Built-in browser</strong><p>Open links and websites inside elorahub, and let elora read the page you're looking at.</p></div>
+          <label class="es-switch"><input type="checkbox" id="browserOnToggle" aria-label="Built-in browser"><span></span></label>
         </div>
         <div class="es-row" data-keywords="suggestions follow ups chips">
           <div class="es-copy"><strong>Follow-up suggestions</strong><p>One-tap follow-ups like "Shorter" under the latest reply.</p></div>
@@ -5283,6 +5595,16 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 
 
       <section class="es-panel" data-settings-panel="code">
+        <h2>Code appearance</h2>
+        <div class="es-code-themes" data-keywords="code theme colors syntax highlight appearance dark light">
+          <div class="es-code-theme"><span class="es-select"><select id="codeThemeLight" aria-label="Code theme in light mode"><option value="elora-light">elora Light</option><option value="green-paper">Green Paper</option><option value="paper">Paper</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span><div class="es-code-sample" id="codeSampleLight"></div></div>
+          <div class="es-code-theme"><span class="es-select"><select id="codeThemeDark" aria-label="Code theme in dark mode"><option value="elora-dark">elora Dark</option><option value="green-night">Green Night</option><option value="soft-contrast">Soft Contrast</option></select><svg class="ec-i"><use href="#i-chevron-down"/></svg></span><div class="es-code-sample" id="codeSampleDark"></div></div>
+        </div>
+        <div class="es-row" data-keywords="font monospace typeface code">
+          <div class="es-copy"><strong>Code font</strong><p>Set a custom monospace font for code. It must be installed on this device.</p></div>
+          <input class="es-input" id="codeFontInput" type="text" maxlength="40" placeholder="e.g. JetBrains Mono" autocomplete="off" spellcheck="false">
+        </div>
+
         <h2>Code</h2>
         <p class="es-lead">How elora writes code for you — in Code mode and whenever you ask for code.</p>
         <div class="es-row" data-keywords="programming language default python javascript">
@@ -6642,6 +6964,60 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
   var LOGO_SRC = (document.querySelector(".brand img") || document.querySelector(".ec-brand img")).getAttribute("src");
   function icon(name){ return '<svg class="ec-i" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
 
+  // ---- Syntax colours for code blocks (themes live in Settings → Code) ----
+  var HL_WORDS = {}, HL_SQL = {};
+  ("abstract and as assert async await begin break case catch chan class const continue def defer del delete do elif else end ensure enum except export extends extern false False final finally fn for foreach from func function get global go if impl implements import in include instanceof interface is lambda let loop match mod module mut namespace new nil None not null of or override package pass private protected pub public raise range require rescue return select self set static struct super switch template then this throw throws trait true True try type typeof undefined unless until use using val var void when where while with yield int float double char bool boolean string str long short byte u8 u16 u32 u64 i8 i16 i32 i64 f32 f64 usize isize").split(" ").forEach(function(w){ HL_WORDS[w] = 1; });
+  ("select from where insert into values update set delete join left right inner outer full on group by order limit offset as and or not null is in like ilike create table index primary key foreign references drop alter add distinct count sum avg min max having union all case when then else end desc asc exists between default view returning with local function return if").split(" ").forEach(function(w){ HL_SQL[w] = 1; });
+  function hlLang(label){
+    var l = String(label || "").toLowerCase().trim(), ext = l.indexOf(".") > -1 ? l.split(".").pop() : l;
+    if(/^(html?|xml|svg|vue|svelte|xhtml)$/.test(ext)) return "markup";
+    if(/^(css|scss|sass|less)$/.test(ext)) return "css";
+    if(/^(py|python|python3|sh|bash|shell|zsh|console|rb|ruby|ya?ml|toml|r|pl|perl|ps1|powershell|dockerfile|makefile|ini|conf|env|elixir|ex|exs|nim)$/.test(ext)) return "hash";
+    if(/^(sql|psql|mysql|sqlite|lua|hs|haskell)$/.test(ext)) return "dash";
+    if(/^(diff|patch)$/.test(ext)) return "diff";
+    if(/^(txt|text|plain|md|markdown|log|csv|tsv|output|code)$/.test(ext) || !ext) return "plain";
+    return "c";
+  }
+  function hlTokens(src, lang){
+    var out = [], m, re;
+    if(lang === "plain") return [["", src]];
+    if(lang === "diff"){
+      src.split("\n").forEach(function(line, i){ if(i) out.push(["", "\n"]); out.push([/^\+/.test(line) ? "add" : /^-/.test(line) ? "del" : /^@@/.test(line) ? "com" : "", line]); });
+      return out;
+    }
+    if(lang === "markup") re = /(<!--[\s\S]*?-->)|(=\s*(?:"[^"]*"|'[^']*'))|(<\/?[A-Za-z][\w:-]*|\/?>)|([\w:-]+)(?=\s*=)|([^<=\w]+|\w+|[\s\S])/g;
+    else if(lang === "css") re = /(\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(#[0-9a-fA-F]{3,8}\b|-?\d*\.?\d+(?:px|em|rem|%|vh|vw|vmin|vmax|s|ms|deg|fr|ch)?)|([\w-]+)(?=\s*:(?!:))|(@[\w-]+|[\w-]+|[\s\S])/g;
+    else {
+      var com = lang === "hash" ? "#[^\\n]*" : lang === "dash" ? "--[^\\n]*" : "\\/\\*[\\s\\S]*?\\*\\/|\\/\\/[^\\n]*";
+      var str = (lang === "hash" ? '"""[\\s\\S]*?"""|\'\'\'[\\s\\S]*?\'\'\'|' : "") + '"(?:[^"\\\\\\n]|\\\\.)*"|\'(?:[^\'\\\\\\n]|\\\\.)*\'' + (lang === "c" ? "|`(?:[^`\\\\]|\\\\.)*`" : "");
+      re = new RegExp("(" + com + ")|(" + str + ")|(\\b0x[0-9a-fA-F]+\\b|\\b\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?\\b)|([A-Za-z_$][\\w$]*)|([\\s\\S])", "g");
+    }
+    while((m = re.exec(src))){
+      if(m[1] != null) out.push(["com", m[1]]);
+      else if(m[2] != null) out.push(["str", m[2]]);
+      else if(m[3] != null) out.push([lang === "markup" ? "tag" : "num", m[3]]);
+      else if(m[4] != null){
+        if(lang === "markup" || lang === "css") out.push(["attr", m[4]]);
+        else {
+          var w = m[4], rest = src.slice(re.lastIndex, re.lastIndex + 4);
+          var kw = lang === "dash" ? (HL_SQL[w.toLowerCase()] || HL_WORDS[w]) : HL_WORDS[w];
+          out.push([kw ? "kw" : /^\s*\(/.test(rest) ? "fn" : /^[A-Z][a-z0-9]/.test(w) ? "type" : "", w]);
+        }
+      }
+      else out.push(["", m[5] != null ? m[5] : m[0]]);
+    }
+    return out;
+  }
+  function hlLines(src, label){
+    var lines = [""];
+    hlTokens(src, hlLang(label)).forEach(function(t){
+      String(t[1]).split("\n").forEach(function(part, i){
+        if(i) lines.push("");
+        if(part) lines[lines.length - 1] += t[0] ? '<span class="tk-' + t[0] + '">' + escapeHtml(part) + "</span>" : escapeHtml(part);
+      });
+    });
+    return lines;
+  }
   // Code blocks get a small header with a Copy button.
   function enhanceCodeBlocks(root){
     root.querySelectorAll("pre").forEach(function(pre){
@@ -6656,7 +7032,13 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
       wrap.appendChild(head);
       wrap.appendChild(pre);
       var codeEl = pre.querySelector("code");
-      if(codeEl && !codeEl.querySelector(".ec-ln")) codeEl.innerHTML = codeEl.innerHTML.split("\n").map(function(line){ return '<span class="ec-ln">' + line + "</span>"; }).join("\n");
+      if(codeEl && !codeEl.querySelector(".ec-ln")){
+        var rawCode = codeEl.textContent.replace(/\n$/, "");
+        var lineHtml;
+        try { lineHtml = rawCode.length < 200000 ? hlLines(rawCode, pre.getAttribute("data-label")) : null; } catch(err){ lineHtml = null; }
+        if(!lineHtml) lineHtml = rawCode.split("\n").map(function(line){ return escapeHtml(line); });
+        codeEl.innerHTML = lineHtml.map(function(line){ return '<span class="ec-ln">' + line + "</span>"; }).join("\n");
+      }
       addCodeActions(wrap);
     });
   }
@@ -7068,7 +7450,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
   /* ---------------- Preferences + Settings window ---------------- */
   var selectedModel = "groq";
   var inputFoot = document.getElementById("inputFoot");
-  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, enterToSend:true, suggestions:true, autoFocus:true, contrast:false, themeMode:"dark", chatFont:"system", textSize:"medium", transcriptWidth:"medium", motion:"system", responseLanguage:"auto", sidebarCollapsed:false, workspaceMode:"chat", memory:true, readLinks:true, taskMode:true, followups:true, doneNotify:false, work:"", instructions:"", taskAuto:"auto", taskMaxSteps:"6", taskAutoPanel:true, showThinking:true, codeLanguage:"auto", codeIndent:"auto", codeComments:"normal", codeExplain:"normal", codeTypes:false, codeLines:false, codeWrap:false, readAloud:true, speakAuto:false, voiceName:"", voiceRate:"1", dictationLang:"", underlineLinks:false, showModel:false, typing:true, replySound:false, compact:false };
+  var chatPreferences = { style:"balanced", tone:"direct", activity:true, webSearch:true, enterToSend:true, suggestions:true, autoFocus:true, contrast:false, themeMode:"dark", chatFont:"system", textSize:"medium", transcriptWidth:"medium", motion:"system", responseLanguage:"auto", sidebarCollapsed:false, workspaceMode:"chat", memory:true, readLinks:true, taskMode:true, followups:true, doneNotify:false, work:"", instructions:"", taskAuto:"auto", taskMaxSteps:"6", taskAutoPanel:true, showThinking:true, codeLanguage:"auto", codeIndent:"auto", codeComments:"normal", codeExplain:"normal", codeTypes:false, codeLines:false, codeWrap:false, readAloud:true, speakAuto:false, voiceName:"", voiceRate:"1", dictationLang:"", underlineLinks:false, showModel:false, typing:true, replySound:false, compact:false, codeThemeDark:"elora-dark", codeThemeLight:"elora-light", codeFont:"", runCode:true, browserOn:true, shareZone:false };
   var DEFAULT_PREFERENCES = JSON.parse(JSON.stringify(chatPreferences));
   try { chatPreferences = Object.assign(chatPreferences, JSON.parse(localStorage.getItem("elorahub_chat_preferences") || "{}")); } catch(e){}
   // Carry over settings saved by the previous chat design.
@@ -7102,7 +7484,14 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     root.classList.toggle("ec-code-wrap", !!chatPreferences.codeWrap);
     root.classList.toggle("ec-underline-links", !!chatPreferences.underlineLinks);
     root.classList.toggle("ec-compact", !!chatPreferences.compact);
+    root.classList.toggle("ec-no-browser", chatPreferences.browserOn === false);
+    var codeTheme = resolvedTheme() === "light" ? (chatPreferences.codeThemeLight || "elora-light") : (chatPreferences.codeThemeDark || "elora-dark");
+    root.setAttribute("data-code-theme", codeTheme);
+    var codeFont = cleanFontName(chatPreferences.codeFont);
+    if(codeFont) root.style.setProperty("--ec-mono", '"' + codeFont + '",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace');
+    else root.style.removeProperty("--ec-mono");
   }
+  function cleanFontName(v){ return String(v || "").replace(/[^A-Za-z0-9 _-]/g, "").trim().slice(0, 40); }
   applyTheme();
   if(systemDark){
     var onSystemTheme = function(){ if(chatPreferences.themeMode === "system") applyTheme(); };
@@ -7150,32 +7539,17 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
   function renderPlanInfo(){
     var meta = document.getElementById("sidebarUserMeta");
     if(meta) meta.textContent = currentUser ? planLabel() + " plan" : "Not signed in";
+    var menuPlan = document.getElementById("accountMenuPlan");
+    if(menuPlan) menuPlan.textContent = currentUser ? planLabel() + " plan" : "Free · not signed in";
     var name = document.getElementById("settingsPlanName");
     var copy = document.getElementById("settingsPlanCopy");
     var plan = planInfo && planInfo.plan || "free";
     if(name) name.textContent = planLabel() + " plan";
     if(copy) copy.textContent = plan === "premium" ? "Unlimited messages with elora." : plan === "private" ? "A monthly allowance of messages, refilled when your plan renews." : "Try elora with a daily message limit. Upgrade for more.";
     if(typeof renderUpgradePill === "function") renderUpgradePill();
-    var title = document.getElementById("settingsUsageTitle");
-    var value = document.getElementById("settingsUsageValue");
-    var meter = document.getElementById("settingsUsageMeter");
-    var bar = document.getElementById("settingsUsageBar");
-    var text = document.getElementById("settingsUsageCopy");
-    if(!value || !text) return;
-    if(!planInfo){ value.textContent = "—"; if(meter) meter.hidden = true; text.textContent = "Couldn't load your usage right now."; return; }
-    if(title) title.textContent = planLabel() + " plan";
-    if(plan === "premium"){
-      value.textContent = "Unlimited"; if(meter) meter.hidden = true;
-      text.textContent = "No message limit on your plan.";
-    } else if(plan === "private" && planInfo.creditsTotal){
-      var left = Math.max(0, Number(planInfo.creditsRemaining) || 0), total = Number(planInfo.creditsTotal) || 0;
-      value.textContent = left + " of " + total + " left";
-      if(meter){ meter.hidden = false; bar.style.width = Math.max(0, Math.min(100, total ? left / total * 100 : 0)).toFixed(1) + "%"; }
-      text.textContent = "Messages left this billing period. They refill when your plan renews.";
-    } else {
-      value.textContent = "Up to " + (planInfo.freeDailyLimit || 20) + " a day"; if(meter) meter.hidden = true;
-      text.textContent = currentUser ? "The free plan has a daily message limit. Upgrade for more." : "Log in and upgrade for more messages.";
-    }
+    var upBtn = document.getElementById("settingsUpgradeBtn");
+    if(upBtn) upBtn.textContent = plan === "free" ? "Upgrade" : "Adjust plan";
+    renderUsageV2();
   }
   async function loadPlanInfo(){
     try {
@@ -7274,7 +7648,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     if(tab === "memory") loadMemorySummary();
     if(tab === "billing" || tab === "usage") loadPlanInfo();
     if(tab === "billing" && typeof loadBillingSub === "function") loadBillingSub();
-    if(tab === "usage") renderDeviceStats();
+    if(tab === "usage"){ renderDeviceStats(); renderUsageV2(); fetchSubscription().then(function(sub){ renderUsageV2(sub); }); }
     if(tab === "storage") renderStorageSize();
     if(tab === "connectors") loadConnectorStatus();
     if(tab === "notifications") renderNotificationState();
@@ -7560,6 +7934,10 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     set("typingToggle", chatPreferences.typing !== false);
     set("replySoundToggle", !!chatPreferences.replySound);
     set("compactToggle", !!chatPreferences.compact);
+    set("runCodeToggle", chatPreferences.runCode !== false);
+    set("browserOnToggle", chatPreferences.browserOn !== false);
+    set("shareZoneToggle", !!chatPreferences.shareZone);
+    var zoneEl = document.getElementById("privacyZone"); if(zoneEl){ try { zoneEl.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "your time zone"; } catch(e){} }
     var lang = document.getElementById("codeLanguageSelect"); if(lang) lang.value = chatPreferences.codeLanguage || "auto";
     var dict = document.getElementById("dictationLangSelect"); if(dict) dict.value = chatPreferences.dictationLang || "";
     var ver = document.getElementById("aboutVersion"); if(ver) ver.textContent = APP_VERSION;
@@ -7583,7 +7961,30 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
   var taskModeMain = document.getElementById("taskModeToggle");
   if(taskModeMain) taskModeMain.addEventListener("change", syncExtraSettings);
 
+  function renderCodeSamples(){
+    var sample = [[" ", 'function greet(name: string) {'], ["-", '  return "Hello, " + name;'], ["+", '  return `Hello, ${name}!`;'], [" ", "}"]];
+    var html = sample.map(function(row, i){
+      return '<div class="es-dl' + (row[0] === "+" ? " is-add" : row[0] === "-" ? " is-del" : "") + '"><span class="n">' + (row[0] === "+" ? i : i + 1) + '</span><span class="m">' + (row[0] === " " ? "" : row[0]) + '</span><code>' + hlLines(row[1], "ts")[0] + "</code></div>";
+    }).join("");
+    var light = document.getElementById("codeSampleLight"), dark = document.getElementById("codeSampleDark");
+    if(light){ light.innerHTML = html; light.setAttribute("data-code-theme", chatPreferences.codeThemeLight || "elora-light"); }
+    if(dark){ dark.innerHTML = html; dark.setAttribute("data-code-theme", chatPreferences.codeThemeDark || "elora-dark"); }
+    var selL = document.getElementById("codeThemeLight"), selD = document.getElementById("codeThemeDark"), font = document.getElementById("codeFontInput");
+    if(selL) selL.value = chatPreferences.codeThemeLight || "elora-light";
+    if(selD) selD.value = chatPreferences.codeThemeDark || "elora-dark";
+    if(font && document.activeElement !== font) font.value = chatPreferences.codeFont || "";
+  }
+  bindPref("codeThemeLight", "codeThemeLight", function(){ applyTheme(); renderCodeSamples(); });
+  bindPref("codeThemeDark", "codeThemeDark", function(){ applyTheme(); renderCodeSamples(); });
+  (function(){
+    var font = document.getElementById("codeFontInput");
+    if(font) font.addEventListener("input", function(){ chatPreferences.codeFont = cleanFontName(font.value); saveChatPreferences(); applyTheme(); });
+  })();
+  bindToggle("runCodeToggle", "runCode", function(el){ showToast(el.checked ? "Run and Preview are on for new replies." : "Run and Preview are off."); });
+  bindToggle("browserOnToggle", "browserOn", function(){ applyTheme(); });
+  bindToggle("shareZoneToggle", "shareZone");
   function renderCodePreview(){
+    renderCodeSamples();
     var box = document.getElementById("codePreview");
     if(!box) return;
     box.innerHTML = mdToHtml("```python filename=preview.py\ndef greet(name: str) -> str:\n    \"\"\"Say hello — this line is long on purpose so you can see how wrapping looks in a code block.\"\"\"\n    return f\"Hello, {name}!\"\n\nprint(greet(\"elora\"))\n```");
@@ -7875,6 +8276,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
       autoTask: chatPreferences.taskMode !== false && chatPreferences.taskAuto !== "manual" && !taskArmed,
       taskMaxSteps: chatPreferences.taskMaxSteps || 6,
       showThinking: chatPreferences.showThinking !== false,
+      timeZone: chatPreferences.shareZone ? (function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(e){ return ""; } })() : "",
       code: { indent: chatPreferences.codeIndent || "auto", comments: chatPreferences.codeComments || "normal", explain: chatPreferences.codeExplain || "normal", language: chatPreferences.codeLanguage || "auto", types: chatPreferences.codeTypes === true } };
   }
   async function getReply(text, fileEntries, signal){
@@ -7943,7 +8345,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     if(!text && attachedFiles.length === 0) return;
 
     var openCmd = /^(?:please\s+)?(?:open|go to|browse|visit)\s+(https?:\/\/\S+|[\w-]+(?:\.[\w-]+)+(?:\/\S*)?)\s*$/i.exec(text);
-    if(openCmd && attachedFiles.length === 0){
+    if(openCmd && attachedFiles.length === 0 && chatPreferences.browserOn !== false){
       chatInput.value = ""; autoGrow();
       openBrowser({ url: /^https?:/i.test(openCmd[1]) ? openCmd[1] : "https://" + openCmd[1] });
       showToast("Opened " + openCmd[1].replace(/^https?:\/\//, "") + " in the browser.");
@@ -8710,7 +9112,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     // Links in elora's replies open in the browser panel (Ctrl/⌘-click opens a real tab).
     chatThread.addEventListener("click", function(e){
       var a = e.target.closest && e.target.closest(".ec-msg.is-ai .ec-msg-text a[href]");
-      if(!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1 || chatPreferences.linksInBrowser === false) return;
+      if(!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1 || chatPreferences.linksInBrowser === false || chatPreferences.browserOn === false) return;
       if(!/^https?:/i.test(a.getAttribute("href") || "")) return;
       e.preventDefault();
       openBrowser({ url: a.href });
@@ -8800,6 +9202,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     worker.postMessage({ code: code });
   }
   function addCodeActions(wrap){
+    if(chatPreferences.runCode === false) return;
     var head = wrap.querySelector(".ec-code-head");
     var pre = wrap.querySelector("pre");
     if(!head || !pre || head.querySelector(".ec-code-run,.ec-code-preview")) return;
@@ -9097,7 +9500,77 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     setTimeout(check, 600);
   })();
 
-  // Settings → Billing: subscription details, cancel and resume.
+  // Settings → Usage: plan tag, pace, today's and this period's bars.
+  var subCache = { at:0, sub:null };
+  async function fetchSubscription(force){
+    if(!currentUser || !getAccessToken()) return null;
+    if(!force && subCache.at && Date.now() - subCache.at < 60000) return subCache.sub;
+    try { var r = await fetch("/api/pay/subscription", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } }); var d = r.ok ? await r.json() : {}; subCache = { at:Date.now(), sub:d.subscription || null }; } catch(e){ subCache = { at:Date.now(), sub:null }; }
+    return subCache.sub;
+  }
+  function fmtDay(d){ return d.toLocaleDateString(undefined, { month:"short", day:"numeric" }); }
+  function setBar(id, frac){ var el = document.getElementById(id); if(el) el.style.width = Math.max(0, Math.min(100, frac * 100)).toFixed(1) + "%"; }
+  function renderUsageV2(sub){
+    var tag = document.getElementById("usagePlanTag");
+    if(!tag) return;
+    var plan = planInfo && planInfo.plan || "free";
+    tag.textContent = planLabel();
+    var activity = readActivity(), today = (activity.days || {})[localDayKey(new Date())] || 0;
+    var limit = (planInfo && planInfo.freeDailyLimit) || 20;
+    var pace = document.getElementById("usagePace"), callout = document.getElementById("usageCallout"), actions = document.getElementById("usageActions"), upBtn = document.getElementById("usageUpgradeBtn");
+    var rowPeriod = document.getElementById("usageRowPeriod"), todayMeter = document.getElementById("usageTodayMeter");
+    callout.hidden = plan !== "free";
+    actions.hidden = plan === "premium";
+    if(upBtn) upBtn.textContent = plan === "private" ? "Upgrade to Premium" : "Upgrade plan";
+    var midnight = new Date(); midnight.setHours(24, 0, 0, 0);
+    document.getElementById("usageTodayReset").textContent = plan === "free" ? "Resets at " + midnight.toLocaleTimeString([], { hour:"numeric", minute:"2-digit" }) : "Messages you sent today";
+    if(plan === "free"){
+      todayMeter.hidden = false; setBar("usageTodayBar", today / limit);
+      document.getElementById("usageTodayVal").textContent = Math.min(100, Math.round(today / limit * 100)) + "% used";
+      rowPeriod.hidden = true;
+      pace.textContent = !currentUser ? "You're on the free plan — up to " + limit + " messages a day. Log in and upgrade for more." : today >= limit * 0.75 ? "Heads up. You've used " + today + " of your " + limit + " messages today. They reset at midnight." : "You've used " + today + " of " + limit + " free messages today.";
+      return;
+    }
+    todayMeter.hidden = true;
+    document.getElementById("usageTodayVal").textContent = today + (today === 1 ? " message" : " messages");
+    if(plan === "premium"){ rowPeriod.hidden = true; pace.textContent = "You're on Premium — no message limits. Use elora as much as you like."; return; }
+    var total = Number(planInfo.creditsTotal) || 0, left = Math.max(0, Number(planInfo.creditsRemaining) || 0), used = Math.max(0, total - left);
+    rowPeriod.hidden = !total;
+    setBar("usagePeriodBar", total ? used / total : 0);
+    document.getElementById("usagePeriodVal").textContent = total ? Math.round(used / total * 100) + "% used" : "—";
+    sub = sub || subCache.sub;
+    var end = sub && sub.current_period_end ? new Date(sub.current_period_end) : null;
+    document.getElementById("usagePeriodReset").textContent = end ? "Refills " + fmtDay(end) : "Refills when your plan renews";
+    if(!end || !total){ pace.textContent = left + " of " + total + " messages left this billing period."; return; }
+    var start = new Date(end); if(sub.cycle === "yearly") start.setFullYear(start.getFullYear() - 1); else start.setMonth(start.getMonth() - 1);
+    var days = Math.max(0.5, (Date.now() - start.getTime()) / 864e5), rate = used / days;
+    if(left <= 0) pace.textContent = "You've used all " + total + " messages for this period. They refill on " + fmtDay(end) + ".";
+    else if(rate > 0 && Date.now() + left / rate * 864e5 < end.getTime()) pace.textContent = "Heads up. At this pace you'll run out around " + fmtDay(new Date(Date.now() + left / rate * 864e5)) + ", before your " + fmtDay(end) + " refill.";
+    else pace.textContent = "You're on track — your " + left + " messages left should last until the " + fmtDay(end) + " refill.";
+  }
+  document.querySelectorAll("[data-usage-plans]").forEach(function(b){ b.addEventListener("click", function(){ closeSettings(); if(window.EloraPlans) window.EloraPlans.open(); }); });
+
+  // Settings → Billing: subscription details, invoices, cancel and resume.
+  var invoiceList = [];
+  function money(amount, currency){ return currency === "USD" ? "$" + Number(amount).toFixed(2).replace(/\.00$/, "") : Number(amount).toFixed(2) + " " + currency; }
+  async function loadInvoices(){
+    var host = document.getElementById("billingInvoices");
+    if(!host) return;
+    try { var r = await fetch("/api/pay/invoices", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } }); var d = r.ok ? await r.json() : {}; invoiceList = d.invoices || []; } catch(e){ invoiceList = []; }
+    if(!invoiceList.length){ host.innerHTML = '<p class="es-hint">No invoices yet.</p>'; return; }
+    host.innerHTML = '<table class="es-table"><thead><tr><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + invoiceList.map(function(inv, i){
+      return "<tr><td>" + escapeHtml(new Date(inv.created_at).toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" })) + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + "</td><td>" + (inv.status === "completed" ? "Paid" : "Refunded") + '</td><td><button type="button" class="es-inline-link" data-receipt="' + i + '">Receipt</button></td></tr>';
+    }).join("") + "</tbody></table>";
+  }
+  function openReceipt(inv){
+    var w = window.open("", "_blank");
+    if(!w){ showToast("Allow pop-ups to open the receipt."); return; }
+    var date = new Date(inv.created_at).toLocaleDateString(undefined, { day:"numeric", month:"long", year:"numeric" });
+    var item = (inv.plan === "premium" ? "Premium" : "Private") + " plan — " + (inv.cycle === "yearly" ? "1 year" : "1 month") + (inv.kind === "renewal" ? " (renewal)" : "");
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>elorahub receipt ' + escapeHtml(inv.id) + '</title><style>body{font:15px/1.6 -apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111;max-width:640px;margin:48px auto;padding:0 24px}h1{font-size:26px;margin:0 0 4px}.muted{color:#666}table{width:100%;border-collapse:collapse;margin:28px 0}td,th{padding:10px 0;border-bottom:1px solid #e5e5e5;text-align:left}td:last-child,th:last-child{text-align:right}.total td{font-weight:700;border-bottom:0}button{margin-top:18px;padding:10px 16px;border:0;border-radius:8px;background:#111;color:#fff;font:600 14px inherit;cursor:pointer}@media print{button{display:none}}</style></head><body><h1>elorahub</h1><div class="muted">Receipt</div><p><strong>Receipt no.</strong> ' + escapeHtml(inv.id) + "<br><strong>Date</strong> " + escapeHtml(date) + "<br><strong>Billed to</strong> " + escapeHtml(currentUser && currentUser.email || "") + "</p><table><tr><th>Item</th><th>Amount</th></tr><tr><td>" + escapeHtml(item) + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + '</td></tr><tr class="total"><td>Total ' + (inv.status === "completed" ? "paid" : "(refunded)") + "</td><td>" + escapeHtml(money(inv.amount, inv.currency)) + '</td></tr></table><p class="muted">Paid by card through Bank of Georgia. Questions? elorahubonline@gmail.com</p><button onclick="window.print()">Print or save as PDF</button></body></html>');
+    w.document.close();
+  }
+  document.addEventListener("click", function(e){ var b = e.target.closest && e.target.closest("[data-receipt]"); if(b && invoiceList[Number(b.getAttribute("data-receipt"))]) openReceipt(invoiceList[Number(b.getAttribute("data-receipt"))]); });
   async function loadBillingSub(){
     var box = document.getElementById("billingSub");
     if(!box) return;
@@ -9105,10 +9578,12 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     var payCopy = document.getElementById("billingPayCopy");
     if(payCopy) payCopy.textContent = cfg && cfg.bog ? "Card payments are processed securely by Bank of Georgia. elorahub never sees or stores your card number." : "Card payments are handled securely by Bank of Georgia. elorahub never sees or stores your card number.";
     if(!currentUser || !getAccessToken()){ box.hidden = true; return; }
-    var sub = null;
-    try { var r = await fetch("/api/pay/subscription", { cache:"no-store", headers:{ Authorization:"Bearer " + getAccessToken() } }); var d = r.ok ? await r.json() : {}; sub = d.subscription; } catch(e){}
+    var sub = await fetchSubscription(true);
+    renderUsageV2(sub);
     if(!sub){ box.hidden = true; return; }
     box.hidden = false;
+    loadInvoices();
+    var cyc = document.getElementById("billingCycleLabel"); if(cyc) cyc.textContent = sub.cycle === "yearly" ? "Yearly" : "Monthly";
     var end = new Date(sub.current_period_end);
     var endText = end.toLocaleDateString(undefined, { day:"numeric", month:"long", year:"numeric" });
     var price = (sub.currency === "USD" ? "$" + Number(sub.amount) : Number(sub.amount) + " " + sub.currency) + (sub.cycle === "yearly" ? " / year" : " / month");
@@ -9117,17 +9592,19 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     var pill = document.getElementById("billingSubPill");
     pill.textContent = !active ? (sub.status === "canceled" ? "Ended" : "Expired") : sub.cancel_at_period_end ? "Ends " + endText : sub.status === "past_due" ? "Payment problem" : "Active";
     pill.className = "es-pill " + (!active || sub.status === "past_due" ? "is-soon" : sub.cancel_at_period_end ? "is-off" : "is-on");
-    var rows = [["Price", price], [sub.cancel_at_period_end || !sub.renews ? "Access until" : "Renews on", endText], ["Card", sub.card_type ? String(sub.card_type).toUpperCase() : "Saved with the bank"], ["Payment", "Bank of Georgia"]];
+    var rows = [["Price", price], [sub.cancel_at_period_end || !sub.renews ? "Access until" : "Renews on", endText], ["Card", (sub.card_type ? String(sub.card_type).toUpperCase() + " · " : "") + "saved with Bank of Georgia"]];
+    var copyEl = document.getElementById("settingsPlanCopy"); if(copyEl && active) copyEl.textContent = sub.cancel_at_period_end ? "Your plan ends on " + endText + "." : sub.renews ? "Your subscription will auto renew on " + endText + "." : "Your plan runs until " + endText + ".";
     document.getElementById("billingSubInfo").innerHTML = rows.map(function(r){ return "<div><dt>" + escapeHtml(r[0]) + "</dt><dd>" + escapeHtml(r[1]) + "</dd></div>"; }).join("");
     document.getElementById("billingCancelBtn").hidden = !active || sub.cancel_at_period_end || !sub.renews;
     document.getElementById("billingResumeBtn").hidden = !active || !sub.cancel_at_period_end;
+    var cl = document.getElementById("billingCancelLabel"); if(cl) cl.textContent = sub.cancel_at_period_end ? "Plan cancelled" : "Cancel plan";
     document.getElementById("billingSubHint").textContent = !active ? "Your plan has ended. Choose a plan again any time." : sub.status === "past_due" ? "The last renewal didn't go through. elora will try your card again tomorrow — make sure it has funds." : sub.cancel_at_period_end ? "You won't be charged again. You keep your plan until " + endText + "." : !sub.renews ? "This plan doesn't renew automatically — you'll be asked to pay again on " + endText + "." : "Cancel any time — you keep your plan until the end of the period.";
   }
   async function changeSub(action){
     var btn = document.getElementById(action === "cancel" ? "billingCancelBtn" : "billingResumeBtn");
     if(action === "cancel" && !btn.classList.contains("is-confirming")){
       btn.classList.add("is-confirming"); btn.textContent = "Click again to cancel";
-      setTimeout(function(){ btn.classList.remove("is-confirming"); btn.textContent = "Cancel subscription"; }, 4000);
+      setTimeout(function(){ btn.classList.remove("is-confirming"); btn.textContent = "Cancel"; }, 4000);
       return;
     }
     btn.disabled = true;
@@ -9138,7 +9615,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
     } catch(e){ showToast("elorahub couldn't be reached."); }
     btn.disabled = false;
     btn.classList.remove("is-confirming");
-    btn.textContent = action === "cancel" ? "Cancel subscription" : "Keep my subscription";
+    btn.textContent = action === "cancel" ? "Cancel" : "Keep my plan";
     loadBillingSub();
   }
   if(document.getElementById("billingCancelBtn")){
@@ -9243,6 +9720,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 
   function openSavedConversation(id){
     if(replyPending) return;
+    if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
     var target = chatSessions.find(function(session){ return session.id === id; });
     if(!target) return;
     if(activeConversation && activeConversation.id === target.id){ setSidebarOpen(false); return; }
@@ -9281,6 +9759,7 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
 
   function resetConversation(message, removeActive){
     if(replyPending) return;
+    if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
     if(removeActive && activeConversation){
       chatSessions = chatSessions.filter(function(session){ return session.id !== activeConversation.id; });
     } else {
@@ -9896,7 +10375,10 @@ html.reduce-motion .ec-think-dot,html.reduce-motion .ec-think-orb::before{ anima
       nextConversationId=Math.max(1,chatSessions.reduce(function(max,s){return Math.max(max,Number(s.id)||0);},0)+1);
       activeConversation=createConversation(); conversationHistory=[]; attachedFiles=[]; renderAttachments(); chatInput.value=""; autoGrow(); chatThread.innerHTML=""; renderChatWelcome(); updateConversationTitle(); renderConversationList();
     },
-    openConversation:openSavedConversation
+    openConversation:openSavedConversation,
+    renderMarkdown:function(text){ var box=document.createElement("div"); box.className="ec-msg-text"; box.innerHTML=mdToHtml(String(text||"")); enhanceCodeBlocks(box); return box; },
+    setPreference:function(key, value){ chatPreferences[key]=value; saveChatPreferences(); applyTheme(); try{ syncSettingsForm(); }catch(e){} try{ syncComposerModes(); }catch(e){} },
+    setTaskMode:function(on){ var t=document.getElementById("taskToggle"); if(t && (t.getAttribute("aria-pressed")==="true") !== !!on) t.click(); }
   };
 })();
 </script>

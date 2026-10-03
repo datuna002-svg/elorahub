@@ -121,6 +121,23 @@ async function handleCancel(req, res, resume) {
   return send(res, 200, { ok: true, cancel_at_period_end: !resume, current_period_end: sub.current_period_end });
 }
 
+// The signed-in customer's own payments, newest first (for Settings → Billing).
+async function handleInvoices(req, res) {
+  const { email } = await verifyRequester(req);
+  if (!email) return send(res, 401, { error: "auth_required" });
+  const supabase = await getSupabaseClient();
+  if (!supabase) return send(res, 200, { invoices: [] });
+  const { data, error } = await supabase
+    .from("bog_orders")
+    .select("external_id,plan,cycle,kind,status,amount,currency,created_at")
+    .eq("email", email)
+    .in("status", ["completed", "refunded", "partially_refunded"])
+    .order("created_at", { ascending: false })
+    .limit(24);
+  if (error) return send(res, 200, { invoices: [] });
+  return send(res, 200, { invoices: (data || []).map((o) => ({ id: o.external_id, plan: o.plan, cycle: o.cycle, kind: o.kind, status: o.status, amount: Number(o.amount), currency: o.currency, created_at: o.created_at })) });
+}
+
 const ROUTES = {
   config: handleConfig,
   checkout: handleCheckout,
@@ -129,6 +146,7 @@ const ROUTES = {
   subscription: handleSubscription,
   cancel: (req, res) => handleCancel(req, res, false),
   resume: (req, res) => handleCancel(req, res, true),
+  invoices: handleInvoices,
 };
 
 export default async function handler(req, res) {

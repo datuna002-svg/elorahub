@@ -24,7 +24,7 @@
   var syncMessage = "Saved on this device";
   var syncTimer = 0;
   var reminderTimer = 0;
-  var activePanel = "projects";
+  var activePanel = null;
   var lastFocus = null;
   var connectorStatuses = { google:{ configured:false, connected:false }, github:{ configured:false, connected:false } };
 
@@ -206,73 +206,247 @@
   }
   function closeMenus(){
     [[accountMenu,accountTrigger],[moreMenu,moreTrigger],[attachMenu,attachTrigger]].forEach(function(pair){if(pair[0]) pair[0].hidden=true;if(pair[1])pair[1].setAttribute("aria-expanded","false");});
+    var learn=document.getElementById("learnMenu"); if(learn) learn.hidden=true;
   }
-  function closePanel(){ if(panel){panel.hidden=true;document.body.classList.remove("workspace-panel-open");} if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
+  // ---------------------------------------------------------------------
+  // Full-page views in the main area (Projects, Artifacts, Scheduled tasks,
+  // Customize) — they replace the chat until you pick a chat or New chat.
+  // ---------------------------------------------------------------------
+  var pageEl=document.getElementById("workspacePage"), pageBody=document.getElementById("workspacePageBody"), chatMain=document.getElementById("chatMain");
+  var sheetEl=null;
+  var ui={artTab:"all",artQuery:"",artView:"list",artSearch:false,custTab:"skills",custScope:"",custQuery:"",projQuery:""};
+  var SKILL_CATALOG=[
+    {id:"cat-review",icon:"code",title:"Code reviewer",desc:"Paste code and get a careful review: real bugs, edge cases, security and naming — then the fixed code.",prompt:"Review this code like a senior engineer. List real bugs and risky edge cases first (with line references), then security problems, then readability. Finish with the corrected full code.\n\n```\n\n```"},
+    {id:"cat-bug",icon:"bug",title:"Bug hunter",desc:"Describe the bug and paste the error. elora traces what the code really does and gives the smallest fix.",prompt:"Help me find and fix a bug. Trace what the code actually does step by step, name the root cause, then give the smallest correct fix and how to check it worked.\n\nWhat happens:\n\nError message:\n\nCode:\n"},
+    {id:"cat-site",icon:"window",title:"Website builder",desc:"Describe a site and get a complete, responsive page you can preview, tweak and download.",prompt:"Build a complete, responsive one-page website as a single HTML file with inline CSS and JS. Make it modern and polished.\n\nIt's for:\nSections I want:\n"},
+    {id:"cat-explain",icon:"cap",title:"Explain it simply",desc:"Any topic or file explained in plain words, with one good example.",prompt:"Explain this in plain, simple language as if I'm smart but new to it. Start with a one-sentence summary, then the key ideas, then one concrete example:\n\n"},
+    {id:"cat-email",icon:"mail",title:"Email writer",desc:"Turn a few notes into a clear, friendly email in your voice, with a subject line.",prompt:"Write a clear, friendly email from these notes. Keep it short, keep my voice, and give me a subject line.\n\nTo:\nWhat I want:\nNotes:\n"},
+    {id:"cat-polish",icon:"pen",title:"Writing polish",desc:"Tighten a draft without losing your voice — clearer, shorter, stronger.",prompt:"Rewrite this so it's clearer and tighter, but keep my voice and meaning. Then list the 3 biggest changes you made:\n\n"},
+    {id:"cat-quiz",icon:"book",title:"Quiz me",desc:"Learn faster: elora asks one question at a time and explains whatever you miss.",prompt:"Quiz me on this topic, one question at a time. Wait for my answer, tell me if I'm right, explain briefly, then ask the next one. Start easy and get harder.\n\nTopic: "},
+    {id:"cat-plan",icon:"check-list",title:"Project planner",desc:"Break a goal into clear steps with time estimates and the first thing to do today.",prompt:"Turn this goal into a clear plan: milestones, concrete steps with rough time estimates, risks to watch, and the very first thing I should do today.\n\nGoal: "},
+    {id:"cat-decide",icon:"scale",title:"Decision helper",desc:"Lay out the real trade-offs of a choice and get a straight recommendation.",prompt:"Help me decide. State the real trade-offs, surface hidden assumptions, then give me a clear recommendation and what would change your mind.\n\nThe choice: "},
+    {id:"cat-summary",icon:"doc",title:"Summarize anything",desc:"Paste text or attach a file. Get the key points, decisions and next steps.",prompt:"Summarize this. Give me the 5 key points, any decisions or numbers that matter, and suggested next steps:\n\n"},
+    {id:"cat-sql",icon:"database",title:"SQL helper",desc:"Describe the data you want and get the query, explained, plus indexes that help.",prompt:"Write the SQL for this, explain it line by line, and suggest indexes that would make it fast.\n\nTables:\nWhat I need:\n"},
+    {id:"cat-translate",icon:"globe",title:"Georgian ⇄ English",desc:"Natural translations both ways, with a note on tone where it matters.",prompt:"Translate this naturally (Georgian ⇄ English — detect which way). Keep the tone; add a short note only where a phrase has no direct equivalent:\n\n"},
+    {id:"cat-interview",icon:"user",title:"Interview coach",desc:"Practice a job interview: realistic questions, then honest feedback on each answer.",prompt:"Run a mock job interview with me. Ask one realistic question at a time, wait for my answer, then give honest feedback and a stronger version before the next question.\n\nRole:\nCompany (optional):\n"},
+    {id:"cat-regex",icon:"terminal",title:"Regex builder",desc:"Say what you need to match and get a tested regular expression with examples.",prompt:"Write a regular expression for this. Explain each part, and show 3 strings it matches and 3 it shouldn't:\n\nI need to match: "}
+  ];
+  var TEMPLATES=[
+    {id:"tpl-brief",icon:"sunrise",title:"Daily briefing",desc:"A short morning summary of the news on the topics you care about.",kind:"daily_task",cadence:"daily",prompt:"Give me a short morning briefing: the 5 most important news items today about [your topics]. One or two sentences each, with the source link."},
+    {id:"tpl-monitor",icon:"binoculars",title:"Monitor a topic",desc:"Watch for news or mentions of a topic, competitor or keyword.",kind:"daily_task",cadence:"daily",prompt:"Search for news and mentions of [topic, company or keyword]. List anything new from the last 24 hours with a one-line summary and the link. If there's nothing new, say so in one line."},
+    {id:"tpl-weekly",icon:"check-list",title:"Weekly review",desc:"A Friday check-in on your goals and the top three priorities for next week.",kind:"daily_task",cadence:"weekly",prompt:"Weekly review for my goals: [list your goals]. Give me 3 short reflection questions, then suggest the top 3 priorities for next week and one thing to stop doing."},
+    {id:"tpl-ideas",icon:"bulb",title:"Content ideas",desc:"A few fresh post ideas each week for your niche, each with a hook.",kind:"daily_task",cadence:"weekly",prompt:"Give me 5 fresh content ideas for [my niche and audience] this week. For each: a hook line, the format (post, short video, thread) and why it should work."},
+    {id:"tpl-learn",icon:"cap",title:"Learn something",desc:"A bite-size lesson every weekday on a subject you pick.",kind:"daily_task",cadence:"weekdays",prompt:"Teach me one bite-size lesson (under 300 words) about [subject]. Build on the basics day by day and end with one question to check my understanding."},
+    {id:"tpl-remind",icon:"bell",title:"Reminder",desc:"A one-time nudge at the exact time you choose, while elorahub is open.",kind:"reminder"}
+  ];
+  var MAKE=[
+    {id:"doc",title:"Document",art:'<div class="ew-art-doc"><i></i><i></i><i></i><i></i><i></i><i></i></div>',prompt:"Write a clear, well-structured document in markdown, with headings and short sections. Topic and audience: "},
+    {id:"slides",title:"Slides",art:'<div class="ew-art-slides"><i></i><i></i><i></i></div>',prompt:"Create a slide deck as one self-contained HTML file: one slide per screen, arrow keys and on-screen buttons to move, a clean dark design and 6–10 slides. Topic: "},
+    {id:"site",title:"Website",art:'<div class="ew-art-site"><i></i><i></i><i></i></div>',prompt:"Build a complete, responsive one-page website as a single HTML file with inline CSS and JS. Make it modern and polished. It's for: "},
+    {id:"app",title:"App",art:'<div class="ew-art-app"><i></i><i></i><i></i><i></i><i></i></div>',prompt:"Build a small working web app as a single HTML file with inline CSS and JS, saving data in localStorage. The app: "}
+  ];
+  function ic(name){ return '<svg class="ec-i" aria-hidden="true"><use href="#i-'+name+'"/></svg>'; }
+  function markNav(view){ document.querySelectorAll(".ec-nav [data-workspace-view]").forEach(function(b){ b.classList.toggle("is-current", b.dataset.workspaceView===view); }); }
+  function closeSidebarOnPhone(){ var side=document.getElementById("chatSidebar"), scrim=document.getElementById("sidebarScrim"); if(side&&side.classList.contains("is-open")&&scrim) scrim.click(); }
   function openPanel(view){
     closeMenus();
-    if(view==="customize"){ if(panel) panel.hidden=true; if(app&&app.openSettings) app.openSettings("general"); return; }
-    var meta={
-      projects:["Projects","Keep related work together, and jump back into its conversations."],
-      artifacts:["Artifacts","Keep useful answers, notes, and drafts close at hand."],
-      scheduled:["Scheduled","Set a precise in-tab reminder or a daily task that runs on the server."],
-      skills:["Prompt library","Reusable starting points for the work you do often."],
-      connectors:["Connectors","Read-only connections for the services you chose."],
-    }[view]||["Workspace","Your EloraHub workspace"];
-    activePanel=view; lastFocus=document.activeElement;
-    if(panel){panel.hidden=false;document.body.classList.add("workspace-panel-open");if(window.eloraSwapIn)window.eloraSwapIn(panel.querySelector(".workspace-panel")||panel);}
-    if(panelTitle) panelTitle.textContent=meta[0]; if(panelKicker) panelKicker.textContent="ELORAHUB WORKSPACE"; if(panelDescription) panelDescription.textContent=meta[1];
-    renderPanel();
-    var closeBtn=panel&&panel.querySelector(".workspace-close"); if(closeBtn) closeBtn.focus();
+    if(view==="skills"){ ui.custTab="skills"; view="customize"; }
+    else if(view==="connectors"){ ui.custTab="connectors"; view="customize"; loadConnectorStatus().then(function(){ if(activePanel==="customize"&&ui.custTab==="connectors") renderPanel(); }); }
+    activePanel=view;
+    if(!pageEl||!pageBody) return;
+    pageEl.hidden=false; if(chatMain) chatMain.classList.add("is-page");
+    markNav(view); renderPanel(); pageEl.scrollTop=0;
+    if(window.eloraSwapIn) window.eloraSwapIn(pageBody);
+    closeSidebarOnPhone();
   }
-  function emptyPanel(title,copy,mark){ return '<div class="workspace-empty"><div class="workspace-empty-mark" aria-hidden="true">'+escapeHtml(mark||"◇")+'</div><h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(copy)+'</p></div>'; }
+  function closePage(){
+    closeSheet();
+    if(!pageEl||pageEl.hidden) return;
+    pageEl.hidden=true; if(chatMain) chatMain.classList.remove("is-page"); markNav(null); activePanel=null;
+  }
+  function closePanel(){ closePage(); }
   function timeLabel(ts){ if(!ts) return ""; try{return new Date(ts).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});}catch(_e){return "";} }
+  function agoLabel(ts){
+    if(!ts) return ""; var d=Date.now()-Number(ts), m=Math.round(d/60000);
+    if(m<1) return "Just now"; if(m<60) return m+"m ago"; var h=Math.round(m/60); if(h<24) return h+"h ago";
+    var days=Math.round(h/24); if(days<7) return days+"d ago";
+    try{return new Date(ts).toLocaleDateString([], {month:"short",day:"numeric"});}catch(_e){return "";}
+  }
+  function emptyBlock(iconName,title,copy,buttonHtml){ return '<div class="ew-empty">'+ic(iconName)+'<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(copy)+'</p>'+(buttonHtml||"")+'</div>'; }
+  function searchBox(id,placeholder,value){ return '<label class="ew-search">'+ic("search")+'<input type="search" id="'+id+'" placeholder="'+escapeHtml(placeholder)+'" value="'+escapeHtml(value||"")+'" autocomplete="off"></label>'; }
+  function matches(q){ q=String(q||"").trim().toLowerCase(); return function(){ if(!q) return true; return Array.prototype.slice.call(arguments).join(" ").toLowerCase().indexOf(q)>-1; }; }
+  function serverRunLabel(){ try{ var d=new Date(); d.setUTCHours(0,5,0,0); return d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}); }catch(_e){ return "00:05 UTC"; } }
+  function cadenceLabel(c){ return c==="weekly"?"Weekly":c==="weekdays"?"Weekdays":"Every day"; }
+
+  // ---- Projects ----
   function renderProjects(){
     var sessions=app&&app.getSessions?app.getSessions():state.sessions;
-    var html='<div class="workspace-toolbar"><p>Projects group related chats and saved work; they are stored locally and sync when account storage is available.</p><button class="workspace-primary" type="button" data-action="show-project-form">＋ New project</button></div>';
-    html+='<form class="workspace-form" id="projectForm" hidden><label>Project name<input name="name" maxlength="70" required placeholder="e.g. Website refresh"></label><label>What is this for?<textarea name="description" maxlength="350" placeholder="A short note to keep the work focused"></textarea></label><div><button class="workspace-primary" type="submit">Create project</button> <button class="workspace-secondary" type="button" data-action="cancel-project-form">Cancel</button></div></form>';
-    if(!state.projects.length) return html+emptyPanel("Nothing in Projects yet","Create a project to group its chats and keep related work organized.","▦");
-    html+='<div class="workspace-card-list" style="margin-top:16px">'+state.projects.map(function(p){
-      var count=sessions.filter(function(s){return s.projectId===p.id;}).length;
-      return '<article class="workspace-card"><h3>'+escapeHtml(p.name)+'</h3><p>'+escapeHtml(p.description||"No description yet.")+'</p><div class="workspace-card-meta"><span>'+count+' conversation'+(count===1?"":"s")+'</span><span>'+timeLabel(p.updatedAt||p.createdAt)+'</span></div><div class="workspace-card-actions"><button type="button" data-project-action="open" data-id="'+escapeHtml(p.id)+'">Open project chat</button><button type="button" data-project-action="current" data-id="'+escapeHtml(p.id)+'">Add current chat</button><button type="button" data-project-action="pin" data-id="'+escapeHtml(p.id)+'">'+(p.pinned?"Unpin":"Pin")+'</button><button type="button" data-project-action="rename" data-id="'+escapeHtml(p.id)+'">Rename</button><button type="button" data-project-action="delete" data-id="'+escapeHtml(p.id)+'">Delete</button></div></article>';
+    var match=matches(ui.projQuery);
+    var html='<header class="ew-head"><h1>Projects</h1><button class="ew-btn ew-btn-main" type="button" data-action="show-project-form">'+ic("plus")+'New project</button></header>';
+    html+='<p class="ew-sub">Group related chats and keep their context in one place.</p>';
+    if(!state.projects.length) return html+emptyBlock("folder","No projects yet","Create a project to keep a set of chats together — a website, a class, a side business.",'<button class="ew-btn ew-btn-main" type="button" data-action="show-project-form">'+ic("plus")+'New project</button>');
+    html+='<div class="ew-bar">'+searchBox("ewProjSearch","Search projects",ui.projQuery)+'</div>';
+    var list=state.projects.filter(function(p){return match(p.name,p.description);});
+    if(!list.length) return html+emptyBlock("search","No matching projects","Try a different word.");
+    html+='<div class="ew-grid">'+list.map(function(p){
+      var chats=sessions.filter(function(s){return s.projectId===p.id;}).sort(function(a,b){return Number(b.updatedAt||0)-Number(a.updatedAt||0);});
+      var convs=chats.slice(0,3).map(function(c){return '<button type="button" data-ew="open-conv" data-id="'+escapeHtml(String(c.id))+'">'+ic("chat")+'<span>'+escapeHtml(c.title||"Conversation")+'</span></button>';}).join("");
+      var pid=escapeHtml(p.id);
+      return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic("folder")+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(p.name)+'</h3><div class="ew-card-meta">'+chats.length+' chat'+(chats.length===1?"":"s")+' · '+escapeHtml(agoLabel(p.updatedAt||p.createdAt))+(p.pinned?' · Pinned':'')+'</div></div><div class="ew-card-tools"><button class="ew-iconbtn'+(p.pinned?" is-on":"")+'" type="button" title="'+(p.pinned?"Unpin from sidebar":"Pin to sidebar")+'" aria-label="'+(p.pinned?"Unpin":"Pin")+'" data-project-action="pin" data-id="'+pid+'">'+ic("pin")+'</button><button class="ew-iconbtn" type="button" title="Rename" aria-label="Rename" data-project-action="rename" data-id="'+pid+'">'+ic("pen")+'</button><button class="ew-iconbtn" type="button" title="Delete" aria-label="Delete" data-project-action="delete" data-id="'+pid+'">'+ic("trash")+'</button></div></div>'+
+        (p.description?'<p>'+escapeHtml(p.description)+'</p>':'')+(convs?'<div class="ew-convs">'+convs+'</div>':'')+
+        '<div class="ew-card-acts"><button class="ew-btn ew-btn-sm ew-btn-main" type="button" data-project-action="open" data-id="'+pid+'">'+ic("plus")+'New chat</button><button class="ew-btn ew-btn-sm" type="button" data-project-action="current" data-id="'+pid+'">Add this chat</button></div></article>';
     }).join("")+'</div>';
     return html;
   }
+
+  // ---- Artifacts ----
+  function artKind(a){ var k=String(a.kind||"Note"); return k==="File"?"files":k==="Note"?"notes":"replies"; }
+  function artIcon(a){ var k=artKind(a); if(k==="files") return /\.(html?|css|js|ts|py|json|sh|go|rs|java|c|cpp)$/i.test(a.title||"")?"code":"file"; return k==="notes"?"pen":"chat"; }
   function renderArtifacts(){
-    var html='<div class="workspace-toolbar"><p>Save an assistant reply from the conversation, or write a note for yourself.</p><button class="workspace-primary" type="button" data-action="show-note-form">＋ New note</button></div>';
-    html+='<form class="workspace-form" id="noteForm" hidden><label>Title<input name="title" maxlength="100" required placeholder="A useful note"></label><label>Content<textarea name="content" maxlength="12000" required placeholder="Write or paste your note"></textarea></label><div><button class="workspace-primary" type="submit">Save note</button> <button class="workspace-secondary" type="button" data-action="cancel-note-form">Cancel</button></div></form>';
-    if(!state.artifacts.length) return html+emptyPanel("No saved artifacts yet","Use the Save action beneath an Elora response, or create a note of your own.","◇");
-    html+='<div class="workspace-card-list" style="margin-top:16px">'+state.artifacts.map(function(a){
-      return '<article class="workspace-card"><h3>'+escapeHtml(a.title)+'</h3><p>'+escapeHtml(String(a.content||"").slice(0,240))+(String(a.content||"").length>240?"…":"")+'</p><div class="workspace-card-meta"><span>'+escapeHtml(a.kind||"Note")+'</span><span>'+timeLabel(a.updatedAt||a.createdAt)+'</span></div><div class="workspace-card-actions"><button type="button" data-artifact-action="copy" data-id="'+escapeHtml(a.id)+'">Copy</button><button type="button" data-artifact-action="download" data-id="'+escapeHtml(a.id)+'">Download .md</button><button type="button" data-artifact-action="delete" data-id="'+escapeHtml(a.id)+'">Delete</button></div></article>';
+    var tabs=[["all","All"],["replies","Saved replies"],["files","Files"],["notes","Notes"]];
+    var match=matches(ui.artQuery);
+    var html='<header class="ew-head"><h1>Artifacts</h1><button class="ew-iconbtn'+(ui.artSearch?" is-on":"")+'" type="button" data-ew="art-search" title="Search" aria-label="Search artifacts">'+ic("search")+'</button><button class="ew-iconbtn" type="button" data-ew="art-view" title="'+(ui.artView==="list"?"Grid view":"List view")+'" aria-label="Switch view">'+ic(ui.artView==="list"?"grid":"list")+'</button><button class="ew-btn" type="button" data-action="show-note-form">'+ic("plus")+'New note</button></header>';
+    html+='<div class="ew-bar"><div class="ew-tabs" role="tablist">'+tabs.map(function(t){return '<button type="button" role="tab" class="ew-tab'+(ui.artTab===t[0]?" is-active":"")+'" data-ew="art-tab" data-v="'+t[0]+'">'+t[1]+'</button>';}).join("")+'</div>'+(ui.artSearch?'<span class="ew-spacer"></span>'+searchBox("ewArtSearch","Search artifacts",ui.artQuery):'')+'</div>';
+    html+='<div class="ew-label">Make something new</div><div class="ew-make">'+MAKE.map(function(m){return '<button type="button" class="ew-make-card" data-ew="make" data-v="'+m.id+'"><div class="ew-art">'+m.art+'</div><strong>'+escapeHtml(m.title)+'<small>Task</small></strong></button>';}).join("")+'</div>';
+    var items=state.artifacts.filter(function(a){return (ui.artTab==="all"||artKind(a)===ui.artTab)&&match(a.title,a.content,a.kind);});
+    html+='<div class="ew-label">'+(ui.artTab==="all"?"Saved":tabs.filter(function(t){return t[0]===ui.artTab;})[0][1])+'</div>';
+    if(!state.artifacts.length) return html+emptyBlock("artifact","Nothing saved yet","Save a reply with the bookmark under it, keep files from a task, or write a note.");
+    if(!items.length) return html+emptyBlock("search","Nothing here","Try another tab or search word.");
+    var acts=function(a){ var id=escapeHtml(a.id); return '<div class="ew-row-acts"><button class="ew-iconbtn" type="button" title="Copy" aria-label="Copy" data-artifact-action="copy" data-id="'+id+'">'+ic("copy")+'</button><button class="ew-iconbtn" type="button" title="Download" aria-label="Download" data-artifact-action="download" data-id="'+id+'">'+ic("download")+'</button><button class="ew-iconbtn" type="button" title="Delete" aria-label="Delete" data-artifact-action="delete" data-id="'+id+'">'+ic("trash")+'</button></div>'; };
+    if(ui.artView==="grid"){
+      html+='<div class="ew-grid">'+items.map(function(a){return '<article class="ew-card"><div class="ew-card-top ew-card-click" data-ew="art-open" data-id="'+escapeHtml(a.id)+'"><span class="ew-card-ico">'+ic(artIcon(a))+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(a.title||"Untitled")+'</h3><div class="ew-card-meta">'+escapeHtml(a.kind||"Note")+' · '+escapeHtml(agoLabel(a.updatedAt||a.createdAt))+'</div></div></div><p class="ew-card-click" data-ew="art-open" data-id="'+escapeHtml(a.id)+'">'+escapeHtml(plainExcerpt(a.content,200))+'</p>'+acts(a)+'</article>';}).join("")+'</div>';
+    } else {
+      html+='<div class="ew-list">'+items.map(function(a){return '<div class="ew-row"><span class="ew-row-ico">'+ic(artIcon(a))+'</span><div class="ew-row-main" data-ew="art-open" data-id="'+escapeHtml(a.id)+'" role="button" tabindex="0"><strong>'+escapeHtml(a.title||"Untitled")+'</strong><small>'+escapeHtml(plainExcerpt(a.content,120))+'</small></div><span class="ew-row-time">'+escapeHtml(agoLabel(a.updatedAt||a.createdAt))+'</span>'+acts(a)+'</div>';}).join("")+'</div>';
+    }
+    return html;
+  }
+  function plainExcerpt(text,n){ return String(text||"").replace(/```[a-z0-9 =._-]*\n?/gi," ").replace(/[#*`>|]+/g," ").replace(/^\s*[-+]\s+/gm," ").replace(/\s+/g," ").trim().slice(0,n); }
+  function looksLikeHtml(a){ return /\.html?$/i.test(a.title||"")||/^\s*(<!doctype html|<html[\s>])/i.test(String(a.content||"")); }
+  function openViewer(a){
+    var html='<h2>'+escapeHtml(a.title||"Untitled")+'</h2><p>'+escapeHtml(a.kind||"Note")+' · saved '+escapeHtml(timeLabel(a.updatedAt||a.createdAt))+'</p><div class="ew-bar">'+(looksLikeHtml(a)?'<button class="ew-btn ew-btn-sm ew-btn-main" type="button" data-ew="viewer-preview">'+ic("eye")+'Preview</button>':'')+'<button class="ew-btn ew-btn-sm" type="button" data-artifact-action="copy" data-id="'+escapeHtml(a.id)+'">'+ic("copy")+'Copy</button><button class="ew-btn ew-btn-sm" type="button" data-artifact-action="download" data-id="'+escapeHtml(a.id)+'">'+ic("download")+'Download</button></div><div class="ew-viewer" id="ewViewerBody"></div>';
+    openSheet(html,true);
+    var body=document.getElementById("ewViewerBody");
+    if(looksLikeHtml(a)){ showViewerPreview(a,body); }
+    else if(app&&app.renderMarkdown){ body.appendChild(app.renderMarkdown(/```/.test(a.content)||artKind(a)!=="files"?a.content:"```\n"+a.content+"\n```")); }
+    else { var pre=document.createElement("pre"); pre.textContent=a.content||""; body.appendChild(pre); }
+    sheetEl.dataset.artifactId=a.id;
+  }
+  function showViewerPreview(a,body){
+    body=body||document.getElementById("ewViewerBody"); if(!body) return;
+    body.textContent=""; var frame=document.createElement("iframe"); frame.setAttribute("sandbox","allow-scripts allow-forms allow-modals"); frame.title="Preview of "+(a.title||"file"); frame.srcdoc=String(a.content||""); body.appendChild(frame);
+  }
+  function startMake(id){
+    var m=MAKE.filter(function(x){return x.id===id;})[0]; if(!m) return;
+    if(app&&app.startNewChat) app.startNewChat();
+    closePage();
+    if(app&&app.setTaskMode) app.setTaskMode(true);
+    setChatInput(m.prompt);
+  }
+
+  // ---- Scheduled tasks ----
+  function renderSchedules(){
+    var html='<header class="ew-head"><h1>Scheduled tasks</h1><button class="ew-btn ew-btn-main" type="button" data-ew="new-task">'+ic("plus")+'New task</button></header>';
+    html+='<p class="ew-sub">Run tasks on a schedule or whenever you need them. Background tasks run once a day around '+escapeHtml(serverRunLabel())+' your time, even when elorahub is closed.</p>';
+    if(state.schedules.length){
+      html+='<div class="ew-grid2">'+state.schedules.slice().sort(function(a,b){return Number(b.createdAt)-Number(a.createdAt);}).map(function(s){
+        var on=s.enabled!==false, bg=s.kind==="daily_task";
+        var when=bg?cadenceLabel(s.cadence)+" · around "+serverRunLabel():(s.firedAt?"Done · ":"Once · ")+timeLabel(s.dueAt);
+        var runs=state.taskRuns.filter(function(r){return r.taskId===s.id;}).sort(function(a,b){return Number(b.createdAt)-Number(a.createdAt);}).slice(0,3);
+        var results=runs.map(function(r){return '<details class="ew-note"><summary style="cursor:pointer">'+(r.status==="failed"?"Run failed · ":"Result · ")+escapeHtml(timeLabel(r.createdAt))+'</summary><div style="margin-top:8px;white-space:pre-wrap;max-height:260px;overflow:auto">'+escapeHtml(r.result||r.error||"")+'</div></details>';}).join("");
+        return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(bg?"repeat":"bell")+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(s.title)+'</h3><div class="ew-card-meta">'+ic("clock")+escapeHtml(when)+'</div></div><label class="ew-switch" title="'+(on?"Pause":"Resume")+'"><input type="checkbox" '+(on?"checked":"")+' data-schedule-action="toggle" data-id="'+escapeHtml(s.id)+'" aria-label="'+(on?"Pause":"Resume")+' '+escapeHtml(s.title)+'"><span></span></label></div><p>'+escapeHtml(bg?(s.prompt||""):(s.note||"A reminder for you."))+'</p>'+results+'<div class="ew-card-acts">'+(on?'<span class="ew-chip is-green">On</span>':'<span class="ew-chip">Paused</span>')+'<span class="ew-spacer"></span><button class="ew-iconbtn" type="button" title="Delete" aria-label="Delete" data-schedule-action="delete" data-id="'+escapeHtml(s.id)+'">'+ic("trash")+'</button></div></article>';
+      }).join("")+'</div>';
+      html+='<div class="ew-wave" aria-hidden="true"><svg viewBox="0 0 600 14" preserveAspectRatio="none"><path d="M0 7 Q 7.5 0 15 7 T 30 7 T 45 7 T 60 7 T 75 7 T 90 7 T 105 7 T 120 7 T 135 7 T 150 7 T 165 7 T 180 7 T 195 7 T 210 7 T 225 7 T 240 7 T 255 7 T 270 7 T 285 7 T 300 7 T 315 7 T 330 7 T 345 7 T 360 7 T 375 7 T 390 7 T 405 7 T 420 7 T 435 7 T 450 7 T 465 7 T 480 7 T 495 7 T 510 7 T 525 7 T 540 7 T 555 7 T 570 7 T 585 7 T 600 7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></div>';
+    }
+    html+='<div class="ew-label">'+(state.schedules.length?"Start from a template":"Start from a template — or press New task")+'</div><div class="ew-grid2">'+TEMPLATES.map(function(t){
+      var when=t.kind==="reminder"?"Once · at the time you pick":cadenceLabel(t.cadence)+" · around "+serverRunLabel();
+      return '<button type="button" class="ew-card ew-style-opt" data-ew="tpl" data-v="'+t.id+'"><div class="ew-card-top"><span class="ew-card-ico">'+ic(t.icon)+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(t.title)+'</h3><p style="margin-top:4px">'+escapeHtml(t.desc)+'</p><div class="ew-card-meta" style="margin-top:8px">'+ic("clock")+escapeHtml(when)+'</div></div></div></button>';
     }).join("")+'</div>';
     return html;
   }
   function localDateTimeValue(date){ var d=new Date(date.getTime()-date.getTimezoneOffset()*60000); return d.toISOString().slice(0,16); }
-  function renderSchedules(){
+  function openScheduleSheet(tpl){
     var canOffline=!!(currentUser()&&accessToken()&&syncAvailable);
-    var html='<div class="workspace-toolbar"><p>Reminders ring while this tab is open. Offline AI tasks run once daily in the Vercel UTC window.</p><button class="workspace-secondary" type="button" data-action="notifications">Enable browser notifications</button></div>';
-    html+='<form class="workspace-form" id="scheduleForm"><label>What should EloraHub do?<input name="title" maxlength="90" required placeholder="e.g. Review my weekly goals"></label><label>Schedule type<select name="kind" id="scheduleKind"><option value="reminder">In-tab reminder · around your chosen time</option><option value="daily_task" '+(canOffline?"":"disabled")+'>Background AI task · runs while the site is closed</option></select></label>';
-    html+='<div id="reminderFields"><label>Remind me at<input name="dueAt" type="datetime-local" value="'+localDateTimeValue(new Date(Date.now()+3600000))+'" required></label><label>Reminder note<textarea name="note" maxlength="500" placeholder="Optional detail to include in the reminder"></textarea></label></div>';
-    html+='<div id="offlineTaskFields" hidden><label>Prompt for Elora<textarea name="prompt" maxlength="3000" placeholder="What should Elora prepare each time this task runs?"></textarea></label><label>Repeat<select name="cadence"><option value="daily">Every day</option><option value="weekdays">Weekdays</option><option value="weekly">Weekly</option></select></label><div class="workspace-note"><strong>Vercel execution window:</strong> once daily, around 00:00–00:59 UTC on the current setup. The task runs on its selected cadence and only asks Elora to generate and save a result; it will not send messages or edit connected services.</div></div>';
-    if(!canOffline) html+='<div class="workspace-note">Sign in with a connected account to create server-backed tasks. In-tab reminders remain available without signing in.</div>';
-    html+='<div><button class="workspace-primary" type="submit">Add schedule</button></div></form>';
-    if(!state.schedules.length) return html+emptyPanel("Nothing scheduled","Add an in-tab reminder or, when signed in and synced, a background AI task.","◷");
-    html+='<div class="workspace-card-list" style="margin-top:18px">'+state.schedules.slice().sort(function(a,b){return Number(a.createdAt)-Number(b.createdAt);}).map(function(s){
-      var cadenceLabel=s.cadence==="weekly"?"Weekly":s.cadence==="weekdays"?"Weekdays":"Daily";
-      var desc=s.kind==="daily_task"?"Background AI · "+cadenceLabel+" · "+(s.timezone||"UTC"):"In-tab reminder · "+timeLabel(s.dueAt);
-      var status=s.enabled===false?"Paused":s.kind==="daily_task"?"Vercel UTC window":"Tab must stay open";
-      var runs=state.taskRuns.filter(function(r){return r.taskId===s.id;}).sort(function(a,b){return Number(b.createdAt)-Number(a.createdAt);}).slice(0,3);
-      var results=runs.map(function(r){return '<details style="margin-top:10px"><summary style="color:var(--text-2);font-size:.69rem;cursor:pointer">'+(r.status==="failed"?"Run failed · ":"Result · ")+escapeHtml(timeLabel(r.createdAt))+'</summary><pre style="max-height:220px;overflow:auto;white-space:pre-wrap;color:var(--text-2);font:.69rem/1.55 var(--font-body);padding:10px;background:rgba(0,0,0,.18);border-radius:9px">'+escapeHtml(r.result||r.error||"")+'</pre></details>';}).join("");
-      return '<article class="workspace-card"><h3>'+escapeHtml(s.title)+'</h3><p>'+escapeHtml(s.kind==="daily_task"?(s.prompt||""): (s.note||"A reminder for you."))+'</p><div class="workspace-card-meta"><span>'+escapeHtml(desc)+'</span><span>'+escapeHtml(status)+'</span></div>'+results+'<div class="workspace-card-actions"><button type="button" data-schedule-action="toggle" data-id="'+escapeHtml(s.id)+'">'+(s.enabled===false?"Resume":"Pause")+'</button><button type="button" data-schedule-action="delete" data-id="'+escapeHtml(s.id)+'">Delete</button></div></article>';
-    }).join("")+'</div>';
+    var kind=tpl&&tpl.kind==="reminder"?"reminder":(tpl?"daily_task":(canOffline?"daily_task":"reminder"));
+    var html='<h2>'+(tpl?escapeHtml(tpl.title):"New task")+'</h2><p>'+(tpl?escapeHtml(tpl.desc):"Have elora prepare something on a schedule, or set a reminder.")+'</p>';
+    html+='<form class="ew-form" id="scheduleForm"><label>Name<input name="title" maxlength="90" required value="'+escapeHtml(tpl?tpl.title:"")+'" placeholder="e.g. Morning news on AI"></label>';
+    html+='<label>Type<select name="kind" id="scheduleKind"><option value="daily_task"'+(kind==="daily_task"?" selected":"")+(canOffline?"":" disabled")+'>Background task — elora runs it on the server</option><option value="reminder"'+(kind==="reminder"?" selected":"")+'>Reminder — rings in this tab</option></select></label>';
+    html+='<div id="offlineTaskFields" class="ew-form"'+(kind==="daily_task"?"":" hidden")+'><label>What should elora do?<textarea name="prompt" maxlength="3000" placeholder="Describe the result you want each time">'+escapeHtml(tpl&&tpl.prompt?tpl.prompt:"")+'</textarea></label><label>Repeat<select name="cadence"><option value="daily"'+(tpl&&tpl.cadence==="daily"?" selected":"")+'>Every day</option><option value="weekdays"'+(tpl&&tpl.cadence==="weekdays"?" selected":"")+'>Weekdays</option><option value="weekly"'+(tpl&&tpl.cadence==="weekly"?" selected":"")+'>Weekly</option></select></label><div class="ew-note">Runs once a day around '+escapeHtml(serverRunLabel())+' your time. Results appear on this page. Words in [brackets] are yours to fill in. elora only prepares a result — it never sends messages or changes your accounts.</div></div>';
+    html+='<div id="reminderFields" class="ew-form"'+(kind==="reminder"?"":" hidden")+'><label>Remind me at<input name="dueAt" type="datetime-local" value="'+localDateTimeValue(new Date(Date.now()+3600000))+'"></label><label>Note<textarea name="note" maxlength="500" placeholder="Optional detail"></textarea></label><div class="ew-note">Reminders ring while elorahub is open in a tab. <button type="button" class="ew-btn ew-btn-sm" data-action="notifications" style="margin-left:6px">Allow notifications</button></div></div>';
+    if(!canOffline) html+='<div class="ew-note">'+(currentUser()?"Background tasks need account sync — it's being set up for your account.":"Log in to create background tasks that run while elorahub is closed.")+'</div>';
+    html+='<div class="ew-form-acts"><button class="ew-btn" type="button" data-ew="close-sheet">Cancel</button><button class="ew-btn ew-btn-main" type="submit">Create task</button></div></form>';
+    openSheet(html);
+    var first=sheetEl.querySelector(kind==="daily_task"?"textarea[name=prompt]":"input[name=title]"); if(first){ first.focus(); if(first.tagName==="TEXTAREA"){ var at=first.value.indexOf("["); if(at>-1){ var end=first.value.indexOf("]",at); first.setSelectionRange(at,end>-1?end+1:at); } } }
+  }
+
+  // ---- Customize ----
+  function renderCustomize(){
+    var tabs=[["skills","Skills"],["connectors","Connectors"],["styles","Styles"]];
+    if(!ui.custScope) ui.custScope=state.skills.length?"yours":"discover";
+    var html='<header class="ew-head"><h1>Customize</h1>'+(ui.custTab==="skills"?'<button class="ew-btn" type="button" data-action="show-skill-form">'+ic("plus")+'Add</button>':'')+'</header>';
+    html+='<div class="ew-bar"><div class="ew-plain-tabs" role="tablist">'+tabs.map(function(t){return '<button type="button" role="tab" class="ew-tab'+(ui.custTab===t[0]?" is-active":"")+'" data-ew="cust-tab" data-v="'+t[0]+'">'+t[1]+'</button>';}).join("")+'</div>';
+    if(ui.custTab==="skills") html+='<div class="ew-tabs" style="margin-left:6px">'+[["yours","Yours"],["discover","Discover"]].map(function(t){return '<button type="button" class="ew-tab'+(ui.custScope===t[0]?" is-active":"")+'" data-ew="cust-scope" data-v="'+t[0]+'">'+t[1]+'</button>';}).join("")+'</div><span class="ew-spacer"></span>'+searchBox("ewCustSearch","Search skills",ui.custQuery);
+    html+='</div>';
+    if(ui.custTab==="connectors") return html+'<p class="ew-sub" style="margin-top:0">Let elora read files you pick from your other apps. Read-only — elora never edits or deletes anything.</p>'+renderConnectors();
+    if(ui.custTab==="styles") return html+renderStyles();
+    var match=matches(ui.custQuery);
+    var added=function(cid){ return state.skills.some(function(s){return s.from===cid;}); };
+    if(ui.custScope==="discover"){
+      var list=SKILL_CATALOG.filter(function(c){return match(c.title,c.desc);});
+      if(!ui.custQuery){
+        var f=SKILL_CATALOG[0];
+        html+='<section class="ew-feature"><div class="ew-feature-copy"><small>From elorahub</small><h2>'+escapeHtml(f.title)+'</h2><p>'+escapeHtml(f.desc)+'</p><div class="ew-card-acts" style="padding:0"><button class="ew-btn ew-btn-main" type="button" data-ew="skill-add" data-id="'+f.id+'"'+(added(f.id)?" disabled":"")+'>'+(added(f.id)?ic("check")+"Added":ic("plus")+"Add")+'</button><button class="ew-btn" type="button" data-ew="skill-try" data-id="'+f.id+'">'+ic("chat")+'Try</button></div></div><div class="ew-feature-art">'+ic(f.icon)+'</div></section>';
+        list=list.slice(1);
+      }
+      html+='<div class="ew-label">'+(ui.custQuery?"Results":"For you")+'</div>';
+      if(!list.length) return html+emptyBlock("search","No skills match","Try a different word.");
+      html+='<div class="ew-grid2">'+list.map(function(c){var on=added(c.id);return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c.icon)+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(c.title)+'</h3><p style="margin-top:4px">'+escapeHtml(c.desc)+'</p><div class="ew-card-meta" style="margin-top:6px">by elorahub</div></div><div style="display:flex;gap:6px"><button class="ew-btn ew-btn-sm" type="button" data-ew="skill-try" data-id="'+c.id+'">'+ic("chat")+'Try</button><button class="ew-add'+(on?" is-added":"")+'" type="button" data-ew="skill-add" data-id="'+c.id+'" title="'+(on?"Added to Yours":"Add to Yours")+'" aria-label="'+(on?"Added":"Add")+' '+escapeHtml(c.title)+'">'+ic(on?"check":"plus")+'</button></div></div></article>';}).join("")+'</div>';
+      return html;
+    }
+    var mine=state.skills.filter(function(s){return match(s.title,s.prompt);});
+    if(!state.skills.length) return html+emptyBlock("wand","No skills yet","Add ready-made skills from Discover, or write your own reusable prompt.",'<div class="ew-card-acts" style="justify-content:center"><button class="ew-btn ew-btn-main" type="button" data-ew="cust-scope" data-v="discover">Browse Discover</button><button class="ew-btn" type="button" data-action="show-skill-form">'+ic("plus")+'Write your own</button></div>');
+    if(!mine.length) return html+emptyBlock("search","No skills match","Try a different word.");
+    html+='<div class="ew-grid2">'+mine.map(function(s){var c=SKILL_CATALOG.filter(function(x){return x.id===s.from;})[0];return '<article class="ew-card"><div class="ew-card-top"><span class="ew-card-ico">'+ic(c?c.icon:"wand")+'</span><div style="min-width:0;flex:1"><h3>'+escapeHtml(s.title)+'</h3><p style="margin-top:4px">'+escapeHtml(c?c.desc:String(s.prompt||"").slice(0,160))+'</p><div class="ew-card-meta" style="margin-top:6px">'+(c?"from elorahub":"by you")+'</div></div></div><div class="ew-card-acts"><button class="ew-btn ew-btn-sm ew-btn-main" type="button" data-ew="skill-try" data-id="'+escapeHtml(s.id)+'">'+ic("chat")+'Use</button><span class="ew-spacer"></span><button class="ew-iconbtn" type="button" title="Remove" aria-label="Remove '+escapeHtml(s.title)+'" data-skill-action="delete" data-id="'+escapeHtml(s.id)+'">'+ic("trash")+'</button></div></article>';}).join("")+'</div>';
     return html;
   }
-  function renderSkills(){
-    var html='<div class="workspace-toolbar"><p>Click a prompt to load it into the composer. Your own prompts stay on this device and sync to your account when available.</p><button class="workspace-primary" type="button" data-action="show-skill-form">＋ Save prompt</button></div>';
-    html+='<form class="workspace-form" id="skillForm" hidden><label>Name<input name="title" maxlength="70" required placeholder="e.g. Product brief"></label><label>Prompt<textarea name="prompt" maxlength="2500" required placeholder="Write a reusable instruction"></textarea></label><div><button class="workspace-primary" type="submit">Save prompt</button> <button class="workspace-secondary" type="button" data-action="cancel-skill-form">Cancel</button></div></form>';
-    html+='<div class="workspace-section-label" style="padding-left:0;margin-top:18px">START HERE</div><div class="workspace-card-list">'+BUILTIN_PROMPTS.map(function(p){return '<article class="workspace-card"><h3>'+escapeHtml(p.title)+'</h3><p>Built-in EloraHub prompt</p><div class="workspace-card-actions"><button type="button" data-skill-action="use" data-id="'+escapeHtml(p.id)+'">Use prompt</button></div></article>';}).join("")+'</div>';
-    if(state.skills.length) html+='<div class="workspace-section-label" style="padding-left:0;margin-top:22px">SAVED BY YOU</div><div class="workspace-card-list">'+state.skills.map(function(s){return '<article class="workspace-card"><h3>'+escapeHtml(s.title)+'</h3><p>'+escapeHtml(String(s.prompt||"").slice(0,180))+'</p><div class="workspace-card-actions"><button type="button" data-skill-action="use" data-id="'+escapeHtml(s.id)+'">Use prompt</button><button type="button" data-skill-action="delete" data-id="'+escapeHtml(s.id)+'">Delete</button></div></article>';}).join("")+'</div>';
+  function renderStyles(){
+    var prefs=app&&app.getPreferences?app.getPreferences():{};
+    var styles=[["balanced","Balanced","Clear answers with just enough detail."],["concise","Concise","Short and to the point. Code first."],["deep","In depth","Thorough explanations, examples and edge cases."],["technical","Technical","Precise, expert-level answers with full code."]];
+    var tones=[["direct","Direct","Straight answers, no fluff."],["warm","Warm","Friendly and encouraging."],["technical","Precise","Exact wording, careful claims."]];
+    var opt=function(key,cur,o){return '<button type="button" class="ew-card ew-style-opt'+(cur===o[0]?" is-on":"")+'" data-ew="style" data-k="'+key+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'"><span class="ew-check">'+ic("check")+'</span><h3>'+o[1]+'</h3><p>'+o[2]+'</p></button>';};
+    var html='<p class="ew-sub" style="margin-top:0">Choose how elora writes by default. You can still switch per message in the box.</p>';
+    html+='<div class="ew-label">Answer style</div><div class="ew-grid">'+styles.map(function(o){return opt("style",prefs.style||"balanced",o);}).join("")+'</div>';
+    html+='<div class="ew-label">Tone</div><div class="ew-grid">'+tones.map(function(o){return opt("tone",prefs.tone||"direct",o);}).join("")+'</div>';
+    var ins=String(prefs.instructions||"").trim();
+    html+='<div class="ew-label">Your instructions</div><article class="ew-card"><h3>Instructions for elora</h3><p>'+escapeHtml(ins||"Nothing yet — tell elora things like “keep answers short” or “always use TypeScript”.")+'</p><div class="ew-card-acts"><button class="ew-btn ew-btn-sm" type="button" data-ew="edit-instructions">'+ic("pen")+'Edit</button></div></article>';
     return html;
   }
+
+  // ---- shared sheet (forms and the artifact viewer) ----
+  function openSheet(html,wide){
+    if(!sheetEl){
+      sheetEl=document.createElement("div"); sheetEl.className="ew-sheet"; sheetEl.hidden=true; sheetEl.setAttribute("role","dialog"); sheetEl.setAttribute("aria-modal","true");
+      document.body.appendChild(sheetEl);
+      sheetEl.addEventListener("click",function(e){ if(e.target===sheetEl){closeSheet();return;} handlePanelClick(e); });
+      sheetEl.addEventListener("submit",handlePanelSubmit);
+      sheetEl.addEventListener("change",function(e){ if(e.target.id==="scheduleKind") renderScheduleFields(); });
+    }
+    sheetEl.innerHTML='<div class="ew-sheet-card'+(wide?" is-wide":"")+'"><button type="button" class="ew-iconbtn ew-sheet-x" data-ew="close-sheet" aria-label="Close">'+ic("x")+'</button>'+html+'</div>';
+    sheetEl.hidden=false; delete sheetEl.dataset.artifactId;
+    var root=document.getElementById("page-chat"); if(root&&!root.contains(sheetEl)){} 
+  }
+  function closeSheet(){ if(sheetEl&&!sheetEl.hidden){ sheetEl.hidden=true; sheetEl.innerHTML=""; } }
+  function openFormSheet(kind){
+    if(kind==="project") openSheet('<h2>New project</h2><p>Keep related chats together.</p><form class="ew-form" id="projectForm"><label>Name<input name="name" maxlength="70" required placeholder="e.g. Website refresh"></label><label>What is it for?<textarea name="description" maxlength="350" placeholder="A short note to keep the work focused"></textarea></label><div class="ew-form-acts"><button class="ew-btn" type="button" data-ew="close-sheet">Cancel</button><button class="ew-btn ew-btn-main" type="submit">Create project</button></div></form>');
+    else if(kind==="note") openSheet('<h2>New note</h2><p>Saved in Artifacts.</p><form class="ew-form" id="noteForm"><label>Title<input name="title" maxlength="100" required placeholder="A useful note"></label><label>Content<textarea name="content" maxlength="12000" required placeholder="Write or paste your note" style="min-height:180px"></textarea></label><div class="ew-form-acts"><button class="ew-btn" type="button" data-ew="close-sheet">Cancel</button><button class="ew-btn ew-btn-main" type="submit">Save note</button></div></form>');
+    else if(kind==="skill") openSheet('<h2>Add a skill</h2><p>A reusable starting prompt. Use it from Customize or the + menu.</p><form class="ew-form" id="skillForm"><label>Name<input name="title" maxlength="70" required placeholder="e.g. Product brief"></label><label>Prompt<textarea name="prompt" maxlength="2500" required placeholder="Write the instruction elora should start from" style="min-height:160px"></textarea></label><div class="ew-form-acts"><button class="ew-btn" type="button" data-ew="close-sheet">Cancel</button><button class="ew-btn ew-btn-main" type="submit">Save skill</button></div></form>');
+    var f=sheetEl&&sheetEl.querySelector("input"); if(f) f.focus();
+  }
+  function rerenderKeepFocus(id){
+    var el=document.getElementById(id), pos=el?el.selectionStart:null;
+    renderPanel();
+    var again=document.getElementById(id); if(again){ again.focus(); try{ if(pos!=null) again.setSelectionRange(pos,pos); }catch(_e){} }
+  }
+  function emptyPanel(title,copy){ return emptyBlock("search",title,copy); }
   async function loadConnectorStatus(){
     if(!accessToken()){ connectorStatuses={google:{configured:false,connected:false},github:{configured:false,connected:false}}; return; }
     try{
@@ -342,12 +516,12 @@
     }catch(error){toast(error.message||"Could not read the selected file.");}
   }
   function renderPanel(){
-    if(!panelBody) return;
-    if(activePanel==="projects") panelBody.innerHTML=renderProjects();
-    else if(activePanel==="artifacts") panelBody.innerHTML=renderArtifacts();
-    else if(activePanel==="scheduled") panelBody.innerHTML=renderSchedules();
-    else if(activePanel==="skills") panelBody.innerHTML=renderSkills();
-    else if(activePanel==="connectors") panelBody.innerHTML=renderConnectors();
+    if(pageBody&&activePanel){
+      if(activePanel==="projects") pageBody.innerHTML=renderProjects();
+      else if(activePanel==="artifacts") pageBody.innerHTML=renderArtifacts();
+      else if(activePanel==="scheduled") pageBody.innerHTML=renderSchedules();
+      else if(activePanel==="customize") pageBody.innerHTML=renderCustomize();
+    }
     renderCounts();
   }
   function addArtifact(title,content,kind,sourceId){
@@ -407,16 +581,22 @@
   }
   function handlePanelSubmit(e){
     e.preventDefault(); var form=e.target, data=new FormData(form), now=Date.now();
+    if(form.id==="feedbackForm"){
+      var text=String(data.get("text")||"").trim(); if(!text)return;
+      var who=currentUser(); var body=text+"\n\n— sent from elorahub"+(who&&who.email?" by "+who.email:"");
+      window.location.href="mailto:elorahubonline@gmail.com?subject="+encodeURIComponent("elorahub feedback")+"&body="+encodeURIComponent(body);
+      closeSheet(); toast("Thanks! Your email app should open with your feedback."); return;
+    }
     if(form.id==="projectForm"){
       var name=String(data.get("name")||"").trim(); if(!name)return;
       state.projects.unshift({id:uid(),name:name,description:String(data.get("description")||"").trim(),pinned:false,createdAt:now,updatedAt:now});
-      scheduleSave(); renderPanel(); toast("Project created.");
+      scheduleSave(); closeSheet(); renderPanel(); toast("Project created.");
     }else if(form.id==="noteForm"){
       addArtifact(String(data.get("title")||"Untitled note"),String(data.get("content")||""),"Note",null);
-      form.reset(); renderPanel();
+      closeSheet(); renderPanel();
     }else if(form.id==="skillForm"){
       var title=String(data.get("title")||"").trim(), prompt=String(data.get("prompt")||"").trim(); if(!title||!prompt)return;
-      state.skills.unshift({id:uid(),title:title,prompt:prompt,createdAt:now,updatedAt:now}); state.skills=state.skills.slice(0,100); scheduleSave(); renderPanel(); toast("Prompt saved to your library.");
+      state.skills.unshift({id:uid(),title:title,prompt:prompt,createdAt:now,updatedAt:now}); state.skills=state.skills.slice(0,100); ui.custScope="yours"; scheduleSave(); closeSheet(); renderPanel(); toast("Skill saved.");
     }else if(form.id==="googleSearchForm"){
       googleDriveSearch(String(data.get("q")||""));
     }else if(form.id==="githubSearchForm"){
@@ -427,7 +607,7 @@
         var due=new Date(String(data.get("dueAt")||"")).getTime();
         if(!Number.isFinite(due)||due<=now){toast("Choose a future reminder time.");return;}
         state.schedules.unshift({id:uid(),kind:"reminder",title:title2,note:String(data.get("note")||"").trim(),dueAt:due,enabled:true,createdAt:now,updatedAt:now,firedAt:null});
-        scheduleSave(); renderPanel(); toast("Reminder added. Keep this tab open to receive it."); return;
+        scheduleSave(); closeSheet(); renderPanel(); toast("Reminder added. Keep this tab open to receive it."); return;
       }
       if(!currentUser()||!accessToken()){toast("Sign in with a synced account to create a task that runs while the site is closed.");return;}
       if(!syncAvailable){
@@ -445,19 +625,39 @@
     else{if(nextRun.getTime()<=now)nextRun.setUTCDate(nextRun.getUTCDate()+1);if(cadence==="weekdays")while(nextRun.getUTCDay()===0||nextRun.getUTCDay()===6)nextRun.setUTCDate(nextRun.getUTCDate()+1);}
     var id=uid();
     state.schedules.unshift({id:id,kind:"daily_task",title:title,prompt:prompt,cadence:cadence,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC",nextRunAt:nextRun.getTime(),enabled:true,createdAt:now,updatedAt:now,lastRunAt:null});
-    scheduleSave(); pushRemote().then(function(ok){if(!ok){state.schedules=state.schedules.filter(function(s){return s.id!==id;});scheduleSave();toast("Couldn't sync this offline task, so it wasn't added.");return;}renderPanel();toast("Background AI task saved. It runs on the selected cadence in the site's UTC window.");});
+    scheduleSave(); pushRemote().then(function(ok){if(!ok){state.schedules=state.schedules.filter(function(s){return s.id!==id;});scheduleSave();toast("Couldn't sync this offline task, so it wasn't added.");return;}closeSheet();renderPanel();toast("Task saved. elora runs it around "+serverRunLabel()+" your time.");});
   }
   function handlePanelClick(e){
+    var ew=e.target.closest("[data-ew]");
+    if(ew){
+      var k=ew.dataset.ew, v=ew.dataset.v;
+      if(k==="close-sheet") closeSheet();
+      else if(k==="art-tab"){ui.artTab=v;renderPanel();}
+      else if(k==="art-view"){ui.artView=ui.artView==="list"?"grid":"list";renderPanel();}
+      else if(k==="art-search"){ui.artSearch=!ui.artSearch;if(!ui.artSearch)ui.artQuery="";renderPanel();var si=document.getElementById("ewArtSearch");if(si)si.focus();}
+      else if(k==="make") startMake(v);
+      else if(k==="art-open"){var it=state.artifacts.find(function(x){return x.id===ew.dataset.id;});if(it)openViewer(it);}
+      else if(k==="viewer-preview"){var it2=state.artifacts.find(function(x){return sheetEl&&x.id===sheetEl.dataset.artifactId;});if(it2)showViewerPreview(it2);}
+      else if(k==="new-task") openScheduleSheet(null);
+      else if(k==="tpl") openScheduleSheet(TEMPLATES.find(function(t){return t.id===v;})||null);
+      else if(k==="cust-tab"){ui.custTab=v;if(v==="connectors")loadConnectorStatus().then(function(){if(activePanel==="customize"&&ui.custTab==="connectors")renderPanel();});renderPanel();}
+      else if(k==="cust-scope"){ui.custScope=v;renderPanel();}
+      else if(k==="skill-try"){var sk=SKILL_CATALOG.concat(state.skills).find(function(x){return x.id===ew.dataset.id;});if(sk){if(app&&app.startNewChat)app.startNewChat();setChatInput(sk.prompt);}}
+      else if(k==="skill-add"){var cat=SKILL_CATALOG.find(function(x){return x.id===ew.dataset.id;});if(cat&&!state.skills.some(function(x){return x.from===cat.id;})){var t0=Date.now();state.skills.unshift({id:uid(),title:cat.title,prompt:cat.prompt,from:cat.id,createdAt:t0,updatedAt:t0});scheduleSave();renderPanel();toast("Added “"+cat.title+"” to your skills.");}}
+      else if(k==="style"){if(app&&app.setPreference)app.setPreference(ew.dataset.k,v);renderPanel();}
+      else if(k==="edit-instructions"){if(app&&app.openSettings)app.openSettings("account");setTimeout(function(){var ta=document.getElementById("settingsInstructions");if(ta)ta.focus();},80);}
+      else if(k==="open-conv"){if(app&&app.openConversation){closePage();app.openConversation(Number(ew.dataset.id));}}
+      else if(k==="install-app"){if(installPrompt){installPrompt.prompt();installPrompt.userChoice.then(function(){installPrompt=null;closeSheet();});}}
+      return;
+    }
     var close=e.target.closest("[data-workspace-close]"); if(close){closePanel();return;}
     var action=e.target.closest("[data-action]");
     if(action){
       var a=action.dataset.action;
-      if(a==="show-project-form"){var f=document.getElementById("projectForm");if(f){f.hidden=false;f.querySelector("input").focus();}}
-      else if(a==="cancel-project-form"){var pf=document.getElementById("projectForm");if(pf)pf.hidden=true;}
-      else if(a==="show-note-form"){var nf=document.getElementById("noteForm");if(nf){nf.hidden=false;nf.querySelector("input").focus();}}
-      else if(a==="cancel-note-form"){var nf2=document.getElementById("noteForm");if(nf2)nf2.hidden=true;}
-      else if(a==="show-skill-form"){var sf=document.getElementById("skillForm");if(sf){sf.hidden=false;sf.querySelector("input").focus();}}
-      else if(a==="cancel-skill-form"){var sf2=document.getElementById("skillForm");if(sf2)sf2.hidden=true;}
+      if(a==="show-project-form") openFormSheet("project");
+      else if(a==="show-note-form") openFormSheet("note");
+      else if(a==="show-skill-form") openFormSheet("skill");
+      else if(a.indexOf("cancel-")===0) closeSheet();
       else if(a==="notifications") askNotificationPermission();
       else if(a==="refresh-connectors"){loadConnectorStatus().then(renderPanel);}
       return;
@@ -485,7 +685,7 @@
     if(artifact){
       var aid=artifact.dataset.id, item=state.artifacts.find(function(x){return x.id===aid;}); if(!item)return;
       var aa=artifact.dataset.artifactAction;
-      if(aa==="delete"){state.artifacts=state.artifacts.filter(function(x){return x.id!==aid;});scheduleSave();renderPanel();}
+      if(aa==="delete"){state.artifacts=state.artifacts.filter(function(x){return x.id!==aid;});scheduleSave();closeSheet();renderPanel();toast("Deleted.");}
       else if(aa==="copy"){copyText(item.content).then(function(){toast("Copied.");});}
       else if(aa==="download"){downloadText((item.title||"artifact").replace(/[^\w.-]+/g,"-")+".md","# "+item.title+"\n\n"+item.content);}
       return;
@@ -513,15 +713,34 @@
   }
   function downloadText(name,text){var blob=new Blob([text],{type:"text/markdown;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);}
   function handleAccountAction(e){
+    var pageBtn=e.target.closest("[data-account-page]");
+    if(pageBtn){closeMenus();if(app&&app.showPage)app.showPage(pageBtn.dataset.accountPage);return;}
     var btn=e.target.closest("[data-account-action]"); if(!btn)return;
-    var action=btn.dataset.accountAction; closeMenus();
+    var action=btn.dataset.accountAction;
+    if(action==="learn"){var sub=document.getElementById("learnMenu");if(sub){var open=sub.hidden;sub.hidden=!open;btn.setAttribute("aria-expanded",String(open));}return;}
+    closeMenus();
     if(action==="settings"){if(app&&app.openSettings)app.openSettings("general");}
-    else if(action==="language"){if(app&&app.openSettings){app.openSettings("general");setTimeout(function(){var field=document.getElementById("responseLanguageSelect");if(field)field.focus();},0);}}
-    else if(action==="usage"){if(app&&app.openSettings)app.openSettings("subscription");}
+    else if(action==="language"){if(app&&app.openSettings){app.openSettings("general");setTimeout(function(){var field=document.getElementById("responseLanguageSelect");if(field)field.focus();},60);}}
+    else if(action==="usage"){if(app&&app.openSettings)app.openSettings("usage");}
     else if(action==="connectors")openPanel("connectors");
-    else if(action==="help"){if(app&&app.showPage)app.showPage("guidelines");}
+    else if(action==="help"){if(app&&app.showPage)app.showPage("help");}
+    else if(action==="feedback")openFeedback();
+    else if(action==="apps")openAppsSheet();
+    else if(action==="changelog"){if(app&&app.showPage)app.showPage("changelog");}
     else if(action==="upgrade"){if(window.EloraPlans)window.EloraPlans.open();else if(app&&app.showPage)app.showPage("pricing");}
     else if(action==="signout"){var old=document.getElementById("signOutBtn");if(old)old.click();}
+  }
+  function openFeedback(){
+    openSheet('<h2>Give feedback</h2><p>Tell us what works, what\'s broken, or what you wish elora could do. We read every message.</p><form class="ew-form" id="feedbackForm"><label>Your feedback<textarea name="text" maxlength="2000" required placeholder="What happened, and what did you expect?" style="min-height:150px"></textarea></label><div class="ew-form-acts"><button class="ew-btn" type="button" data-ew="close-sheet">Cancel</button><button class="ew-btn ew-btn-main" type="submit">Send by email</button></div></form>');
+    var t=sheetEl.querySelector("textarea"); if(t) t.focus();
+  }
+  var installPrompt=null;
+  window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();installPrompt=e;});
+  function openAppsSheet(){
+    var standalone=window.matchMedia&&matchMedia("(display-mode: standalone)").matches;
+    var ua=navigator.userAgent||"", ios=/iphone|ipad|ipod/i.test(ua), android=/android/i.test(ua);
+    var steps=ios?'<li>Open elorahub.online in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button.</li><li>Choose <strong>Add to Home Screen</strong>.</li>':android?'<li>Open elorahub.online in <strong>Chrome</strong>.</li><li>Tap the <strong>⋮</strong> menu.</li><li>Choose <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>':'<li>In <strong>Chrome</strong> or <strong>Edge</strong>, open the browser menu <strong>⋮</strong>.</li><li>Choose <strong>Cast, save and share → Install page as app</strong> (or <strong>Apps → Install elorahub</strong>).</li><li>elorahub opens in its own window, with an icon in your taskbar or dock.</li>';
+    openSheet('<h2>Get the elorahub app</h2><p>'+(standalone?"You're already using elorahub as an app.":"Install elorahub so it opens in its own window, right from your home screen or taskbar.")+'</p>'+(installPrompt&&!standalone?'<div class="ew-bar"><button class="ew-btn ew-btn-main" type="button" data-ew="install-app">'+ic("download")+'Install elorahub</button></div>':'')+'<div class="ew-note"><strong>'+(ios?"iPhone and iPad":android?"Android":"Computer")+'</strong><ol style="margin:8px 0 0;padding-left:18px;display:grid;gap:4px">'+steps+'</ol></div><p style="margin-top:14px;color:var(--ec-text-3);font-size:12.5px">On another device? Open <strong>elorahub.online</strong> there and use Get apps from the account menu.</p>');
   }
   function startDictation(){
     var Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -543,7 +762,7 @@
     var authAction=document.getElementById("accountAuthAction"); if(authAction)authAction.addEventListener("click",function(){closeMenus();if(app&&app.openSignIn)app.openSignIn();});
     if(panel)panel.addEventListener("click",function(e){if(e.target.closest("[data-workspace-close]"))closePanel();});
     document.addEventListener("click",function(e){if(!e.target.closest(".ec-account-wrap"))closeOne(accountMenu,accountTrigger);if(!e.target.closest(".ec-more"))closeOne(moreMenu,moreTrigger);if(!e.target.closest(".ec-plus-wrap"))closeOne(attachMenu,attachTrigger);});
-    document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeMenus();if(panel&&!panel.hidden)closePanel();}});
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"){closeMenus();closeSheet();}});
     if(fileInput)fileInput.addEventListener("click",function(){closeMenus();});
     document.querySelectorAll("[data-attach-action]").forEach(function(btn){btn.addEventListener("click",function(){var a=btn.dataset.attachAction;closeMenus();if(a==="files"&&fileInput)fileInput.click();else if(a==="folder"&&folderInput)folderInput.click();else if(a==="dictate")startDictation();else if(a==="research")toggleResearch();});});
     if(folderInput)folderInput.addEventListener("change",function(){
@@ -551,7 +770,12 @@
       try{var transfer=new DataTransfer();Array.from(folderInput.files).forEach(function(f){transfer.items.add(f);});fileInput.files=transfer.files;fileInput.dispatchEvent(new Event("change",{bubbles:true}));}catch(_e){toast("Folder upload isn't available in this browser. Choose files instead.");}
       folderInput.value="";
     });
-    if(panelBody){panelBody.addEventListener("click",handlePanelClick);panelBody.addEventListener("submit",handlePanelSubmit);panelBody.addEventListener("change",function(e){if(e.target.id==="scheduleKind")renderScheduleFields();});}
+    if(pageBody){
+      pageBody.addEventListener("click",handlePanelClick);pageBody.addEventListener("submit",handlePanelSubmit);
+      pageBody.addEventListener("input",function(e){var id=e.target.id;if(id==="ewProjSearch"){ui.projQuery=e.target.value;rerenderKeepFocus(id);}else if(id==="ewArtSearch"){ui.artQuery=e.target.value;rerenderKeepFocus(id);}else if(id==="ewCustSearch"){ui.custQuery=e.target.value;rerenderKeepFocus(id);}});
+      pageBody.addEventListener("keydown",function(e){if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches(".ew-row-main")){e.preventDefault();e.target.click();}});
+    }
+    document.addEventListener("click",function(e){if(e.target.closest("#newChatBtn,#chatHistoryList button,#chatHistoryList [role=listitem],.ec-brand"))closePage();});
     var thread=document.getElementById("chatThread");
     if(thread){
       thread.addEventListener("click",function(e){var btn=e.target.closest("[data-workspace-save-message]");if(!btn)return;var msg=btn.closest(".ec-msg.is-ai"),bubble=msg&&msg.querySelector(".ec-msg-text");if(!bubble)return;var title=app&&app.getActiveConversationTitle?app.getActiveConversationTitle():"Elora response";var id=app&&app.getActiveConversationId?app.getActiveConversationId():null;addArtifact(title,bubble.innerText,"Elora response",id?String(id)+":"+bubble.innerText.slice(0,80):null);btn.textContent="Saved";btn.disabled=true;});
@@ -560,7 +784,7 @@
     window.addEventListener("elorahub:auth-state",function(){onAuthChange();});
     window.addEventListener("elorahub:conversation-updated",function(){
       if(app&&app.getSessions){state.sessions=app.getSessions();writeJson(storageKey("chats",identity),state.sessions);}
-      if(activePanel==="projects")renderPanel();
+      if(activePanel==="projects"&&pageEl&&!pageEl.hidden)renderPanel();
     });
     document.querySelectorAll("[data-theme-mode]").forEach(function(btn){btn.addEventListener("click",function(){if(app&&app.setThemeMode)app.setThemeMode(btn.dataset.themeMode);document.querySelectorAll("[data-theme-mode]").forEach(function(b){b.classList.toggle("is-active",b===btn);});});});
     updateResearchLabels();
@@ -579,7 +803,7 @@
     return {top:top,bottom:bottom};
   }
   function fitPop(menu){
-    if(!menu||menu.hidden) return;
+    if(!menu||menu.hidden||menu.classList.contains("ec-pop-sub")) return;
     menu.classList.remove("ec-pop-flip-down","ec-pop-flip-up","is-scrolling"); menu.style.maxHeight=""; menu.style.top=""; menu.style.bottom="";
     var wrap=(menu.parentElement||menu), anchor=wrap.getBoundingClientRect(), box=clipBox(menu), pad=10;
     var h=menu.scrollHeight+2, above=anchor.top-box.top-pad-6, below=box.bottom-anchor.bottom-pad-6;
@@ -603,7 +827,7 @@
   })();
   function closeOne(menu,trigger){if(menu)menu.hidden=true;if(trigger)trigger.setAttribute("aria-expanded","false");}
   // Read-only counts for Settings → Usage.
-  window.EloraWorkspace={saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
+  window.EloraWorkspace={openPage:openPanel,closePage:function(){closePage();},saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
   function renderAll(){renderAccount();renderCounts();updateResearchLabels();if(activePanel&&panel&&!panel.hidden)renderPanel();}
   function init(){
     initEvents();

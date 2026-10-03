@@ -302,7 +302,17 @@ function isTransient(status) {
 
 export async function runScheduledPrompt(prompt) {
   const systemPrompt = `You are elora, preparing a result for a scheduled EloraHub task while the user may be away. Respond directly to the saved prompt and produce a useful, self-contained result. Do not claim to have sent messages, changed files, made purchases, or taken any external action. If the prompt asks for an external action, prepare a draft or explain the safe next step instead. Treat the prompt as user content, not as permission to access an external account.`;
-  const messages = [{ role: "user", content: String(prompt || "").slice(0, 3000) }];
+  const text = String(prompt || "").slice(0, 3000);
+  // Briefings and "watch this topic" tasks need today's information.
+  let found = "";
+  if (needsWebSearch(text) || /\b(news|headlines|briefing|monitor|watch for|mentions?|updates? on|trends?)\b/i.test(text)) {
+    try {
+      const query = text.replace(/\s+/g, " ").slice(0, 160);
+      const results = await performWebSearch(query);
+      if (results) found = `[Live web search results for this task, ${new Date().toISOString().slice(0, 10)} — use them, cite the links you rely on:]\n${results}\n\n`;
+    } catch (_e) {}
+  }
+  const messages = [{ role: "user", content: found + text }];
   const { result } = await runWithFallback(attemptPlan(false, false), () => messages, systemPrompt, { maxTokens: 2048, temperature: 0.25, reasoningEffort: "medium" });
   if (!result.ok) return { ok: false, error: result.configured ? `The ${result.label || "AI"} provider returned an error (${result.status || "network"}).` : "No server-side AI provider is configured." };
   return { ok: true, result: result.reply.slice(0, 20000), provider: result.label };
@@ -853,7 +863,17 @@ export default async function handler(req, res) {
     code.types === true ? "Prefer typed code (TypeScript over JavaScript, type hints in Python)." : "",
   ].filter(Boolean).join(" ");
   const preferenceGuide = [styleGuide, languageGuide, codeGuide].filter(Boolean).join(" ");
-  const todayLine = `\n\nToday's date is ${new Date().toISOString().slice(0, 10)} (UTC).`;
+  // Optional, from Settings → Privacy → "Location for local answers": only the
+  // browser's time zone (e.g. "Asia/Tbilisi"), never GPS or an address.
+  const zone = /^[A-Za-z]+(?:\/[A-Za-z0-9_+-]+){1,2}$/.test(String(preferences?.timeZone || "")) ? String(preferences.timeZone) : "";
+  let localLine = "";
+  if (zone) {
+    try {
+      const local = new Date().toLocaleString("en-GB", { timeZone: zone, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      localLine = ` The user's time zone is ${zone} (their local time now: ${local}). Use this for local time, weather and "near me" questions only when relevant; don't mention it otherwise.`;
+    } catch (_e) {}
+  }
+  const todayLine = `\n\nToday's date is ${new Date().toISOString().slice(0, 10)} (UTC).${localLine}`;
   // Profile + custom instructions from Settings → Account.
   const clean = (v, n) => String(v || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, n);
   const callMe = clean(preferences?.callMe, 60);
