@@ -5927,12 +5927,15 @@ html.reduce-motion .hx-chip,html.reduce-motion .hx-glass-orbit i,html.reduce-mot
       var revealed = 0;
       // Bigger steps for longer replies, so every answer finishes typing
       // in roughly the same couple of seconds.
-      var step = Math.max(1, Math.ceil(total / 130));
-      if(document.documentElement.classList.contains("reduce-motion")) step = total;
+      // Progress follows the clock, not the tick count: a background tab
+      // throttles timers to ~1/s, and the reply still finishes on time.
+      var duration = Math.min(2600, 600 + total * 4), started = Date.now();
+      if(document.documentElement.classList.contains("reduce-motion")) duration = 0;
       skipTyping = false;
       var timer = setInterval(function(){
         var stickToBottom = isNearBottom();
-        revealed = skipTyping ? total : Math.min(total, revealed + step);
+        var byTime = duration ? Math.floor(total * (Date.now() - started) / duration) : total;
+        revealed = (skipTyping || document.hidden) ? total : Math.min(total, Math.max(revealed + 1, byTime));
         var slice = fullText.slice(0, revealed);
         var atEnd = revealed >= total;
         // Mid-typing, show plain escaped text — partial markdown (a
