@@ -152,14 +152,17 @@ function attemptPlan(hasImages, preferGemini) {
   const groqOk = Boolean(primary.apiKey);
   const geminiOk = Boolean(gemini.apiKey);
   const plan = [];
-  if (preferGemini && geminiOk) plan.push(gemini);
+  // A second Gemini model: when the main one is overloaded, big jobs try it
+  // before falling back to Groq (whose 8k/min limit can't fit a whole site).
+  const geminiAlt = geminiOk && !process.env.GEMINI_MODEL && gemini.model !== "gemini-3.5-flash" ? { ...gemini, model: "gemini-3.5-flash" } : null;
+  if (preferGemini && geminiOk) { plan.push(gemini); if (geminiAlt) plan.push(geminiAlt); }
   if (groqOk) plan.push(primary);
   if (!preferGemini && geminiOk) plan.push(gemini);
   if (groqOk && isGroqEndpoint(primary) && !process.env.LLM_MODEL && !process.env.LLM_VISION_MODEL) {
     const extras = hasImages ? [] : ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"];
     extras.filter((m) => m !== primary.model).forEach((model) => plan.push({ ...primary, model }));
   }
-  if (geminiOk && !process.env.GEMINI_MODEL) plan.push({ ...gemini, model: "gemini-3.5-flash" });
+  if (!preferGemini && geminiAlt) plan.push(geminiAlt);
   return plan;
 }
 
@@ -256,7 +259,7 @@ async function runWithFallback(plan, messagesFor, systemPrompt, opts = {}) {
     const wait = !result.ok && result.status === 429 ? retryAfterSeconds(result) : null;
     const timedOut = !result.ok && result.status === 0 && result.errBody === "timed out";
     if (!result.ok && !timedOut && Date.now() - started < budget - 8000 && ((wait != null && wait <= 4) || result.status === 503 || result.status === 0)) {
-      await new Promise((r) => setTimeout(r, wait != null ? Math.ceil(wait * 1000) + 150 : 600));
+      await new Promise((r) => setTimeout(r, wait != null ? Math.ceil(wait * 1000) + 150 : result.status === 503 ? 1500 : 600));
       result = await callModel(cfg, messagesFor(cfg), systemPrompt, callOpts());
     }
     if (result.ok) return { result, failures };
@@ -651,6 +654,7 @@ async function runTaskPhase(res, ctx) {
       stepOpts.maxTokens = (cfg, msgs, sysP) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(7000, 7600 - estimateTokens(msgs, sysP))) : 12000);
       stepOpts.timeoutMs = 150000;
       stepOpts.totalBudgetMs = 200000;
+      stepOpts.reasoningEffort = "low";
     }
     const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
@@ -1026,7 +1030,8 @@ export default async function handler(req, res) {
     temperature: isBuildReply ? 0.6 : 0.3,
     timeoutMs: isBuildReply ? 150000 : undefined,
     // Deep dive and Code get the most careful reasoning.
-    reasoningEffort: preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
+    // (A build needs its tokens for the page itself, not for thinking.)
+    reasoningEffort: isBuildReply || preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
     wantReasoning: preferences?.showThinking !== false,
     totalBudgetMs: isBuildReply ? 210000 : 40000,
   });
