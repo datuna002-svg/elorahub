@@ -244,14 +244,20 @@ function retryAfterSeconds(result) {
 async function runWithFallback(plan, messagesFor, systemPrompt, opts = {}) {
   const failures = [];
   const started = Date.now();
+  const budget = opts.totalBudgetMs || 50000;
+  // Each call gets at most the time that's left, so the whole walk fits the
+  // budget (and the function's time limit).
+  const callOpts = () => ({ ...opts, timeoutMs: Math.max(6000, Math.min(opts.timeoutMs || 28000, budget - (Date.now() - started))) });
   for (const cfg of plan) {
-    if (Date.now() - started > (opts.totalBudgetMs || 50000)) break;
-    let result = await callModel(cfg, messagesFor(cfg), systemPrompt, opts);
+    if (Date.now() - started > budget - 4000) break;
+    let result = await callModel(cfg, messagesFor(cfg), systemPrompt, callOpts());
     // A momentary rate limit: wait the few seconds the provider asks for, once.
+    // A call that timed out isn't retried on the same model — the next one gets the time.
     const wait = !result.ok && result.status === 429 ? retryAfterSeconds(result) : null;
-    if (!result.ok && ((wait != null && wait <= 4) || result.status === 503 || result.status === 0)) {
+    const timedOut = !result.ok && result.status === 0 && result.errBody === "timed out";
+    if (!result.ok && !timedOut && Date.now() - started < budget - 8000 && ((wait != null && wait <= 4) || result.status === 503 || result.status === 0)) {
       await new Promise((r) => setTimeout(r, wait != null ? Math.ceil(wait * 1000) + 150 : 600));
-      result = await callModel(cfg, messagesFor(cfg), systemPrompt, opts);
+      result = await callModel(cfg, messagesFor(cfg), systemPrompt, callOpts());
     }
     if (result.ok) return { result, failures };
     failures.push(result);
@@ -629,8 +635,8 @@ async function runTaskPhase(res, ctx) {
     if (isBuild && step.kind === "code") {
       // A whole polished page is long: give Gemini room for it.
       stepOpts.maxTokens = (cfg, msgs, sysP) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(7000, 7600 - estimateTokens(msgs, sysP))) : 12000);
-      stepOpts.timeoutMs = 50000;
-      stepOpts.totalBudgetMs = 52000;
+      stepOpts.timeoutMs = 150000;
+      stepOpts.totalBudgetMs = 200000;
     }
     const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
@@ -1003,11 +1009,11 @@ export default async function handler(req, res) {
     // depends on the prompt; Gemini gets more room for long answers.
     maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(replyTokens + 1200, 7600 - estimateTokens(msgs, sys))) : isBuildReply ? 12000 : Math.round(replyTokens * 2)),
     temperature: isBuildReply ? 0.6 : 0.3,
-    timeoutMs: isBuildReply ? 45000 : undefined,
+    timeoutMs: isBuildReply ? 150000 : undefined,
     // Deep dive and Code get the most careful reasoning.
     reasoningEffort: preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
     wantReasoning: preferences?.showThinking !== false,
-    totalBudgetMs: isBuildReply ? 50000 : 40000,
+    totalBudgetMs: isBuildReply ? 210000 : 40000,
   });
 
   if (!result.ok) {

@@ -10,10 +10,11 @@
       "maxDuration": 60
     },
     "api/chat.js": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "api/pay/[action].js": {
       "maxDuration": 30
     }
-  }
+  },
+  "fluid": true
 }
