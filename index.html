@@ -8593,6 +8593,8 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     function inline(str){
       var codes = [];
       str = str.replace(/`([^`\n]+)`/g, function(_, c){ codes.push("<code>" + c + "</code>"); return "\u0001" + (codes.length - 1) + "\u0001"; });
+      // Models often put <br> inside table cells — show it as a line break.
+      str = str.replace(/&lt;br\s*\/?&gt;/gi, "<br>");
       str = str.replace(/\*\*([^*\n]+?)\*\*/g, "<strong>$1</strong>");
       str = str.replace(/__([^_\n]+?)__/g, "<strong>$1</strong>");
       str = str.replace(/(^|[^*\w])\*([^*\n]+?)\*(?!\*)/g, "$1<em>$2</em>");
