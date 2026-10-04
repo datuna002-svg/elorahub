@@ -11,7 +11,7 @@
 
 import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
 import { handleImage, rewriteImageLinks } from "./_lib/images.js";
-import { CAPABILITIES, pickSkills, skillGuide, isHeavy } from "./_lib/skills.js";
+import { CAPABILITIES, pickSkills, skillGuide, isHeavy, prefersGemini } from "./_lib/skills.js";
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -1008,7 +1008,7 @@ export default async function handler(req, res) {
   const replyTokens = preferences?.style === "concise" ? 1600 : preferences?.style === "deep" || preferences?.style === "technical" ? 4000 : 3000;
   const promptTokens = estimateTokens(finalMessages, systemPrompt);
   const isBuildReply = Boolean(buildGuide);
-  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500 || isBuildReply;
+  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500 || isBuildReply || prefersGemini(skills);
   const plan = attemptPlan(hasImages, preferGemini);
   const messagesFor = (cfg) => (isGroqEndpoint(cfg) ? fitToBudget(finalMessages, systemPrompt, Math.max(1200, 6800 - replyTokens)) : finalMessages);
   const { result, failures } = await runWithFallback(plan, messagesFor, systemPrompt, {

@@ -210,6 +210,11 @@ export function skillGuide(ids) {
   return ids.map((id) => (SKILLS[id] ? SKILLS[id].guide() : "")).filter(Boolean).join("\n\n");
 }
 
+// Design-heavy answers that come out better from Gemini, even when short.
+export function prefersGemini(ids) {
+  return ids.some((id) => id === "logo" || id === "animation" || id === "slides");
+}
+
 export function isHeavy(ids) {
   return ids.some((id) => SKILLS[id] && SKILLS[id].heavy);
 }
