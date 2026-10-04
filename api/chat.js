@@ -292,7 +292,7 @@ function describeFailures(failures) {
   return failures.map((f) => ({
     model: f.model,
     status: f.status || 0,
-    reason: f.errBody === "timed out" ? "timed out" : f.status === 429 ? "rate limited" : f.status === 503 ? "overloaded" : f.status === 401 || f.status === 403 ? "key rejected" : f.status === 404 ? "model not found" : f.status === 400 || f.status === 502 ? String(f.errBody || "").replace(/\s+/g, " ").slice(0, 140) : f.status ? `http ${f.status}` : "network",
+    reason: f.errBody === "timed out" ? "timed out" : f.status === 429 ? "rate limited" : f.status === 503 ? `overloaded: ${String(f.errBody || "").replace(/\s+/g, " ").slice(0, 160)}` : f.status === 401 || f.status === 403 ? "key rejected" : f.status === 404 ? "model not found" : f.status === 400 || f.status === 502 ? String(f.errBody || "").replace(/\s+/g, " ").slice(0, 140) : f.status ? `http ${f.status}` : "network",
   }));
 }
 async function continueLongReply(first, baseMessages, systemPrompt, opts) {
