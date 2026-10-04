@@ -7825,6 +7825,14 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       else if(m.cmd === "pause"){ if(mode === "play" && !paused){ paused = true; pausedAt = performance.now(); if(raf){ cancelAnimationFrame(raf); raf = 0; } } }
       else if(m.cmd === "resume"){ if(mode === "play" && paused){ paused = false; start += performance.now() - pausedAt; if(!raf) raf = requestAnimationFrame(loop); } }
       else if(m.cmd === "record"){ if(mode !== "record" && mode !== "stopping") record(); }
+      else if(m.cmd === "frame"){
+        if(mode === "record" || mode === "stopping") return;
+        if(raf){ cancelAnimationFrame(raf); raf = 0; }
+        mode = "export";
+        frame(Number(m.t) || 0);
+        c.toBlob(function(b){ send({ type:"frame", id:m.id, blob:b }); }, "image/jpeg", 0.92);
+      }
+      else if(m.cmd === "endExport"){ if(mode === "export") play(); }
     });
     (async function(){
       try {
@@ -7879,43 +7887,62 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     else if(m.type === "progress"){ if(fig.__rec) fig.__rec.onProgress(Number(m.t) || 0, Number(m.dur) || 0); }
     else if(m.type === "recorded"){ if(fig.__rec && m.blob instanceof Blob) fig.__rec.resolve(m.blob); }
     else if(m.type === "recordError"){ if(fig.__rec) fig.__rec.reject(new Error(m.message || "Recording failed.")); }
+    else if(m.type === "frame"){ var wtg = fig.__frameWait; if(wtg && wtg.id === m.id){ fig.__frameWait = null; if(m.blob instanceof Blob) wtg.resolve(m.blob); else wtg.reject(new Error("a frame couldn't be drawn")); } }
   });
+  function animFrame(fig, fr, t, id){
+    return new Promise(function(resolve, reject){
+      var timer = setTimeout(function(){ if(fig.__frameWait && fig.__frameWait.id === id){ fig.__frameWait = null; reject(new Error("a frame took too long to draw")); } }, 20000);
+      fig.__frameWait = { id:id, resolve:function(b){ clearTimeout(timer); resolve(b); }, reject:function(e){ clearTimeout(timer); reject(e); } };
+      fr.contentWindow.postMessage({ cmd:"frame", t:t, id:id }, "*");
+    });
+  }
   async function exportAnim(fig, kind){
     if(fig.__busy) return;
     var fr = animFrameOf(fig), c = fig.__cfg;
     if(!fr || !c){ showXStatus(fig, "The animation is still loading — try again in a second.", true); return; }
     fig.__busy = true; fig.classList.add("is-busy");
+    var base = slugify(c.title) || "elora-video", out = null, ext = "";
+    var ff = null, written = [];
     try {
-      showXStatus(fig, "Recording… 0.0 / " + c.duration.toFixed(1) + " s — keep this tab open");
-      var blob = await new Promise(function(resolve, reject){
-        fig.__rec = { resolve: resolve, reject: reject, onProgress: function(t, d){ showXStatus(fig, "Recording… " + t.toFixed(1) + " / " + d.toFixed(1) + " s — keep this tab open"); } };
-        fr.contentWindow.postMessage({ cmd:"record" }, "*");
-        setTimeout(function(){ reject(new Error("recording took too long — keep the tab visible while it records")); }, (c.duration + 40) * 1000);
-      });
-      fig.__rec = null;
-      var base = slugify(c.title) || "elora-video";
-      var out = blob, ext = /mp4/.test(blob.type) ? "mp4" : "webm";
-      if((kind === "mp4" && ext !== "mp4") || kind === "gif"){
-        showXStatus(fig, ffReady ? "Converting…" : "Loading the video converter (first time only)…");
-        var ff = await loadFFmpeg(function(pct){ showXStatus(fig, "Loading the video converter — " + pct + "%"); });
-        var inName = "anim-in." + ext, outName = kind === "gif" ? "anim-out.gif" : "anim-out.mp4";
+      if(kind === "webm"){
+        // Recorded live, in real time.
+        showXStatus(fig, "Recording… 0.0 / " + c.duration.toFixed(1) + " s — keep this tab open");
+        out = await new Promise(function(resolve, reject){
+          fig.__rec = { resolve: resolve, reject: reject, onProgress: function(t, d){ showXStatus(fig, "Recording… " + t.toFixed(1) + " / " + d.toFixed(1) + " s — keep this tab open"); } };
+          fr.contentWindow.postMessage({ cmd:"record" }, "*");
+          setTimeout(function(){ reject(new Error("recording took too long — keep the tab visible while it records")); }, (c.duration + 40) * 1000);
+        });
+        ext = /mp4/.test(out.type) ? "mp4" : "webm";
+      } else {
+        // MP4 / GIF: every frame drawn at its exact time, then encoded.
+        showXStatus(fig, ffReady ? "Getting ready…" : "Loading the video maker (first time only)…");
+        ff = await loadFFmpeg(function(pct){ showXStatus(fig, "Loading the video maker — " + pct + "%"); });
+        var fps = kind === "gif" ? Math.min(c.fps, 15) : c.fps;
+        var n = Math.max(1, Math.min(900, Math.round(c.duration * fps)));
+        for(var i = 0; i < n; i++){
+          var jpg = await animFrame(fig, fr, i / fps, "f" + i + "-" + Date.now());
+          var fname = "fr" + String(i).padStart(5, "0") + ".jpg";
+          await ff.writeFile(fname, new Uint8Array(await jpg.arrayBuffer()));
+          written.push(fname);
+          if(i % 5 === 0 || i === n - 1) showXStatus(fig, "Drawing frames — " + (i + 1) + " / " + n);
+        }
+        fr.contentWindow.postMessage({ cmd:"endExport" }, "*");
+        var outName = kind === "gif" ? "anim-out.gif" : "anim-out.mp4";
+        var gw = Math.min(c.width, c.width >= c.height ? 720 : 480); gw -= gw % 2;
+        var args = kind === "gif"
+          ? ["-framerate", String(fps), "-i", "fr%05d.jpg", "-vf", "scale=" + gw + ":-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4", "-loop", "0", outName]
+          : ["-framerate", String(fps), "-i", "fr%05d.jpg", "-c:v", "libx264", "-preset", "veryfast", "-crf", "19", "-pix_fmt", "yuv420p", "-movflags", "+faststart", outName];
+        showXStatus(fig, "Making the " + kind.toUpperCase() + "…");
         var onProg = function(ev){ var pct = Math.max(0, Math.min(100, Math.round((ev.progress || 0) * 100))); showXStatus(fig, "Making the " + kind.toUpperCase() + (pct > 0 && pct < 100 ? " — " + pct + "%" : "…")); };
         ff.on("progress", onProg);
-        await ff.writeFile(inName, new Uint8Array(await blob.arrayBuffer()));
-        var gw = Math.min(c.width, c.width >= c.height ? 720 : 480);
-        gw -= gw % 2;
-        var args = kind === "gif"
-          ? ["-i", inName, "-vf", "fps=" + Math.min(c.fps, 15) + ",scale=" + gw + ":-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4", "-loop", "0", outName]
-          : ["-i", inName, "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-r", String(c.fps), "-movflags", "+faststart", "-an", outName];
         var code = await ff.exec(args);
         ff.off("progress", onProg);
         var data = null;
         try { data = await ff.readFile(outName); } catch(e){}
-        try { await ff.deleteFile(inName); } catch(e){}
         try { await ff.deleteFile(outName); } catch(e){}
-        if(!data || !data.length) throw new Error("the conversion didn't finish" + (code ? " (code " + code + ")" : ""));
+        if(!data || !data.length) throw new Error("the video couldn't be encoded" + (code ? " (code " + code + ")" : ""));
         out = new Blob([data.buffer || data], { type: kind === "gif" ? "image/gif" : "video/mp4" });
-        ext = kind === "gif" ? "gif" : "mp4";
+        ext = kind;
       }
       var name = base + "." + ext;
       downloadBlob(out, name);
@@ -7923,8 +7950,10 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       showXStatus(fig, "Saved " + name + " · " + prettyBytes(out.size), false, true);
     } catch(err){
       showXStatus(fig, "Couldn't export: " + String(err && err.message || err), true);
+      try { fr.contentWindow.postMessage({ cmd:"endExport" }, "*"); } catch(e){}
     } finally {
-      fig.__busy = false; fig.__rec = null; fig.classList.remove("is-busy");
+      if(ff) for(var k = 0; k < written.length; k++){ try { await ff.deleteFile(written[k]); } catch(e){} }
+      fig.__busy = false; fig.__rec = null; fig.__frameWait = null; fig.classList.remove("is-busy");
     }
   }
   var xObs = null;
