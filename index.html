@@ -7830,7 +7830,10 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         if(raf){ cancelAnimationFrame(raf); raf = 0; }
         mode = "export";
         frame(Number(m.t) || 0);
-        c.toBlob(function(b){ send({ type:"frame", id:m.id, blob:b }); }, "image/jpeg", 0.92);
+        // Synchronous encode: callbacks like toBlob get throttled in background tabs.
+        var url = c.toDataURL("image/jpeg", 0.92), bin = atob(url.slice(url.indexOf(",") + 1)), bytes = new Uint8Array(bin.length);
+        for(var bi = 0; bi < bin.length; bi++) bytes[bi] = bin.charCodeAt(bi);
+        send({ type:"frame", id:m.id, blob:new Blob([bytes], { type:"image/jpeg" }) });
       }
       else if(m.cmd === "endExport"){ if(mode === "export") play(); }
     });
