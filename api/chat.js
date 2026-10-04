@@ -10,6 +10,7 @@
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
 import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
+import { handleImage, rewriteImageLinks, SITE_URL } from "./_lib/images.js";
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -60,7 +61,7 @@ const BUILD_GUIDE = `Website and UI builds — quality bar (follow this whenever
 - Be creative and decisive: invent a specific name, tagline and real, vivid copy that fits the request, and commit to a bold visual concept. For details only the user can know (an invite link, an email, a price), use one clearly named constant at the top of the script (for example const INVITE_URL = "https://discord.gg/your-invite") and mention it once after the code.
 - Design: a distinct palette in CSS variables, a Google Fonts pairing loaded with <link> (for example Sora, Outfit, Space Grotesk, Inter, Fraunces), a big striking hero (gradient mesh or glow, subtle animated background, glass cards), clear hierarchy, generous spacing, rounded cards with soft shadows, inline SVG icons (never icon fonts or emoji as icons), hover and focus states, smooth scrolling, reveal-on-scroll with IntersectionObserver, a sticky nav that becomes a mobile menu, and a real footer. Fully responsive at 375px and 1440px, readable contrast, respect prefers-reduced-motion.
 - Content: 6–9 well-chosen sections for the purpose (for a Discord community: hero with online and member badges and a Join button, what you'll find, channels or features grid, events, team cards, rules, testimonials, FAQ accordion, final join call to action). Add small interactive touches where they help (copy to clipboard, tabs, animated counters, accordion, lightbox, theme toggle).
-- Images: use real generated images, never broken placeholders: <img src="https://image.pollinations.ai/prompt/A%20DETAILED%20URL-ENCODED%20DESCRIPTION?width=1280&height=720&nologo=true&seed=7" alt="…" loading="lazy"> — describe subject, style, lighting and mood in the description (spaces as %20, no quotes), give each image a different seed, and use object-fit:cover. Draw logos and icons as inline SVG.
+- Images: use real generated images, never broken placeholders: <img src="${SITE_URL}/api/chat?img=A%20DETAILED%20URL-ENCODED%20DESCRIPTION&w=1280&h=720&seed=7" alt="…" loading="lazy"> — elorahub generates the picture from the description. Describe subject, style, lighting and mood (spaces as %20, no quotes), give each image a different seed, use 3–6 images on a page, and use object-fit:cover. Draw logos and icons as inline SVG.
 - After the code block, add 2–4 short lines: what's inside and what to change first.`;
 
 const IMAGE_GUIDE = `Images: you CAN create images. When the user asks you to create, generate, draw, design or make a picture, photo, illustration, logo, poster, wallpaper, avatar, icon, sticker or concept art, write one short line, then an image block exactly like:
@@ -284,7 +285,7 @@ function joinContinuation(head, tail) {
 // Models sometimes put "filename=NAME" on its own line under the fence;
 // fold it back into the info string so the file keeps its name.
 function normalizeFences(text) {
-  return String(text || "").replace(/```([\w+#.-]*)[ \t]*\n[ \t]*filename=([^\s`]+)[ \t]*\n/g, "```$1 filename=$2\n");
+  return rewriteImageLinks(text).replace(/```([\w+#.-]*)[ \t]*\n[ \t]*filename=([^\s`]+)[ \t]*\n/g, "```$1 filename=$2\n");
 }
 // What went wrong with each model that didn't answer (no provider text
 // except short error messages for bad requests).
@@ -762,6 +763,8 @@ export default async function handler(req, res) {
   // (Billing / Usage). Sends no message and spends nothing. Lives here
   // rather than in its own file because Vercel Hobby caps the project at
   // 12 serverless functions.
+  // Generated pictures (chat image cards and images in built websites).
+  if (req.method === "GET" && req.query && req.query.img) return handleImage(req, res);
   if (req.method === "GET") {
     res.setHeader("Cache-Control", "no-store");
     const { email } = await verifyRequester(req);

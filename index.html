@@ -7463,7 +7463,7 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
   // ---- Generated images: ```image {"prompt":…} blocks become image cards ----
   function hashSeed(str){ var h = 2166136261; for(var i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return Math.abs(h) % 1000000; }
   function genImageUrl(prompt, w, h, seed){
-    return "https://image.pollinations.ai/prompt/" + encodeURIComponent(String(prompt).slice(0, 900)) + "?width=" + w + "&height=" + h + "&seed=" + seed + "&nologo=true&model=flux&safe=true";
+    return "/api/chat?img=" + encodeURIComponent(String(prompt).slice(0, 900)) + "&w=" + w + "&h=" + h + "&seed=" + seed;
   }
   function genImageCard(raw){
     var spec = null, body = String(raw || "").trim();
@@ -7479,18 +7479,37 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
       '<button type="button" data-gen="again" title="Make a new version">' + '<svg class="ec-i"><use href="#i-refresh"/></svg><span>New version</span></button>' +
       '<button type="button" data-gen="open" title="Open full size">' + '<svg class="ec-i"><use href="#i-expand"/></svg></button></span></figcaption></figure>';
   }
+  // Fetched (not just <img src>) so a stand-in gradient from the server
+  // shows as "couldn't create" instead of passing for the picture.
   function loadGenImage(fig, url){
     var img = fig.querySelector("img");
     if(!img) return;
+    var wait = fig.querySelector(".ec-gen-wait");
+    var token = String(Date.now()) + Math.random();
+    fig.setAttribute("data-load", token);
     fig.classList.add("is-loading"); fig.classList.remove("is-failed");
-    img.onload = function(){ fig.classList.remove("is-loading"); };
-    img.onerror = function(){ fig.classList.remove("is-loading"); fig.classList.add("is-failed"); var w = fig.querySelector(".ec-gen-wait"); if(w) w.innerHTML = "Couldn't create this image right now — press New version to try again."; };
-    img.src = url;
+    if(wait) wait.innerHTML = "<i></i>Creating image…";
+    fetch(url).then(function(r){
+      if(!r.ok) throw new Error("http " + r.status);
+      if(r.headers.get("X-Elora-Image") === "placeholder") throw new Error("unavailable");
+      return r.blob();
+    }).then(function(blob){
+      if(fig.getAttribute("data-load") !== token) return;
+      if(fig._blobUrl) URL.revokeObjectURL(fig._blobUrl);
+      fig._blob = blob; fig._blobUrl = URL.createObjectURL(blob);
+      img.onload = function(){ fig.classList.remove("is-loading"); };
+      img.src = fig._blobUrl;
+    }).catch(function(){
+      if(fig.getAttribute("data-load") !== token) return;
+      fig.classList.remove("is-loading"); fig.classList.add("is-failed");
+      if(wait) wait.innerHTML = "Couldn't create this image right now — press New version to try again.";
+    });
   }
   function enhanceGenImages(root){
     (root || document).querySelectorAll(".ec-gen img[data-src]").forEach(function(img){
-      if(img.getAttribute("src")) return;
-      loadGenImage(img.closest(".ec-gen"), img.getAttribute("data-src"));
+      var fig = img.closest(".ec-gen");
+      if(!fig || fig.hasAttribute("data-load")) return;
+      loadGenImage(fig, img.getAttribute("data-src"));
     });
   }
   function currentGenUrl(fig){ return genImageUrl(fig.getAttribute("data-prompt"), fig.getAttribute("data-w"), fig.getAttribute("data-h"), fig.getAttribute("data-seed")); }
@@ -7504,8 +7523,9 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
     else if(kind === "download"){
       var url = currentGenUrl(fig);
       b.disabled = true;
-      fetch(url).then(function(r){ if(!r.ok) throw new Error("http"); return r.blob(); }).then(function(blob){
-        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "elora-image-" + fig.getAttribute("data-seed") + ".jpg"; document.body.appendChild(a); a.click(); a.remove();
+      (fig._blob ? Promise.resolve(fig._blob) : fetch(url).then(function(r){ if(!r.ok) throw new Error("http"); return r.blob(); })).then(function(blob){
+        var ext = /png/.test(blob.type) ? ".png" : /webp/.test(blob.type) ? ".webp" : /svg/.test(blob.type) ? ".svg" : ".jpg";
+        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "elora-image-" + fig.getAttribute("data-seed") + ext; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
       }).catch(function(){ window.open(url, "_blank", "noopener"); }).then(function(){ b.disabled = false; });
     }
