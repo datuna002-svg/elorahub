@@ -691,7 +691,19 @@ async function runTaskPhase(res, ctx) {
       stepOpts.reasoningEffort = "low";
     }
     stepOpts.onSwitch = (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`);
-    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
+    // Groq counts prompt + reply against 8k tokens a minute: give it a compact
+    // version (shorter earlier results and source excerpts) that fits.
+    const compactFor = (cfg) => {
+      if (!isGroqEndpoint(cfg)) return [{ role: "user", content: msg }];
+      const shortSys = estimateTokens([], sys);
+      const room = Math.max(1200, 7400 - 1900 - shortSys) * 3.4;
+      const shortPrior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r.slice(0, 900)}`).join("\n\n");
+      const shortCtx = context.replace(/(\n\[\d+\] [^\n]*\n)([\s\S]*?)(?=\n\n\[\d+\] |\n\n\[Sources found|$)/g, (m, head, body) => head + body.slice(0, 700));
+      let compact = `${shortPrior ? `Results so far (shortened):\n\n${shortPrior}\n\n` : ""}${shortCtx ? `${shortCtx.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
+      if (compact.length > room) compact = compact.slice(0, Math.max(0, room - 400)) + `\n…\n\nDo step ${i + 1} now: ${step.title}`;
+      return [{ role: "user", content: compact }];
+    };
+    const { result, failures } = await runWithFallback(plan, compactFor, sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
     const stepReply = normalizeFences(result.reply);
     return res.status(200).json({ result: stepReply, files: extractFiles(stepReply), used, provider: result.label, sources: newSources.map((x) => ({ title: x.title, url: x.url, site: x.site, read: x.read })), fallbacks: failures.length ? describeFailures(failures) : undefined });
@@ -702,7 +714,15 @@ async function runTaskPhase(res, ctx) {
   const sys = `${systemBase}\n\nYou just finished a multi-step task for the user. Write your final reply: lead with the result itself — complete and well structured, keeping the concrete facts, numbers and names the steps found — then a short note on what you did.${prevSources.length ? " Cite the numbered web sources as [n] after the facts that come from them; elorahub adds the links, so don't list them yourself." : ""}${isAgent ? ` ${AGENT_STEP_GUIDE}` : ""} ${fileNames.length ? `These files were produced and are attached under your reply as downloads: ${fileNames.join(", ")} — refer to them by name instead of pasting their full contents again.` : ""} Keep it tight and useful.`;
   const msg = `The user's request: """${goal.slice(0, 4000)}"""\n\nTask: ${p.title}\n\nWhat each step produced:\n\n${prior || "(no step output)"}${prevSources.length ? `\n\nNumbered sources used:\n${prevSources.map((x, k) => `[${k + 1}] ${x.title} — ${x.url}`).join("\n")}` : ""}`;
   progress("Writing the final answer");
-  const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, { ...opts(isAgent ? 4000 : 2400), onSwitch: (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`) });
+  const finishFor = (cfg) => {
+    if (!isGroqEndpoint(cfg)) return [{ role: "user", content: msg }];
+    const room = Math.max(1200, 7400 - 1900 - estimateTokens([], sys)) * 3.4;
+    const shortPrior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r.slice(0, Math.floor(room / Math.max(1, results.length)) - 120)}`).join("\n\n");
+    let compact = `The user's request: """${goal.slice(0, 1500)}"""\n\nTask: ${p.title}\n\nWhat each step produced (shortened):\n\n${shortPrior || "(no step output)"}${prevSources.length ? `\n\nNumbered sources used:\n${prevSources.map((x, k) => `[${k + 1}] ${x.title} — ${x.url}`).join("\n")}` : ""}`;
+    if (compact.length > room + 1500) compact = compact.slice(0, room + 1500);
+    return [{ role: "user", content: compact }];
+  };
+  const { result, failures } = await runWithFallback(plan, finishFor, sys, { ...opts(isAgent ? 4000 : 2400), onSwitch: (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`) });
   if (!result.ok) return taskFailure(res, failures);
   if (email && memoryOn) {
     const updated = await updateUserMemory(memorySummary, goal, result.reply);

@@ -10896,7 +10896,21 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     });
   }
 
+  // A busy model shouldn't sink a whole task: wait and try the call once more.
   async function taskCall(t, body){
+    try { return await taskCallOnce(t, body); }
+    catch(err){
+      if(t.cancelled || (err && err.name === "AbortError") || body.phase === "plan") throw err;
+      for(var s = 20; s > 0; s--){
+        if(t.cancelled) throw err;
+        if(t.view) t.view.live("The models are busy — trying again in " + s + "s");
+        await new Promise(function(r){ setTimeout(r, 1000); });
+      }
+      if(t.view) t.view.live("Trying again");
+      return await taskCallOnce(t, body);
+    }
+  }
+  async function taskCallOnce(t, body){
     var callStart = Date.now();
     var raw = await fetch("/api/chat", {
       method: "POST",
