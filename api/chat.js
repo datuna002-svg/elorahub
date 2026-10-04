@@ -672,7 +672,7 @@ async function runTaskPhase(res, ctx) {
       const found = await research(query, { depth: isAgent ? "deep" : "normal", exclude: prevSources.map((x) => x.url), onProgress: progress });
       newSources = found.sources;
       used.push({ tool: "web_search", query: found.query, ok: newSources.length > 0, results: newSources.map((x) => `${x.title} — ${x.url}`), read: newSources.filter((x) => x.read).map((x) => ({ site: x.site, title: x.title, url: x.url })) });
-      if (newSources.length) context += `\n\n${sourcesContext(newSources, prevSources.length)}`;
+      if (newSources.length) context += `\n\n${sourcesContext(newSources, prevSources.length, found.summary || "")}`;
     }
     if (prevSources.length) context += `\n\n[Sources found in earlier steps — cite them by these numbers when you use them:]\n${prevSources.map((x, k) => `[${k + 1}] ${x.title} — ${x.url}`).join("\n")}`;
     if (i === 0 && preferences?.readLinks !== false) {
@@ -987,7 +987,7 @@ async function chatHandler(req, res) {
     const found = await research(lastMessage.content, { depth: webMode === "deep" ? "deep" : "normal", onProgress: progress });
     if (found.sources.length) {
       sources = found.sources;
-      searchContext = sourcesContext(sources);
+      searchContext = sourcesContext(sources, 0, found.summary || "");
       steps.push(`Searched the web for “${found.query.slice(0, 60)}”`);
       const readSites = sources.filter((x) => x.read).map((x) => x.site);
       if (readSites.length) steps.push(`Read ${readSites.length} source${readSites.length === 1 ? "" : "s"}: ${readSites.join(", ")}`);

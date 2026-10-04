@@ -132,16 +132,110 @@ export async function readUrl(url, { maxChars = 6000, terms = [] } = {}) {
   }
 }
 
+// Real Google results through Gemini's "Grounding with Google Search" tool
+// (uses the existing GEMINI_API_KEY). Returns a cited summary plus the pages
+// Google used. Scraped search engines block datacenter servers, so this is
+// the main search; scraping is only the fallback.
+async function geminiSearch(query) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) return null;
+  const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, process.env.GEMINI_MODEL || "gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"].filter(Boolean))];
+  const today = new Date().toISOString().slice(0, 10);
+  for (const model of models) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 22000);
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST", signal: ctrl.signal,
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: `Today is ${today}. Search the web and report what current, reliable sources say about the question below. Give the key facts with exact numbers, names, versions, prices and dates, say which are the newest, and note where sources disagree. Under 220 words, no preamble.\n\nQuestion: ${query}` }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1400 },
+        }),
+      });
+      if (!r.ok) continue;
+      const data = await r.json();
+      const cand = data?.candidates?.[0];
+      const parts = cand?.content?.parts || [];
+      const text = parts.map((x) => x.text || "").join("").trim();
+      const meta = cand?.groundingMetadata || {};
+      const chunks = (meta.groundingChunks || []).map((c) => c.web).filter((w) => w && w.uri);
+      if (!text || !chunks.length) continue;
+      return { text, chunks, supports: meta.groundingSupports || [], queries: meta.webSearchQueries || [], model };
+    } catch (_e) {
+      // try the next model
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  return null;
+}
+// Google's grounding links are redirects; find where each one really goes.
+async function resolveRedirect(uri) {
+  if (!/vertexaisearch\.cloud\.google\.com|grounding-api-redirect/.test(uri)) return uri;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const r = await fetch(uri, { redirect: "manual", signal: ctrl.signal });
+    const loc = r.headers.get("location");
+    return loc && /^https?:\/\//i.test(loc) ? loc : uri;
+  } catch (_e) { return uri; } finally { clearTimeout(timer); }
+}
+// Drops results that don't mention the question's words (blocked search
+// engines sometimes answer with generic pages).
+function relevant(results, query) {
+  const terms = keyTerms(query);
+  if (terms.length < 2) return results;
+  return results.filter((r) => {
+    const hay = `${r.text} ${r.snippet} ${r.href}`.toLowerCase();
+    return terms.filter((t) => hay.includes(t)).length >= Math.min(2, Math.ceil(terms.length / 3));
+  });
+}
+
 // Search, then read the best few pages. Returns numbered-ready sources.
 export async function research(question, { depth = "normal", exclude = [], onProgress } = {}) {
   const query = cleanQuery(question);
   const say = typeof onProgress === "function" ? onProgress : () => {};
   say(`Searching the web for “${query.slice(0, 80)}”`);
-  let results = [];
-  try { results = await searchWeb(query); } catch (_e) { results = []; }
-  if (!results.length) return { query, sources: [], read: 0 };
   const want = depth === "deep" ? 5 : 3;
   const skip = new Set(exclude.map(String));
+  const g = await geminiSearch(query);
+  if (g) {
+    // Unique pages, in Google's order.
+    const resolved = await Promise.all(g.chunks.slice(0, 10).map(async (c) => ({ title: c.title || "", url: await resolveRedirect(c.uri) })));
+    const seen = new Map();
+    const pages = [];
+    resolved.forEach((c, i) => {
+      const key = c.url.replace(/[#?].*$/, "");
+      if (!seen.has(key) && !skip.has(c.url)) { seen.set(key, pages.length); pages.push({ ...c, from: [i] }); }
+      else if (seen.has(key)) pages[seen.get(key)].from.push(i);
+    });
+    const indexOf = new Map();
+    pages.forEach((pg, k) => pg.from.forEach((i) => indexOf.set(i, k + 1)));
+    // Put Google's citations into the summary as [n].
+    let summary = g.text;
+    const marks = (g.supports || []).map((sp) => ({ end: sp?.segment?.endIndex, nums: [...new Set((sp.groundingChunkIndices || []).map((i) => indexOf.get(i)).filter(Boolean))] })).filter((m) => Number.isFinite(m.end) && m.nums.length).sort((a, b) => b.end - a.end);
+    const bytes = Buffer.from(summary, "utf8");
+    let out = bytes;
+    for (const m of marks) {
+      if (m.end > out.length) continue;
+      out = Buffer.concat([out.subarray(0, m.end), Buffer.from(m.nums.map((n) => `[${n}]`).join(""), "utf8"), out.subarray(m.end)]);
+    }
+    summary = out.toString("utf8");
+    const top = pages.slice(0, want);
+    if (top.length) say(`Reading ${top.map((x) => hostOf(x.url)).join(", ")}`);
+    const terms = keyTerms(query);
+    const read = await Promise.all(top.map((x) => readUrl(x.url, { maxChars: depth === "deep" ? 3200 : 2000, terms })));
+    const sources = pages.slice(0, want + 3).map((pg, k) => {
+      const rd = read[k];
+      return { title: (rd && rd.ok && rd.title) || pg.title || hostOf(pg.url), url: (rd && rd.ok && rd.url) || pg.url, site: hostOf((rd && rd.ok && rd.url) || pg.url) || pg.title, excerpt: rd && rd.ok ? rd.text : "", read: Boolean(rd && rd.ok) };
+    });
+    return { query, sources, read: read.filter((x) => x && x.ok).length, summary, engine: "google" };
+  }
+  let results = [];
+  try { results = relevant(await searchWeb(query), query); } catch (_e) { results = []; }
+  if (!results.length) return { query, sources: [], read: 0 };
   const chosen = [];
   const extra = [];
   const hosts = new Set();
@@ -163,10 +257,11 @@ export async function research(question, { depth = "normal", exclude = [], onPro
   return { query, sources: sources.filter((s) => s.excerpt || s.title).slice(0, want + 3), read: pages.filter((p) => p && p.ok).length };
 }
 
-export function sourcesContext(sources, offset = 0) {
+export function sourcesContext(sources, offset = 0, summary = "") {
   if (!sources.length) return "";
   const today = new Date().toISOString().slice(0, 10);
-  return `[Web research, ${today}. Numbered sources below — use them for anything factual or recent. Put the source number in square brackets right after each sentence that uses it, like [1] or [2][3]. Prefer the most recent and most authoritative source when they disagree, and say when they disagree. Don't write your own list of sources or links at the end — elorahub adds the real links automatically. If the sources don't answer the question, say what's missing and answer from your own knowledge, clearly marked.]\n\n${sources.map((s, i) => `[${offset + i + 1}] ${s.title} — ${s.url}${s.read ? "" : " (search snippet only)"}\n${String(s.excerpt || "").slice(0, 4000)}`).join("\n\n")}`;
+  const shifted = summary && offset ? summary.replace(/\[(\d{1,2})\]/g, (m, n) => `[${Number(n) + offset}]`) : summary;
+  return `[Web research, ${today}.${shifted ? `\nGoogle search summary (its [n] marks point to the numbered sources below):\n${shifted}\n` : ""} Numbered sources below — use them for anything factual or recent. Put the source number in square brackets right after each sentence that uses it, like [1] or [2][3]. Prefer the most recent and most authoritative source when they disagree, and say when they disagree. Don't write your own list of sources or links at the end — elorahub adds the real links automatically. If the sources don't answer the question, say what's missing and answer from your own knowledge, clearly marked.]\n\n${sources.map((s, i) => `[${offset + i + 1}] ${s.title} — ${s.url}${s.read ? "" : " (search snippet only)"}\n${String(s.excerpt || "").slice(0, 4000)}`).join("\n\n")}`;
 }
 
 // Removes a sources list the model wrote itself and adds the real one,
