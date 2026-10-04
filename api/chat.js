@@ -51,6 +51,29 @@ Building things in elorahub: HTML code blocks get a Preview button that runs the
 
 Hard problems: slow down. Restate what's really being asked, work through it step by step, check edge cases and your own arithmetic or logic before answering, and if something is ambiguous pick the most sensible reading and say which one you chose.`;
 
+
+// Quality bar for anything that is a web page, site, app UI or game. Added to
+// the system prompt only when the request looks like that kind of build, so
+// ordinary chats stay light.
+const BUILD_GUIDE = `Website and UI builds — quality bar (follow this whenever you build a page, site, web app, dashboard or browser game):
+- Deliver ONE complete, self-contained index.html (all CSS in <style>, all JS in <script>) unless the user asks for separate files, in a single \`\`\`html filename=index.html block. Never leave gaps, "...", TODOs or placeholder syntax like {{NAME}}, [Your Name] or "Your Company".
+- Be creative and decisive: invent a specific name, tagline and real, vivid copy that fits the request, and commit to a bold visual concept. For details only the user can know (an invite link, an email, a price), use one clearly named constant at the top of the script (for example const INVITE_URL = "https://discord.gg/your-invite") and mention it once after the code.
+- Design: a distinct palette in CSS variables, a Google Fonts pairing loaded with <link> (for example Sora, Outfit, Space Grotesk, Inter, Fraunces), a big striking hero (gradient mesh or glow, subtle animated background, glass cards), clear hierarchy, generous spacing, rounded cards with soft shadows, inline SVG icons (never icon fonts or emoji as icons), hover and focus states, smooth scrolling, reveal-on-scroll with IntersectionObserver, a sticky nav that becomes a mobile menu, and a real footer. Fully responsive at 375px and 1440px, readable contrast, respect prefers-reduced-motion.
+- Content: 6–9 well-chosen sections for the purpose (for a Discord community: hero with online and member badges and a Join button, what you'll find, channels or features grid, events, team cards, rules, testimonials, FAQ accordion, final join call to action). Add small interactive touches where they help (copy to clipboard, tabs, animated counters, accordion, lightbox, theme toggle).
+- Images: use real generated images, never broken placeholders: <img src="https://image.pollinations.ai/prompt/A%20DETAILED%20URL-ENCODED%20DESCRIPTION?width=1280&height=720&nologo=true&seed=7" alt="…" loading="lazy"> — describe subject, style, lighting and mood in the description (spaces as %20, no quotes), give each image a different seed, and use object-fit:cover. Draw logos and icons as inline SVG.
+- After the code block, add 2–4 short lines: what's inside and what to change first.`;
+
+const IMAGE_GUIDE = `Images: you CAN create images. When the user asks you to create, generate, draw, design or make a picture, photo, illustration, logo, poster, wallpaper, avatar, icon, sticker or concept art, write one short line, then an image block exactly like:
+\`\`\`image
+{"prompt":"a richly detailed English description — subject, setting, style or medium, composition, lighting, colour palette, mood, and camera or lens if it's a photo","width":1024,"height":1024}
+\`\`\`
+Use width 1344 and height 768 for landscape or banners, 768 x 1344 for phone wallpapers and posters, otherwise 1024 x 1024. For "options" or "variations" give up to 4 blocks with clearly different takes. Never make sexual images, images that put real people in fake or harmful situations, or hateful or violent images — say so briefly instead. You can't make videos. To edit the user's own photo, video or GIF (trim, crop, resize, convert, make a GIF, speed up, mute…), they attach it and say what to change — elorahub edits it right in their browser.`;
+
+const BUILD_PATTERN = /\b(web ?sites?|web ?pages?|landing|home ?page|portfolio|html|css|tailwind|front[- ]?end|ui\b|ux\b|dashboard|web ?app|browser game|game in (?:the )?browser|online store|shop page|store page|template|redesign|site for|page for)\b/i;
+function wantsBuildGuide(text) {
+  return BUILD_PATTERN.test(String(text || ""));
+}
+
 // Finds up to 2 http(s) links in a message, fetches each with a short
 // timeout, strips it down to plain text, and returns a small combined
 // excerpt block — or an empty string if nothing was fetchable. Never
@@ -567,7 +590,7 @@ async function runTaskPhase(res, ctx) {
   const opts = (maxTokens, effort) => ({ maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(maxTokens, 7600 - estimateTokens(msgs, sys))) : Math.max(maxTokens, 8000)), temperature: 0.3, reasoningEffort: effort || "medium", totalBudgetMs: 48000 });
 
   if (phase === "plan") {
-    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable. For a website, app or game, plan complete files (index.html, style.css, script.js — the user gets a live preview of them), and when the job is mainly code, end with a step that reviews the files for bugs and outputs corrected, complete versions.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
+    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable. For a website, web app, dashboard or browser game, plan 3–4 steps: (1) "think" — decide the concept: name, audience, palette, fonts, sections and the actual copy; (2) "code" — build the whole thing as ONE self-contained index.html (CSS and JS inline); (3) "code" — polish: richer visuals, animations, generated images, mobile layout, and output the complete improved index.html; optionally (4) "code" — review for bugs and output the final complete file. Don't split it into separate CSS and JS files unless the user asked. For other code jobs, plan complete files and end with a step that reviews them for bugs and outputs corrected, complete versions.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
     const { result, failures } = await runWithFallback(plan, () => history, sys, opts(1400));
     if (!result.ok) return taskFailure(res, failures);
     const parsed = sanitizePlan(parseJsonObject(result.reply) || {});
@@ -586,6 +609,7 @@ async function runTaskPhase(res, ctx) {
   const prior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r}`).join("\n\n");
 
   if (phase === "step") {
+    const isBuild = wantsBuildGuide(goal) || wantsBuildGuide(p.title);
     const i = Math.max(0, Math.min(p.steps.length - 1, Number(task?.stepIndex) || 0));
     const step = p.steps[i];
     const used = [];
@@ -599,9 +623,16 @@ async function runTaskPhase(res, ctx) {
       const links = await fetchLinkContext(goal);
       if (links) { used.push({ tool: "read_links", ok: true }); context += `\n\n${links}`; }
     }
-    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.`;
+    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.${isBuild ? `\n\n${BUILD_GUIDE}` : ""}`;
     const msg = `${prior ? `Results so far:\n\n${prior}\n\n` : ""}${context ? `${context.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
-    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(step.kind === "code" || step.kind === "write" ? 5000 : 2800, step.kind === "code" ? "high" : "medium"));
+    const stepOpts = opts(step.kind === "code" || step.kind === "write" ? 5000 : 2800, step.kind === "code" ? "high" : "medium");
+    if (isBuild && step.kind === "code") {
+      // A whole polished page is long: give Gemini room for it.
+      stepOpts.maxTokens = (cfg, msgs, sysP) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(7000, 7600 - estimateTokens(msgs, sysP))) : 12000);
+      stepOpts.timeoutMs = 50000;
+      stepOpts.totalBudgetMs = 52000;
+    }
+    const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
     return res.status(200).json({ result: result.reply, files: extractFiles(result.reply), used, provider: result.label });
   }
@@ -624,6 +655,52 @@ async function taskFailure(res, failures) {
   await logEvent("error", "chat", `Task step failed on all models: ${summary}`.slice(0, 1900));
   const busy = (failures || []).length && failures.every((f) => f.status === 429 || f.status === 503 || f.status === 0);
   return res.status(502).json({ error: busy ? "busy" : "model_error", message: busy ? "elora's models are busy right now. Try the task again in a few seconds." : "elora couldn't finish this step. Try the task again." });
+}
+
+
+// ---------------------------------------------------------------------------
+// Media edits — the browser runs ffmpeg (WebAssembly) on the user's own file;
+// this only turns their words into one safe ffmpeg command. The file itself
+// never leaves their device.
+// ---------------------------------------------------------------------------
+const mediaUsage = new Map();
+const MEDIA_OUT = /^output\.(mp4|webm|gif|mp3|wav|ogg|m4a|png|jpg|jpeg|webp)$/;
+async function handleMediaPlan(req, res, body) {
+  const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  const now = Date.now();
+  const slot = mediaUsage.get(ip) || { count: 0, reset: now + 3600000 };
+  if (now > slot.reset) { slot.count = 0; slot.reset = now + 3600000; }
+  slot.count++;
+  mediaUsage.set(ip, slot);
+  if (slot.count > 80) return res.status(429).json({ error: "busy", message: "That's a lot of edits this hour — try again a little later." });
+  const instruction = cleanText(body.instruction, 1200);
+  const m = body.media && typeof body.media === "object" ? body.media : {};
+  const type = cleanText(m.type, 60);
+  const input = /^input\.[a-z0-9]{2,5}$/.test(String(m.input || "")) ? String(m.input) : "input.mp4";
+  const kind = /^video\//.test(type) ? "video" : /^audio\//.test(type) ? "audio" : type === "image/gif" ? "animated GIF" : "image";
+  const facts = [kind, m.duration ? `${Number(m.duration).toFixed(1)} s long` : "", m.width && m.height ? `${Number(m.width)}x${Number(m.height)}` : "", m.size ? `${(Number(m.size) / 1048576).toFixed(1)} MB` : ""].filter(Boolean).join(", ");
+  if (!instruction) return res.status(400).json({ error: "bad_request", message: "Say what to change." });
+  const sys = `You turn a request to edit a media file into ONE ffmpeg command that runs in ffmpeg.wasm (ffmpeg 6, single thread, ~2 GB memory). Available: libx264, libvpx-vp9, aac, libmp3lame, libopus, gif, png, mjpeg, libwebp encoders and the standard filters (scale, crop, trim, setpts, atempo, reverse, areverse, fps, transpose, hflip, vflip, eq, hue, boxblur, gblur, split, palettegen, paletteuse, concat, loop, fade, afade, pad, rotate, colorchannelmixer, unsharp, vignette, curves). NOT available: drawtext or subtitles (no fonts), network inputs, hardware encoders.
+The input file is "${input}" (${facts || kind}).
+Return ONLY JSON, no prose:
+{"args":["-i","${input}", ...more arguments..., "output.EXT"],"output":"output.EXT","summary":"one short friendly sentence saying what you did"}
+Rules: the args array never includes the word ffmpeg; it starts with "-i","${input}" (you may put -ss / -t before -i for fast trimming); the very last argument is the output file, named output with one of these extensions: mp4, webm, gif, mp3, wav, ogg, m4a, png, jpg, webp. For MP4 use -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p -movflags +faststart (and -c:a aac if there's audio; -an to remove it). For GIF use fps 10–15, width at most 640 with -2 for height and flags=lanczos, and split + palettegen + paletteuse in one -filter_complex or -vf. Keep the aspect ratio unless asked. Speed changes: setpts for video and atempo (0.5–2.0, chain for more) for audio. For a still image keep the same format unless asked. If it can't be done with these tools, return {"error":"one short reason and what you can do instead"}.`;
+  const plan = [];
+  const groq = buildProviderConfig("groq", false);
+  const gemini = buildProviderConfig("gemini", false);
+  if (groq.apiKey && isGroqEndpoint(groq)) plan.push({ ...groq, model: "openai/gpt-oss-120b" });
+  if (gemini.apiKey) plan.push(gemini);
+  if (groq.apiKey && isGroqEndpoint(groq)) plan.push({ ...groq, model: "openai/gpt-oss-20b" });
+  if (!plan.length) return res.status(503).json({ error: "not_configured", message: "No AI model is configured." });
+  const { result } = await runWithFallback(plan, () => [{ role: "user", content: instruction }], sys, { maxTokens: 900, temperature: 0.1, reasoningEffort: "low", totalBudgetMs: 25000 });
+  if (!result.ok) return res.status(502).json({ error: "model_error", message: "elora couldn't plan that edit just now. Try again." });
+  const out = parseJsonObject(result.reply) || {};
+  if (out.error) return res.status(200).json({ error: "cannot", message: cleanText(out.error, 300) });
+  const args = Array.isArray(out.args) ? out.args.map((a) => String(a)).slice(0, 80) : [];
+  const output = String(out.output || args[args.length - 1] || "");
+  const bad = !args.length || args.some((a) => /:\/\/|^(https?|tcp|udp|rtmp|file|pipe|concat):/i.test(a) || a.length > 600) || !MEDIA_OUT.test(output) || args[args.length - 1] !== output || args.indexOf(input) < 0;
+  if (bad) return res.status(200).json({ error: "cannot", message: "elora couldn't turn that into a safe edit. Try saying it a different way." });
+  return res.status(200).json({ args, output, summary: cleanText(out.summary, 300) });
 }
 
 const browseUsage = new Map();
@@ -686,6 +763,9 @@ export default async function handler(req, res) {
   // charged — just a safe, rate-limited page reader (see api/_lib/browse.js).
   if (req.body && req.body.browse && typeof req.body.browse === "object") {
     return handleBrowse(req, res, req.body.browse);
+  }
+  if (req.body && req.body.mediaPlan && typeof req.body.mediaPlan === "object") {
+    return handleMediaPlan(req, res, req.body.mediaPlan);
   }
 
   const { messages, provider, images, preferences } = req.body || {};
@@ -883,9 +963,11 @@ export default async function handler(req, res) {
   const personalBlock = personal || instructions
     ? `\n\nAbout the user: ${personal || "(no profile details)"}${instructions ? `\nTheir standing instructions for you — follow them unless they conflict with being safe and honest:\n"""\n${instructions}\n"""` : ""}`
     : "";
+  const recentAsk = messages.filter((m) => m && m.role === "user" && typeof m.content === "string").slice(-2).map((m) => m.content.slice(0, 2000)).join("\n");
+  const buildGuide = wantsBuildGuide(recentAsk) || (preferences?.workspaceMode === "code" && /\b(build|make|create|design)\b/i.test(lastMessage.content)) ? `\n\n${BUILD_GUIDE}` : "";
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
+    : SYSTEM_PROMPT) + `\n\n${IMAGE_GUIDE}` + buildGuide + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
 
   if (taskPhase || autoTask) {
     return runTaskPhase(res, {
@@ -912,18 +994,20 @@ export default async function handler(req, res) {
   const hasImages = safeImages.length > 0;
   const replyTokens = preferences?.style === "concise" ? 1600 : preferences?.style === "deep" || preferences?.style === "technical" ? 4000 : 3000;
   const promptTokens = estimateTokens(finalMessages, systemPrompt);
-  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500;
+  const isBuildReply = Boolean(buildGuide);
+  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500 || isBuildReply;
   const plan = attemptPlan(hasImages, preferGemini);
   const messagesFor = (cfg) => (isGroqEndpoint(cfg) ? fitToBudget(finalMessages, systemPrompt, Math.max(1200, 6800 - replyTokens)) : finalMessages);
   const { result, failures } = await runWithFallback(plan, messagesFor, systemPrompt, {
     // Groq counts prompt + reply against 8k tokens/minute, so its cap
     // depends on the prompt; Gemini gets more room for long answers.
-    maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(replyTokens + 1200, 7600 - estimateTokens(msgs, sys))) : Math.round(replyTokens * 2)),
-    temperature: 0.3,
+    maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(replyTokens + 1200, 7600 - estimateTokens(msgs, sys))) : isBuildReply ? 12000 : Math.round(replyTokens * 2)),
+    temperature: isBuildReply ? 0.6 : 0.3,
+    timeoutMs: isBuildReply ? 45000 : undefined,
     // Deep dive and Code get the most careful reasoning.
     reasoningEffort: preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
     wantReasoning: preferences?.showThinking !== false,
-    totalBudgetMs: 40000,
+    totalBudgetMs: isBuildReply ? 50000 : 40000,
   });
 
   if (!result.ok) {

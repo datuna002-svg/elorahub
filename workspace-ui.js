@@ -859,7 +859,15 @@
   })();
   function closeOne(menu,trigger){if(menu)menu.hidden=true;if(trigger)trigger.setAttribute("aria-expanded","false");}
   // Read-only counts for Settings → Usage.
-  window.EloraWorkspace={openPage:openPanel,closePage:function(){closePage();},saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
+  function tryBuilder(id){
+    var b=BUILDERS.filter(function(x){return x.id===id;})[0]; if(!b) return false;
+    closePage();
+    if(app&&app.startNewChat) app.startNewChat();
+    if(app&&app.setTaskMode) app.setTaskMode(true);
+    setChatInput(b.prompt); selectFirstBlank();
+    return true;
+  }
+  window.EloraWorkspace={openPage:openPanel,closePage:function(){closePage();},tryBuilder:tryBuilder,saveArtifact:function(title,content,kind){addArtifact(title,content,kind||"File",null);},counts:function(){return {projects:state.projects.length,artifacts:state.artifacts.length,skills:state.skills.length,builtIn:BUILTIN_PROMPTS.length,schedules:state.schedules.filter(function(x){return x.enabled!==false;}).length};}};
   function renderAll(){renderAccount();renderCounts();updateResearchLabels();if(activePanel&&panel&&!panel.hidden)renderPanel();}
   function init(){
     initEvents();

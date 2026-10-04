@@ -1,0 +1,6 @@
+ffmpeg.js and 814.ffmpeg.js are the browser loader from ffmpeg.wasm
+(@ffmpeg/ffmpeg 0.12.15, https://github.com/ffmpegwasm/ffmpeg.wasm),
+released under the MIT License, Copyright (c) 2019 Jerome Wu.
+
+The FFmpeg core itself (@ffmpeg/core 0.12.10) is loaded on demand from
+cdn.jsdelivr.net and is not stored in this repository.
