@@ -278,6 +278,20 @@ function joinContinuation(head, tail) {
   const needsSpace = /[\w.,;:!?)]$/.test(head) && /^[\w(]/.test(t);
   return head + (needsSpace ? " " : "") + t;
 }
+// Models sometimes put "filename=NAME" on its own line under the fence;
+// fold it back into the info string so the file keeps its name.
+function normalizeFences(text) {
+  return String(text || "").replace(/```([\w+#.-]*)[ \t]*\n[ \t]*filename=([^\s`]+)[ \t]*\n/g, "```$1 filename=$2\n");
+}
+// What went wrong with each model that didn't answer (no provider text
+// except short error messages for bad requests).
+function describeFailures(failures) {
+  return failures.map((f) => ({
+    model: f.model,
+    status: f.status || 0,
+    reason: f.errBody === "timed out" ? "timed out" : f.status === 429 ? "rate limited" : f.status === 503 ? "overloaded" : f.status === 401 || f.status === 403 ? "key rejected" : f.status === 404 ? "model not found" : f.status === 400 || f.status === 502 ? String(f.errBody || "").replace(/\s+/g, " ").slice(0, 140) : f.status ? `http ${f.status}` : "network",
+  }));
+}
 async function continueLongReply(first, baseMessages, systemPrompt, opts) {
   let reply = first.reply;
   let finish = first.finish;
@@ -287,7 +301,7 @@ async function continueLongReply(first, baseMessages, systemPrompt, opts) {
     const msgs = [...baseMessages, { role: "assistant", content: reply }, { role: "user", content: "Your reply was cut off. Continue exactly where it stopped — no repetition, no preamble, keep the same formatting (stay inside any open code block)." }];
     const { result } = await runWithFallback(attemptPlan(false, true), () => msgs, systemPrompt, {
       maxTokens: (cfg) => (isGroqEndpoint(cfg) ? Math.max(800, 7600 - estimateTokens(msgs, systemPrompt)) : 6000),
-      temperature: 0.3, reasoningEffort: "low", totalBudgetMs: Math.max(8000, (opts.budgetMs || 30000) - (Date.now() - started)), timeoutMs: 26000,
+      temperature: 0.3, reasoningEffort: "low", totalBudgetMs: Math.max(8000, (opts.budgetMs || 30000) - (Date.now() - started)), timeoutMs: opts.timeoutMs || 26000,
     });
     if (!result.ok) break;
     reply = joinContinuation(reply, result.reply);
@@ -640,7 +654,8 @@ async function runTaskPhase(res, ctx) {
     }
     const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
-    return res.status(200).json({ result: result.reply, files: extractFiles(result.reply), used, provider: result.label });
+    const stepReply = normalizeFences(result.reply);
+    return res.status(200).json({ result: stepReply, files: extractFiles(stepReply), used, provider: result.label, fallbacks: failures.length ? describeFailures(failures) : undefined });
   }
 
   // finish
@@ -1041,7 +1056,8 @@ export default async function handler(req, res) {
   let truncated = false;
   if (result.finish === "length") {
     const textOnly = [...finalMessages.slice(0, -1), { role: "user", content: lastText }];
-    const more = await continueLongReply(result, textOnly, systemPrompt, { budgetMs: Math.max(8000, 52000 - (Date.now() - startedAt)) });
+    const elapsed = Date.now() - startedAt;
+    const more = await continueLongReply(result, textOnly, systemPrompt, isBuildReply ? { budgetMs: Math.max(30000, 255000 - elapsed), timeoutMs: 90000 } : { budgetMs: Math.max(8000, 52000 - elapsed) });
     finalReply = more.reply;
     truncated = more.truncated;
     if (more.rounds) steps.push(more.rounds === 1 ? "Kept writing past the length limit" : `Kept writing past the length limit (${more.rounds} more parts)`);
@@ -1067,8 +1083,10 @@ export default async function handler(req, res) {
     }
   }
 
+  finalReply = normalizeFences(finalReply);
   return res.status(200).json({
     reply: finalReply,
+    fallbacks: failures.length ? describeFailures(failures) : undefined,
     usage: result.usage,
     creditsRemaining,
     unlimited,

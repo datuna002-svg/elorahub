@@ -7517,6 +7517,8 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
     text = text.replace(/```([\w+#.-]*)([^\n`]*)\n?([\s\S]*?)(?:```|$)/g, function(_, lang, info, code){
       if(/^image$/i.test(lang)){ codeBlocks.push(genImageCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       var fname = /filename=([^\s`]+)/.exec(info || "") || /^\s*([\w.\/-]+\.[a-z0-9]{1,6})\s*$/i.exec(info || "");
+      var ownLine = /^[ \t]*filename=([^\s`]+)[ \t]*\n/.exec(code);
+      if(ownLine){ if(!fname) fname = ownLine; code = code.slice(ownLine[0].length); }
       var label = fname ? fname[1] : (lang || "code");
       codeBlocks.push('<pre data-label="' + escapeAttr(label) + '"><code>' + escapeHtml(code.replace(/\n$/, "")) + "</code></pre>");
       return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n";
