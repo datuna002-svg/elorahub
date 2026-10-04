@@ -136,9 +136,11 @@ export async function readUrl(url, { maxChars = 6000, terms = [] } = {}) {
 // (uses the existing GEMINI_API_KEY). Returns a cited summary plus the pages
 // Google used. Scraped search engines block datacenter servers, so this is
 // the main search; scraping is only the fallback.
+export const searchDiag = { last: "" };
 async function geminiSearch(query) {
   const key = process.env.GEMINI_API_KEY;
-  if (!key) return null;
+  if (!key) { searchDiag.last = "no GEMINI_API_KEY"; return null; }
+  const errs = [];
   const models = [...new Set([process.env.GEMINI_SEARCH_MODEL, process.env.GEMINI_MODEL || "gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"].filter(Boolean))];
   const today = new Date().toISOString().slice(0, 10);
   for (const model of models) {
@@ -154,21 +156,23 @@ async function geminiSearch(query) {
           generationConfig: { temperature: 0.2, maxOutputTokens: 1400 },
         }),
       });
-      if (!r.ok) continue;
+      if (!r.ok) { errs.push(`${model} ${r.status}: ${(await r.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 160)}`); continue; }
       const data = await r.json();
       const cand = data?.candidates?.[0];
       const parts = cand?.content?.parts || [];
       const text = parts.map((x) => x.text || "").join("").trim();
       const meta = cand?.groundingMetadata || {};
       const chunks = (meta.groundingChunks || []).map((c) => c.web).filter((w) => w && w.uri);
-      if (!text || !chunks.length) continue;
+      if (!text || !chunks.length) { errs.push(`${model}: ${text ? "no sources" : "empty"} (${cand?.finishReason || "?"})`); continue; }
+      searchDiag.last = "";
       return { text, chunks, supports: meta.groundingSupports || [], queries: meta.webSearchQueries || [], model };
-    } catch (_e) {
-      // try the next model
+    } catch (e) {
+      errs.push(`${model}: ${e.name === "AbortError" ? "timed out" : e.message}`);
     } finally {
       clearTimeout(timer);
     }
   }
+  searchDiag.last = errs.join(" | ").slice(0, 600);
   return null;
 }
 // Google's grounding links are redirects; find where each one really goes.

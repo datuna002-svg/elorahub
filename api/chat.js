@@ -12,7 +12,7 @@
 import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
 import { handleImage, rewriteImageLinks } from "./_lib/images.js";
 import { CAPABILITIES, pickSkills, skillGuide, isHeavy, prefersGemini } from "./_lib/skills.js";
-import { research, readLinks, sourcesContext, appendSources, wantsResearch, hostOf } from "./_lib/research.js";
+import { research, readLinks, sourcesContext, appendSources, wantsResearch, hostOf, searchDiag } from "./_lib/research.js";
 import { normalizeMode, codeModeGuide, CODE_REVIEW_SYSTEM, studioModeGuide, AGENT_PLAN_GUIDE, AGENT_STEP_GUIDE } from "./_lib/modes.js";
 
 // Live progress: when the browser asks for it (body.stream), the reply is
@@ -981,6 +981,7 @@ async function chatHandler(req, res) {
   // the user asks for links; "always" and "deep" come from Settings.
   let searchContext = "";
   let sources = [];
+  let researchNote = "";
   const webMode = preferences?.webSearch === false ? "off" : ["always", "deep"].includes(preferences?.webMode) ? preferences.webMode : "auto";
   const heavyIntent = isHeavy(pickSkills(lastMessage.content, "", mode));
   if (!taskPhase && !autoTask && wantsResearch(lastMessage.content, { pref: webMode === "deep" ? "always" : webMode, heavyBuild: heavyIntent })) {
@@ -993,7 +994,9 @@ async function chatHandler(req, res) {
       if (readSites.length) steps.push(`Read ${readSites.length} source${readSites.length === 1 ? "" : "s"}: ${readSites.join(", ")}`);
     } else {
       steps.push("Searched the web — nothing useful came back");
+      if (searchDiag.last) await logEvent("warning", "chat", `Google search via Gemini failed: ${searchDiag.last}`.slice(0, 900));
     }
+    researchNote = found.engine || (searchDiag.last ? `fallback (${searchDiag.last.slice(0, 300)})` : "fallback");
   }
 
   // Links in the newest message are opened and read properly (GitHub repos
@@ -1186,6 +1189,7 @@ async function chatHandler(req, res) {
   return res.status(200).json({
     reply: finalReply,
     sources: sources.length ? sources.map((x, i) => ({ n: i + 1, title: x.title, url: x.url, site: x.site })) : undefined,
+    research: researchNote || undefined,
     fallbacks: failures.length ? describeFailures(failures) : undefined,
     usage: result.usage,
     creditsRemaining,
