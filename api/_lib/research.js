@@ -75,6 +75,21 @@ function excerpt(page, terms, maxChars) {
   return out.trim();
 }
 
+// Page text a search API already returned (markdown) → the relevant parts.
+function rawExcerpt(raw, terms, maxChars) {
+  const blocks = [];
+  for (const part of String(raw || "").replace(/\r/g, "").split(/\n{1,}/)) {
+    let line = part.replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\*\*|__|`/g, "").replace(/\s+/g, " ").trim();
+    if (!line || line.length < 3 || /^[-|:\s=]+$/.test(line)) continue;
+    let t = "p";
+    if (/^#{1,6}\s/.test(line)) { t = "h2"; line = line.replace(/^#+\s*/, ""); }
+    else if (/^([-+•]|\d+[.)])\s/.test(line)) { t = "li"; line = line.replace(/^([-+•]|\d+[.)])\s*/, ""); }
+    if (t === "p" && line.length < 25 && !/\d/.test(line)) continue;
+    blocks.push({ t, x: line.slice(0, 1200) });
+  }
+  return excerpt({ blocks }, terms, maxChars);
+}
+
 async function fetchJson(url, ms = 6000) {
   const r = await safeFetch(url, { timeoutMs: ms, accept: "application/json" });
   if (!r.ok || !r.body) return null;
@@ -149,13 +164,21 @@ async function apiSearch(query, depth) {
   const errs = [];
   if (process.env.TAVILY_API_KEY) {
     try {
-      const r = await timedFetch("https://api.tavily.com/search", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.TAVILY_API_KEY}` }, body: JSON.stringify({ query, search_depth: depth === "deep" ? "advanced" : "basic", max_results: n, include_answer: true }) }, 15000);
+      // Advanced search + advanced answer by default (TAVILY_DEPTH=basic in
+      // Vercel halves the credits used). Page text comes back with the results,
+      // so elora doesn't have to fetch sites that block servers.
+      const searchDepth = /^(basic|advanced|fast|ultra-fast)$/.test(process.env.TAVILY_DEPTH || "") ? process.env.TAVILY_DEPTH : "advanced";
+      const body = { query, search_depth: searchDepth, max_results: n, include_answer: searchDepth === "advanced" ? "advanced" : "basic", include_raw_content: "markdown" };
+      if (searchDepth === "advanced") body.chunks_per_source = 3;
+      if (/\b(news|headlines?|breaking)\b/i.test(query)) body.topic = "news";
+      const r = await timedFetch("https://api.tavily.com/search", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.TAVILY_API_KEY}` }, body: JSON.stringify(body) }, 22000);
       if (r.ok) {
         const d = await r.json();
-        const results = (d.results || []).filter((x) => x && x.url).map((x) => ({ href: x.url, text: x.title || "", snippet: String(x.content || "").slice(0, 1500) }));
+        const results = (d.results || []).filter((x) => x && x.url).map((x) => ({ href: x.url, text: x.title || "", snippet: String(x.content || "").slice(0, 1500), raw: typeof x.raw_content === "string" ? x.raw_content : "" }));
         if (results.length) return { results, answer: d.answer || "", engine: "tavily" };
-      } else errs.push(`tavily ${r.status}`);
-    } catch (e) { errs.push(`tavily ${e.message}`); }
+        errs.push("tavily: no results");
+      } else errs.push(`tavily ${r.status}: ${(await r.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 160)}`);
+    } catch (e) { errs.push(`tavily ${e.name === "AbortError" ? "timed out" : e.message}`); }
   }
   if (process.env.BRAVE_SEARCH_KEY) {
     try {
@@ -311,7 +334,12 @@ async function readResults(query, results, { want, skip, depth, say, summary = "
   }
   if (chosen.length) say(`Reading ${chosen.map((r) => hostOf(r.href)).join(", ")}`);
   const terms = keyTerms(query);
-  const pages = await Promise.all(chosen.map((r) => readUrl(r.href, { maxChars: depth === "deep" ? 3800 : 2600, terms })));
+  const maxChars = depth === "deep" ? 3800 : 2600;
+  const pages = await Promise.all(chosen.map((r) => {
+    const text = r.raw ? rawExcerpt(r.raw, terms, maxChars) : "";
+    if (text.length > 200) return { ok: true, url: r.href, site: hostOf(r.href), title: r.text || hostOf(r.href), text };
+    return readUrl(r.href, { maxChars, terms });
+  }));
   const sources = [];
   chosen.forEach((r, i) => {
     const p = pages[i];
