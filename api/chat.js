@@ -994,7 +994,7 @@ async function chatHandler(req, res) {
       if (readSites.length) steps.push(`Read ${readSites.length} source${readSites.length === 1 ? "" : "s"}: ${readSites.join(", ")}`);
     } else {
       steps.push("Searched the web — nothing useful came back");
-      if (searchDiag.last) await logEvent("warning", "chat", `Google search via Gemini failed: ${searchDiag.last}`.slice(0, 900));
+      if (searchDiag.last) await logEvent("warning", "chat", `Web search found nothing useful (add TAVILY_API_KEY, BRAVE_SEARCH_KEY or SERPER_API_KEY for reliable search): ${searchDiag.last}`.slice(0, 900));
     }
     researchNote = found.engine || (searchDiag.last ? `fallback (${searchDiag.last.slice(0, 300)})` : "fallback");
   }

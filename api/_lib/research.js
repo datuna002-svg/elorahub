@@ -137,6 +137,58 @@ export async function readUrl(url, { maxChars = 6000, terms = [] } = {}) {
 // Google used. Scraped search engines block datacenter servers, so this is
 // the main search; scraping is only the fallback.
 export const searchDiag = { last: "" };
+
+async function timedFetch(url, init, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url, { ...init, signal: ctrl.signal }); } finally { clearTimeout(timer); }
+}
+// Search APIs (any one key in Vercel turns it on): Tavily, Brave or Serper.
+async function apiSearch(query, depth) {
+  const n = depth === "deep" ? 8 : 6;
+  const errs = [];
+  if (process.env.TAVILY_API_KEY) {
+    try {
+      const r = await timedFetch("https://api.tavily.com/search", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.TAVILY_API_KEY}` }, body: JSON.stringify({ query, search_depth: depth === "deep" ? "advanced" : "basic", max_results: n, include_answer: true }) }, 15000);
+      if (r.ok) {
+        const d = await r.json();
+        const results = (d.results || []).filter((x) => x && x.url).map((x) => ({ href: x.url, text: x.title || "", snippet: String(x.content || "").slice(0, 1500) }));
+        if (results.length) return { results, answer: d.answer || "", engine: "tavily" };
+      } else errs.push(`tavily ${r.status}`);
+    } catch (e) { errs.push(`tavily ${e.message}`); }
+  }
+  if (process.env.BRAVE_SEARCH_KEY) {
+    try {
+      const r = await timedFetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${n}`, { headers: { Accept: "application/json", "X-Subscription-Token": process.env.BRAVE_SEARCH_KEY } }, 12000);
+      if (r.ok) {
+        const d = await r.json();
+        const results = (d?.web?.results || []).filter((x) => x && x.url).map((x) => ({ href: x.url, text: String(x.title || "").replace(/<[^>]+>/g, ""), snippet: String(x.description || "").replace(/<[^>]+>/g, "").slice(0, 800) }));
+        if (results.length) return { results, answer: "", engine: "brave" };
+      } else errs.push(`brave ${r.status}`);
+    } catch (e) { errs.push(`brave ${e.message}`); }
+  }
+  if (process.env.SERPER_API_KEY) {
+    try {
+      const r = await timedFetch("https://google.serper.dev/search", { method: "POST", headers: { "Content-Type": "application/json", "X-API-KEY": process.env.SERPER_API_KEY }, body: JSON.stringify({ q: query, num: n }) }, 12000);
+      if (r.ok) {
+        const d = await r.json();
+        const results = (d.organic || []).filter((x) => x && x.link).map((x) => ({ href: x.link, text: x.title || "", snippet: String(x.snippet || "").slice(0, 800) }));
+        const answer = d.answerBox ? String(d.answerBox.answer || d.answerBox.snippet || "") : d.knowledgeGraph ? String(d.knowledgeGraph.description || "") : "";
+        if (results.length) return { results, answer, engine: "google (serper)" };
+      } else errs.push(`serper ${r.status}`);
+    } catch (e) { errs.push(`serper ${e.message}`); }
+  }
+  if (errs.length) searchDiag.last = errs.join(" | ");
+  return null;
+}
+// Wikipedia's own search API — always reachable, good for encyclopedic facts.
+async function wikiSearch(query) {
+  try {
+    const r = await safeFetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&srlimit=5`, { timeoutMs: 6000, accept: "application/json" });
+    const hits = JSON.parse(r.body || "{}")?.query?.search || [];
+    return hits.map((h) => ({ href: `https://en.wikipedia.org/wiki/${encodeURIComponent(String(h.title).replace(/ /g, "_"))}`, text: h.title, snippet: String(h.snippet || "").replace(/<[^>]+>/g, "") }));
+  } catch (_e) { return []; }
+}
 async function geminiSearch(query) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) { searchDiag.last = "no GEMINI_API_KEY"; return null; }
@@ -204,6 +256,8 @@ export async function research(question, { depth = "normal", exclude = [], onPro
   say(`Searching the web for “${query.slice(0, 80)}”`);
   const want = depth === "deep" ? 5 : 3;
   const skip = new Set(exclude.map(String));
+  const api = await apiSearch(query, depth);
+  if (api) return readResults(query, api.results, { want, skip, depth, say, summary: api.answer ? `Search engine's short answer (verify against the sources): ${api.answer}` : "", engine: api.engine, keepSnippets: true });
   const g = await geminiSearch(query);
   if (g) {
     // Unique pages, in Google's order.
@@ -239,7 +293,13 @@ export async function research(question, { depth = "normal", exclude = [], onPro
   }
   let results = [];
   try { results = relevant(await searchWeb(query), query); } catch (_e) { results = []; }
+  if (results.length < 2) results = results.concat(relevant(await wikiSearch(query), query));
   if (!results.length) return { query, sources: [], read: 0 };
+  return readResults(query, results, { want, skip, depth, say, engine: "fallback" });
+}
+
+// Picks distinct sites from search results and reads their pages.
+async function readResults(query, results, { want, skip, depth, say, summary = "", engine = "", keepSnippets = false }) {
   const chosen = [];
   const extra = [];
   const hosts = new Set();
@@ -258,14 +318,15 @@ export async function research(question, { depth = "normal", exclude = [], onPro
     sources.push({ title: (p && p.ok && p.title) || r.text || hostOf(r.href), url: (p && p.ok && p.url) || r.href, site: hostOf(r.href), excerpt: p && p.ok ? p.text : r.snippet || "", read: Boolean(p && p.ok) });
   });
   extra.forEach((r) => sources.push({ title: r.text || hostOf(r.href), url: r.href, site: hostOf(r.href), excerpt: r.snippet || "", read: false }));
-  return { query, sources: sources.filter((s) => s.excerpt || s.title).slice(0, want + 3), read: pages.filter((p) => p && p.ok).length };
+  if (keepSnippets) sources.forEach((src, i) => { if (!src.read && chosen[i] && chosen[i].snippet) src.excerpt = chosen[i].snippet; });
+  return { query, sources: sources.filter((s) => s.excerpt || s.title).slice(0, want + 3), read: pages.filter((p) => p && p.ok).length, summary, engine };
 }
 
 export function sourcesContext(sources, offset = 0, summary = "") {
   if (!sources.length) return "";
   const today = new Date().toISOString().slice(0, 10);
   const shifted = summary && offset ? summary.replace(/\[(\d{1,2})\]/g, (m, n) => `[${Number(n) + offset}]`) : summary;
-  return `[Web research, ${today}.${shifted ? `\nGoogle search summary (its [n] marks point to the numbered sources below):\n${shifted}\n` : ""} Numbered sources below — use them for anything factual or recent. Put the source number in square brackets right after each sentence that uses it, like [1] or [2][3]. Prefer the most recent and most authoritative source when they disagree, and say when they disagree. Don't write your own list of sources or links at the end — elorahub adds the real links automatically. If the sources don't answer the question, say what's missing and answer from your own knowledge, clearly marked.]\n\n${sources.map((s, i) => `[${offset + i + 1}] ${s.title} — ${s.url}${s.read ? "" : " (search snippet only)"}\n${String(s.excerpt || "").slice(0, 4000)}`).join("\n\n")}`;
+  return `[Web research, ${today}.${shifted ? `\nSearch summary (any [n] marks point to the numbered sources below):\n${shifted}\n` : ""} Numbered sources below — use them for anything factual or recent. Put the source number in square brackets right after each sentence that uses it, like [1] or [2][3]. Prefer the most recent and most authoritative source when they disagree, and say when they disagree. Don't write your own list of sources or links at the end — elorahub adds the real links automatically. If the sources don't answer the question, say what's missing and answer from your own knowledge, clearly marked.]\n\n${sources.map((s, i) => `[${offset + i + 1}] ${s.title} — ${s.url}${s.read ? "" : " (search snippet only)"}\n${String(s.excerpt || "").slice(0, 4000)}`).join("\n\n")}`;
 }
 
 // Removes a sources list the model wrote itself and adds the real one,
