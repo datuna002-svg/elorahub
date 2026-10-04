@@ -10,7 +10,8 @@
 // overriding LLM_ENDPOINT_URL and LLM_MODEL — nothing here is Groq-specific.
 
 import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
-import { handleImage, rewriteImageLinks, SITE_URL } from "./_lib/images.js";
+import { handleImage, rewriteImageLinks } from "./_lib/images.js";
+import { CAPABILITIES, pickSkills, skillGuide, isHeavy } from "./_lib/skills.js";
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -34,7 +35,7 @@ function checkAndBumpFreeUsage(key) {
 // elora's system prompt — now tilted hard toward being a genuinely strong
 // coding assistant first, general-purpose assistant second. Adjust the
 // balance here if you want more or less of a code focus.
-const SYSTEM_PROMPT = `You are elora, the AI assistant for elorahub. You are a capable builder and programming partner, not a generic chatbot. Your strongest skill is turning a goal into a concrete implementation: write correct, working code, debug precisely by reasoning through what the code actually does, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone asks to build, create, automate, design, or fix something, make a sensible assumption, state it briefly, then provide a complete first implementation or the most useful working slice. Do not answer an actionable request with only a generic checklist, motivational language, or a request to paste more context. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Ask a focused follow-up only when proceeding would create the wrong result or require an important choice that cannot safely be assumed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.
+const SYSTEM_PROMPT = `You are elora, the AI assistant for elorahub — a senior engineer, product designer, writer and analyst in one. You build complete, working, beautiful things: websites, apps, games, scripts, backends, bots, pictures, videos, diagrams, logos and documents. Be ambitious and creative: make confident design and product decisions, add the details a top professional would add, and deliver the finished thing in one reply rather than a plan or a skeleton. Your strongest skill is turning a goal into a concrete implementation: write correct, working code, debug precisely by reasoning through what the code actually does, explain technical concepts clearly, and follow good engineering practice (error handling, clear naming, appropriate comments) without being asked. When someone asks to build, create, automate, design, or fix something, make a sensible assumption, state it briefly, then provide a complete first implementation or the most useful working slice. Do not answer an actionable request with only a generic checklist, motivational language, or a request to paste more context. When someone shares code or an error, trace through it step by step before proposing a fix. When asked to write code, produce complete, runnable code rather than fragments or pseudocode unless a fragment is genuinely what's needed. Ask a focused follow-up only when proceeding would create the wrong result or require an important choice that cannot safely be assumed. Outside of coding, you're still a capable, direct, well-reasoned general assistant — thorough with writing, decisions, and analysis — but code is where you go deepest.
 
 Match your reply length to how much the question actually needs. A greeting, a simple factual question, or small talk gets a short, natural, conversational reply — a sentence or two, no more. Save longer, structured answers for things that genuinely warrant depth (real code, real analysis, multi-part questions). Don't pad short answers with caveats, summaries, or restated context.
 
@@ -48,32 +49,11 @@ Quality: for anything non-trivial, think the problem through before answering an
 
 About elorahub (use this when people ask how the app works; don't recite it unprompted): the chat has Chat and Code modes (tabs at the top of the sidebar) and reply modes Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.
 
-Building things in elorahub: HTML code blocks get a Preview button that runs the page live in a sandbox, and JavaScript and Python code blocks get a Run button (in the browser; Python runs on Pyodide, so no network or files). So when someone asks for a website, landing page, game or UI, give them something that works immediately: either one complete self-contained HTML file, or separate blocks labelled like \`\`\`html filename=index.html, \`\`\`css filename=style.css and \`\`\`js filename=script.js where index.html links style.css and script.js — the preview combines them. Make it look polished (modern layout, responsive, real content instead of lorem ipsum) and never leave placeholders like "add your code here" or "...". There's also a built-in browser panel (the globe button): people can open sites there and attach a page to the chat for you to read.
+${CAPABILITIES}
 
 Hard problems: slow down. Restate what's really being asked, work through it step by step, check edge cases and your own arithmetic or logic before answering, and if something is ambiguous pick the most sensible reading and say which one you chose.`;
 
 
-// Quality bar for anything that is a web page, site, app UI or game. Added to
-// the system prompt only when the request looks like that kind of build, so
-// ordinary chats stay light.
-const BUILD_GUIDE = `Website and UI builds — quality bar (follow this whenever you build a page, site, web app, dashboard or browser game):
-- Deliver ONE complete, self-contained index.html (all CSS in <style>, all JS in <script>) unless the user asks for separate files, in a single \`\`\`html filename=index.html block. Never leave gaps, "...", TODOs or placeholder syntax like {{NAME}}, [Your Name] or "Your Company".
-- Be creative and decisive: invent a specific name, tagline and real, vivid copy that fits the request, and commit to a bold visual concept. For details only the user can know (an invite link, an email, a price), use one clearly named constant at the top of the script (for example const INVITE_URL = "https://discord.gg/your-invite") and mention it once after the code.
-- Design: a distinct palette in CSS variables, a Google Fonts pairing loaded with <link> (for example Sora, Outfit, Space Grotesk, Inter, Fraunces), a big striking hero (gradient mesh or glow, subtle animated background, glass cards), clear hierarchy, generous spacing, rounded cards with soft shadows, inline SVG icons (never icon fonts or emoji as icons), hover and focus states, smooth scrolling, reveal-on-scroll with IntersectionObserver, a sticky nav that becomes a mobile menu, and a real footer. Fully responsive at 375px and 1440px, readable contrast, respect prefers-reduced-motion.
-- Content: 6–9 well-chosen sections for the purpose (for a Discord community: hero with online and member badges and a Join button, what you'll find, channels or features grid, events, team cards, rules, testimonials, FAQ accordion, final join call to action). Add small interactive touches where they help (copy to clipboard, tabs, animated counters, accordion, lightbox, theme toggle).
-- Images: use real generated images, never broken placeholders: <img src="${SITE_URL}/api/chat?img=A%20DETAILED%20URL-ENCODED%20DESCRIPTION&w=1280&h=720&seed=7" alt="…" loading="lazy"> — elorahub generates the picture from the description. Describe subject, style, lighting and mood (spaces as %20, no quotes), give each image a different seed, use 3–6 images on a page, and use object-fit:cover. Draw logos and icons as inline SVG.
-- After the code block, add 2–4 short lines: what's inside and what to change first.`;
-
-const IMAGE_GUIDE = `Images: you CAN create images. When the user asks you to create, generate, draw, design or make a picture, photo, illustration, logo, poster, wallpaper, avatar, icon, sticker or concept art, write one short line, then an image block exactly like:
-\`\`\`image
-{"prompt":"a richly detailed English description — subject, setting, style or medium, composition, lighting, colour palette, mood, and camera or lens if it's a photo","width":1024,"height":1024}
-\`\`\`
-Use width 1344 and height 768 for landscape or banners, 768 x 1344 for phone wallpapers and posters, otherwise 1024 x 1024. For "options" or "variations" give up to 4 blocks with clearly different takes. Never make sexual images, images that put real people in fake or harmful situations, or hateful or violent images — say so briefly instead. You can't make videos. To edit the user's own photo, video or GIF (trim, crop, resize, convert, make a GIF, speed up, mute…), they attach it and say what to change — elorahub edits it right in their browser.`;
-
-const BUILD_PATTERN = /\b(web ?sites?|web ?pages?|landing|home ?page|portfolio|html|css|tailwind|front[- ]?end|ui\b|ux\b|dashboard|web ?app|browser game|game in (?:the )?browser|online store|shop page|store page|template|redesign|site for|page for)\b/i;
-function wantsBuildGuide(text) {
-  return BUILD_PATTERN.test(String(text || ""));
-}
 
 // Finds up to 2 http(s) links in a message, fetches each with a short
 // timeout, strips it down to plain text, and returns a small combined
@@ -633,7 +613,8 @@ async function runTaskPhase(res, ctx) {
   const prior = results.map((r, k) => `### Step ${k + 1} — ${p.steps[k] ? p.steps[k].title : ""}\n${r}`).join("\n\n");
 
   if (phase === "step") {
-    const isBuild = wantsBuildGuide(goal) || wantsBuildGuide(p.title);
+    const stepSkills = pickSkills(goal, p.title, preferences?.workspaceMode);
+    const isBuild = isHeavy(stepSkills);
     const i = Math.max(0, Math.min(p.steps.length - 1, Number(task?.stepIndex) || 0));
     const step = p.steps[i];
     const used = [];
@@ -647,7 +628,7 @@ async function runTaskPhase(res, ctx) {
       const links = await fetchLinkContext(goal);
       if (links) { used.push({ tool: "read_links", ok: true }); context += `\n\n${links}`; }
     }
-    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.${isBuild ? `\n\n${BUILD_GUIDE}` : ""}`;
+    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.${stepSkills.length && step.kind !== "research" ? `\n\n${skillGuide(stepSkills)}` : ""}`;
     const msg = `${prior ? `Results so far:\n\n${prior}\n\n` : ""}${context ? `${context.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
     const stepOpts = opts(step.kind === "code" || step.kind === "write" ? 5000 : 2800, step.kind === "code" ? "high" : "medium");
     if (isBuild && step.kind === "code") {
@@ -991,11 +972,15 @@ export default async function handler(req, res) {
   const personalBlock = personal || instructions
     ? `\n\nAbout the user: ${personal || "(no profile details)"}${instructions ? `\nTheir standing instructions for you — follow them unless they conflict with being safe and honest:\n"""\n${instructions}\n"""` : ""}`
     : "";
-  const recentAsk = messages.filter((m) => m && m.role === "user" && typeof m.content === "string").slice(-2).map((m) => m.content.slice(0, 2000)).join("\n");
-  const buildGuide = wantsBuildGuide(recentAsk) || (preferences?.workspaceMode === "code" && /\b(build|make|create|design)\b/i.test(lastMessage.content)) ? `\n\n${BUILD_GUIDE}` : "";
+  // Skills: the expert playbooks this request needs (see api/_lib/skills.js).
+  const userTexts = messages.filter((m) => m && m.role === "user" && typeof m.content === "string").map((m) => m.content.slice(0, 2000));
+  const skills = pickSkills(lastMessage.content, userTexts.length > 1 ? userTexts[userTexts.length - 2] : "", preferences?.workspaceMode);
+  const skillText = skills.length ? `\n\n${skillGuide(skills)}` : "";
+  // A big deliverable (a site, app, game, video…) gets the long-output setup.
+  const buildGuide = isHeavy(skills) && (preferences?.workspaceMode === "code" || /\b(build|make|create|design|generate|develop|code|write|program|animate|render|produce|turn|convert|i want|i need|give me|can you|could you|let'?s)\b/i.test(lastMessage.content)) ? "heavy" : "";
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + `\n\n${IMAGE_GUIDE}` + buildGuide + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
+    : SYSTEM_PROMPT) + skillText + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
 
   if (taskPhase || autoTask) {
     return runTaskPhase(res, {

@@ -4085,6 +4085,56 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
 @media (max-width:1100px){
   .ec-wb{ width:min(640px,96vw)!important; }
 }
+
+/* Rich cards: animations (video/GIF), diagrams, vector art */
+.ec-x{ position:relative; margin:6px 0 16px; max-width:640px; border:1px solid var(--ec-line); border-radius:16px; overflow:hidden; background:var(--ec-raised); }
+.ec-x-stage{ position:relative; width:100%; min-height:120px; display:grid; place-items:center; background:#0b0b0b; }
+.ec-x-frame{ display:block; width:100%; height:100%; border:0; background:transparent; position:absolute; inset:0; }
+.ec-x-wait{ display:grid; place-items:center; align-content:center; gap:10px; padding:24px; color:var(--ec-text-2); font:500 13.5px var(--ec-font); text-align:center; }
+.ec-x-wait i{ width:28px; height:28px; border-radius:50%; border:2.5px solid rgba(255,255,255,.12); border-top-color:#3ddc84; animation:ec-spin .9s linear infinite; }
+.ec-anim:not(.is-loading) .ec-x-wait{ display:none; }
+.ec-anim.is-loading .ec-x-frame{ opacity:0; }
+.ec-x figcaption{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--ec-line); }
+.ec-x-cap{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; color:var(--ec-text-3); font-size:12.5px; line-height:1.35; }
+.ec-x-cap strong{ color:var(--ec-text); font-weight:650; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ec-x-cap em{ font-style:normal; }
+.ec-x-acts{ display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; flex:none; }
+.ec-x-acts button{ display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 10px; border:1px solid var(--ec-line-2); border-radius:8px; background:transparent; color:var(--ec-text); font:600 12.5px var(--ec-font); cursor:pointer; }
+.ec-x-acts button:hover{ background:var(--ec-hover); }
+.ec-x-acts button.is-on{ background:var(--ec-hover); border-color:var(--ec-text-3); }
+.ec-x-acts button:disabled{ opacity:.5; cursor:progress; }
+.ec-x-acts .ec-i{ width:15px; height:15px; }
+.ec-anim .ec-x-acts [data-xact="mp4"]{ border-color:rgba(61,220,132,.45); color:#7ff0b0; }
+html[data-ec-theme="light"] .ec-anim .ec-x-acts [data-xact="mp4"]{ color:#11793d; border-color:rgba(17,121,61,.35); }
+.ec-x.is-busy .ec-x-acts button{ pointer-events:none; opacity:.5; }
+.ec-x-status{ padding:9px 12px; border-top:1px solid var(--ec-line); color:var(--ec-text-2); font:500 12.5px var(--ec-font); }
+.ec-x-status.is-error{ color:var(--ec-danger,#ff6b6b); }
+.ec-x-status.is-done{ color:#7ff0b0; }
+html[data-ec-theme="light"] .ec-x-status.is-done{ color:#11793d; }
+.ec-x-code{ border-top:1px solid var(--ec-line); }
+.ec-x-code .ec-code{ margin:0!important; border:0!important; border-radius:0!important; }
+.ec-x-code pre{ max-height:360px; overflow:auto; }
+/* diagrams */
+.ec-diagram .ec-x-stage{ padding:18px; background:#151515; overflow:auto; }
+html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
+.ec-diagram .ec-x-stage svg{ max-width:100%!important; height:auto; }
+.ec-diagram.is-loading .ec-x-stage{ min-height:180px; }
+/* vector art: sit side by side when there are several concepts */
+.ec-svgcard{ display:inline-block; vertical-align:top; width:min(100%,300px); margin-right:10px; }
+.ec-svgcard .ec-x-stage{ aspect-ratio:1/1; padding:22px; background-color:#f3f3f1; background-image:linear-gradient(45deg,#e7e7e4 25%,transparent 25%,transparent 75%,#e7e7e4 75%),linear-gradient(45deg,#e7e7e4 25%,transparent 25%,transparent 75%,#e7e7e4 75%); background-size:18px 18px; background-position:0 0,9px 9px; }
+.ec-svgcard.is-darkbg .ec-x-stage{ background-color:#121212; background-image:linear-gradient(45deg,#1b1b1b 25%,transparent 25%,transparent 75%,#1b1b1b 75%),linear-gradient(45deg,#1b1b1b 25%,transparent 25%,transparent 75%,#1b1b1b 75%); }
+.ec-svgcard .ec-x-stage img{ width:100%; height:100%; object-fit:contain; display:block; }
+.ec-svgcard figcaption{ flex-wrap:wrap; }
+.ec-svgcard .ec-x-acts{ justify-content:flex-start; }
+.ec-svgcard .ec-x-acts span{ display:none; }
+.ec-svgcard .ec-x-acts [data-xact="svg"] span,.ec-svgcard .ec-x-acts [data-xact="png"] span{ display:inline!important; }
+.ec-svgcard .ec-x-acts [data-xact="svg"] .ec-i,.ec-svgcard .ec-x-acts [data-xact="png"] .ec-i{ display:none; }
+.ec-svgcard .ec-x-acts button{ padding:0 9px; }
+@media (max-width:600px){
+  .ec-x-acts span{ display:none; }
+  .ec-x figcaption{ flex-wrap:wrap; }
+  .ec-svgcard{ width:100%; margin-right:0; }
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -4607,17 +4657,18 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
 
             <div class="ec-suggest" id="chatSuggestions">
               <span class="ec-suggest-set" data-set="code">
+              <button type="button" class="ec-chip" data-fill="Build a website for "><svg class="ec-i"><use href="#i-window"/></svg>Build a website</button>
+              <button type="button" class="ec-chip" data-fill="Build a web app that "><svg class="ec-i"><use href="#i-grid"/></svg>Build an app</button>
+              <button type="button" class="ec-chip" data-fill="Make a browser game where "><svg class="ec-i"><use href="#i-play"/></svg>Make a game</button>
+              <button type="button" class="ec-chip" data-fill="Write a complete, runnable script that "><svg class="ec-i"><use href="#i-terminal"/></svg>Write a script</button>
               <button type="button" class="ec-chip" data-fill="Help me fix this error. Here's the message and the code around it:&#10;&#10;"><svg class="ec-i"><use href="#i-bug"/></svg>Fix an error</button>
-              <button type="button" class="ec-chip" data-fill="Explain what this code does, step by step:&#10;&#10;"><svg class="ec-i"><use href="#i-code"/></svg>Explain code</button>
-              <button type="button" class="ec-chip" data-fill="Write a complete, runnable script that "><svg class="ec-i"><use href="#i-pen"/></svg>Write a script</button>
-              <button type="button" class="ec-chip" data-fill="Review this code for bugs, edge cases and readability:&#10;&#10;"><svg class="ec-i"><use href="#i-check-list"/></svg>Review my code</button>
-              <button type="button" class="ec-chip" data-fill="Plan how to build "><svg class="ec-i"><use href="#i-bulb"/></svg>Plan a feature</button>
               </span>
               <span class="ec-suggest-set" data-set="chat">
               <button type="button" class="ec-chip" data-fill="Help me write "><svg class="ec-i"><use href="#i-pen"/></svg>Write</button>
+              <button type="button" class="ec-chip" data-fill="Create an image of "><svg class="ec-i"><use href="#i-wand"/></svg>Create an image</button>
+              <button type="button" class="ec-chip" data-fill="Make a short animated video: "><svg class="ec-i"><use href="#i-play"/></svg>Make a video</button>
+              <button type="button" class="ec-chip" data-fill="Design a logo for "><svg class="ec-i"><use href="#i-spark"/></svg>Design a logo</button>
               <button type="button" class="ec-chip" data-fill="Explain this to me simply: "><svg class="ec-i"><use href="#i-cap"/></svg>Learn</button>
-              <button type="button" class="ec-chip" data-fill="Help me with this code: "><svg class="ec-i"><use href="#i-code"/></svg>Code</button>
-              <button type="button" class="ec-chip" data-fill="Help me weigh up a decision: "><svg class="ec-i"><use href="#i-scale"/></svg>Decide</button>
               <button type="button" class="ec-chip" data-fill="Brainstorm genuinely different ideas for "><svg class="ec-i"><use href="#i-bulb"/></svg>Brainstorm</button>
               </span>
             </div>
@@ -7530,12 +7581,409 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
       }).catch(function(){ window.open(url, "_blank", "noopener"); }).then(function(){ b.disabled = false; });
     }
   });
+  /* ================================================================
+     RICH CARDS — what elora makes besides text and code:
+       ```animation → a canvas animation that plays here and exports as
+                      MP4, GIF or WebM (runs in a locked-down sandbox frame)
+       ```mermaid   → a diagram (SVG / PNG download)
+       ```svg       → vector art: logos, icons, badges (SVG / PNG download)
+     ================================================================ */
+  function xBtn(act, ic, label){ return '<button type="button" data-xact="' + act + '" title="' + escapeAttr(label) + '">' + icon(ic) + '<span>' + escapeHtml(label) + '</span></button>'; }
+  function xSource(code, label){ return '<div class="ec-x-code" hidden><pre data-label="' + escapeAttr(label) + '"><code>' + escapeHtml(String(code || "").replace(/\n$/, "")) + '</code></pre></div>'; }
+  function slugify(s){ return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48); }
+  function downloadBlob(blob, name){
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 8000);
+  }
+  function showXStatus(fig, text, isError, isDone){
+    var st = fig.querySelector(".ec-x-status"); if(!st) return;
+    st.hidden = !text; st.textContent = text || "";
+    st.classList.toggle("is-error", !!isError); st.classList.toggle("is-done", !!isDone);
+  }
+  function splitAnimSpec(raw){
+    var text = String(raw || "").replace(/\r\n?/g, "\n"), cfg = {}, code = text;
+    var m = /^\s*(\{[\s\S]*?\})\s*\n-{3,}[ \t]*\n([\s\S]*)$/.exec(text);
+    if(m){ try { cfg = JSON.parse(m[1]); } catch(e){ cfg = {}; } code = m[2]; }
+    else {
+      var j = /^\s*(\{[^\n]*\})[ \t]*\n/.exec(text);
+      if(j){ try { cfg = JSON.parse(j[1]); code = text.slice(j[0].length); } catch(e){} }
+    }
+    return { cfg: cfg && typeof cfg === "object" ? cfg : {}, code: code };
+  }
+  function animConfig(cfg){
+    var num = function(v, d, a, b){ v = Number(v); return isFinite(v) && v > 0 ? Math.max(a, Math.min(b, v)) : d; };
+    var w = Math.round(num(cfg.width, 1280, 160, 1920)), h = Math.round(num(cfg.height, 720, 160, 1920));
+    return {
+      title: String(cfg.title || "Animation").replace(/[\u0000-\u001f]/g, " ").slice(0, 80),
+      width: w - (w % 2), height: h - (h % 2),
+      duration: Math.round(num(cfg.duration, 6, 0.5, 30) * 10) / 10,
+      fps: Math.round(num(cfg.fps, 30, 10, 60)),
+      fonts: (Array.isArray(cfg.fonts) ? cfg.fonts : []).map(String).filter(function(f){ return /^[A-Za-z0-9 ]{2,40}(:\d{3})?$/.test(f); }).slice(0, 4),
+      background: /^#[0-9a-f]{3,8}$/i.test(String(cfg.background || "")) ? cfg.background : "#000000"
+    };
+  }
+  function animCard(raw){
+    var sp = splitAnimSpec(raw), c = animConfig(sp.cfg);
+    var cap = c.height >= c.width ? ' style="max-width:' + Math.max(240, Math.round(520 * c.width / c.height)) + 'px"' : "";
+    return '<figure class="ec-x ec-anim is-loading" data-x="anim"' + cap + '>' +
+      '<div class="ec-x-stage" style="aspect-ratio:' + c.width + '/' + c.height + '"><span class="ec-x-wait"><i></i>Preparing the animation…</span></div>' +
+      '<figcaption><span class="ec-x-cap"><strong>' + escapeHtml(c.title) + '</strong><em>' + c.duration + ' s · ' + c.width + '×' + c.height + '</em></span><span class="ec-x-acts">' +
+      xBtn("replay", "refresh", "Replay") + xBtn("mp4", "download", "MP4") + xBtn("gif", "download", "GIF") + xBtn("webm", "download", "WebM") + xBtn("code", "code", "Code") +
+      '</span></figcaption><div class="ec-x-status" hidden></div>' +
+      '<textarea class="ec-x-raw" hidden>' + escapeHtml(String(raw || "")) + '</textarea>' + xSource(sp.code, "animation") + '</figure>';
+  }
+  function diagramCard(raw){
+    return '<figure class="ec-x ec-diagram is-loading" data-x="diagram">' +
+      '<div class="ec-x-stage"><span class="ec-x-wait"><i></i>Drawing the diagram…</span></div>' +
+      '<figcaption><span class="ec-x-cap"><strong>Diagram</strong></span><span class="ec-x-acts">' +
+      xBtn("svg", "download", "SVG") + xBtn("png", "download", "PNG") + xBtn("code", "code", "Code") +
+      '</span></figcaption><div class="ec-x-status" hidden></div>' +
+      '<textarea class="ec-x-raw" hidden>' + escapeHtml(String(raw || "")) + '</textarea>' + xSource(raw, "mermaid") + '</figure>';
+  }
+  // Model-written SVG is only ever shown through <img> (no scripts run
+  // there), and is cleaned before anyone downloads it.
+  function cleanSvg(raw){
+    var m = /<svg[\s\S]*<\/svg>/i.exec(String(raw || ""));
+    if(!m) return "";
+    var s = m[0]
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, "")
+      .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+      .replace(/\s(?:xlink:)?href\s*=\s*("|')\s*(?:javascript|data:text\/html)[^"']*\1/gi, "");
+    if(!/^<svg[^>]*\sxmlns=/i.test(s)) s = s.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+    return s;
+  }
+  function svgCard(raw){
+    var svg = cleanSvg(raw);
+    var url = svg ? "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg) : "";
+    return '<figure class="ec-x ec-svgcard" data-x="svg">' +
+      '<div class="ec-x-stage">' + (url ? '<img alt="Vector design by elora" src="' + escapeAttr(url) + '">' : '<span class="ec-x-wait"><i></i>Drawing…</span>') + '</div>' +
+      '<figcaption><span class="ec-x-cap"><strong>Vector</strong><em>SVG</em></span><span class="ec-x-acts">' +
+      xBtn("bg", "sun", "Backdrop") + xBtn("svg", "download", "SVG") + xBtn("png", "download", "PNG") + xBtn("code", "code", "Code") +
+      '</span></figcaption><div class="ec-x-status" hidden></div>' +
+      '<textarea class="ec-x-raw" hidden>' + escapeHtml(svg) + '</textarea>' + xSource(svg || raw, "svg") + '</figure>';
+  }
+  function svgToPng(svg, maxSide, bg){
+    return new Promise(function(resolve, reject){
+      var doc = new DOMParser().parseFromString(svg, "image/svg+xml"), el = doc.documentElement;
+      if(!el || el.nodeName.toLowerCase() !== "svg"){ reject(new Error("This drawing couldn't be converted.")); return; }
+      var vb = String(el.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+      var w = vb.length === 4 && vb[2] > 0 ? vb[2] : parseFloat(el.getAttribute("width")) || 512;
+      var h = vb.length === 4 && vb[3] > 0 ? vb[3] : parseFloat(el.getAttribute("height")) || 512;
+      var scale = (maxSide || 2048) / Math.max(w, h), cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+      el.setAttribute("width", cw); el.setAttribute("height", ch); el.removeAttribute("style");
+      if(!el.getAttribute("viewBox")) el.setAttribute("viewBox", "0 0 " + w + " " + h);
+      var str = new XMLSerializer().serializeToString(el);
+      var img = new Image();
+      img.onload = function(){
+        var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+        var g = cv.getContext("2d");
+        if(bg){ g.fillStyle = bg; g.fillRect(0, 0, cw, ch); }
+        g.drawImage(img, 0, 0, cw, ch);
+        try { cv.toBlob(function(b){ b ? resolve(b) : reject(new Error("This drawing couldn't be converted.")); }, "image/png"); } catch(e){ reject(new Error("This drawing couldn't be converted.")); }
+      };
+      img.onerror = function(){ reject(new Error("This drawing couldn't be converted.")); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(str);
+    });
+  }
+
+  // ---- diagrams (Mermaid, loaded the first time one appears) ----
+  var mermaidReady = null, mermaidSeq = 0;
+  function loadMermaid(){
+    if(mermaidReady) return mermaidReady;
+    mermaidReady = import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs").then(function(mod){ return mod.default || mod; });
+    mermaidReady.catch(function(){ mermaidReady = null; });
+    return mermaidReady;
+  }
+  async function renderDiagram(fig){
+    if(fig.__started) return;
+    fig.__started = true;
+    var src = ((fig.querySelector("textarea.ec-x-raw") || {}).value || "").trim();
+    var stage = fig.querySelector(".ec-x-stage");
+    var id = "ecmmd" + (++mermaidSeq);
+    try {
+      var mermaid = await loadMermaid();
+      var dark = document.documentElement.getAttribute("data-ec-theme") !== "light";
+      mermaid.initialize({ startOnLoad:false, securityLevel:"strict", theme: dark ? "dark" : "default", htmlLabels:false, flowchart:{ htmlLabels:false, curve:"basis" }, fontFamily:"Inter, Segoe UI, Arial, sans-serif" });
+      var out = await mermaid.render(id, src);
+      stage.innerHTML = out.svg;
+      fig.__svg = out.svg;
+      fig.classList.remove("is-loading");
+    } catch(err){
+      fig.classList.remove("is-loading"); fig.classList.add("is-failed");
+      stage.innerHTML = '<span class="ec-x-wait">Couldn\'t draw this diagram' + (mermaidReady ? " — " + escapeHtml(String(err && err.message || err).split("\n")[0].slice(0, 160)) : " — the diagram tool didn't load. Check your connection.") + '</span>';
+      var box = fig.querySelector(".ec-x-code"); if(box) box.hidden = false;
+      ["d" + id, id].forEach(function(x){ var n = document.getElementById(x); if(n && !fig.contains(n)) n.remove(); });
+    }
+  }
+
+  // ---- animations ----
+  // Runs inside the sandboxed frame (it's turned into text, so it can't see
+  // anything from this page): helpers, playback, and recording to video.
+  function animRunnerMain(){
+    var A = window.__A, cfg = A.cfg, send = A.send;
+    var c = document.getElementById("c"), ctx = c.getContext("2d");
+    var w = c.width, h = c.height, dur = cfg.dur;
+    var clamp = function(x, a, b){ return x < a ? a : x > b ? b : x; };
+    var lerp = function(a, b, x){ return a + (b - a) * x; };
+    var range = function(t, a, b){ return b <= a ? (t >= b ? 1 : 0) : clamp((t - a) / (b - a), 0, 1); };
+    var rand = function(seed){ var x = Math.sin((Number(seed) || 0) * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+    var ease = {
+      linear: function(x){ return x; },
+      in: function(x){ return x * x * x; },
+      out: function(x){ return 1 - Math.pow(1 - x, 3); },
+      inOut: function(x){ return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; },
+      inOutSine: function(x){ return -(Math.cos(Math.PI * x) - 1) / 2; },
+      outBack: function(x){ var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+      outElastic: function(x){ var c4 = 2 * Math.PI / 3; return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1; },
+      outBounce: function(x){ var n1 = 7.5625, d1 = 2.75; if(x < 1 / d1) return n1 * x * x; if(x < 2 / d1){ x -= 1.5 / d1; return n1 * x * x + 0.75; } if(x < 2.5 / d1){ x -= 2.25 / d1; return n1 * x * x + 0.9375; } x -= 2.625 / d1; return n1 * x * x + 0.984375; }
+    };
+    ease.inCubic = ease.in; ease.outCubic = ease.out; ease.inOutCubic = ease.inOut; ease.easeInOut = ease.inOut; ease.easeOut = ease.out; ease.easeIn = ease.in;
+    function stand(iw, ih, seed){
+      var cv = document.createElement("canvas"); cv.width = iw; cv.height = ih;
+      var g = cv.getContext("2d"), hue = Math.floor(rand(seed) * 360), gr = g.createLinearGradient(0, 0, iw, ih);
+      gr.addColorStop(0, "hsl(" + hue + ",55%,26%)"); gr.addColorStop(1, "hsl(" + ((hue + 60) % 360) + ",60%,12%)");
+      g.fillStyle = gr; g.fillRect(0, 0, iw, ih); return cv;
+    }
+    function loadImage(prompt, iw, ih, seed){
+      iw = Math.round(iw || 1024); ih = Math.round(ih || 1024);
+      if(seed == null) seed = Math.floor(rand(String(prompt).length + 7) * 100000);
+      return new Promise(function(resolve){
+        var img = new Image(), done = false;
+        var finish = function(v){ if(!done){ done = true; resolve(v); } };
+        img.crossOrigin = "anonymous";
+        img.onload = function(){ finish(img); };
+        img.onerror = function(){ finish(stand(iw, ih, seed)); };
+        setTimeout(function(){ finish(stand(iw, ih, seed)); }, 45000);
+        img.src = cfg.origin + "/api/chat?img=" + encodeURIComponent(String(prompt).slice(0, 800)) + "&w=" + iw + "&h=" + ih + "&seed=" + seed;
+      });
+    }
+    var drawFn = typeof draw === "function" ? draw : null;
+    var setupFn = typeof setup === "function" ? setup : null;
+    if(!drawFn){ send({ type:"error", message: A.err || "The animation has no draw() function." }); return; }
+    var objStyle = function(fn){ return /^[^(]*\(\s*\{/.test(String(fn)); };
+    var drawObj = objStyle(drawFn), setupObj = setupFn && objStyle(setupFn);
+    var state = {}, failed = false;
+    function frame(t){
+      t = clamp(t, 0, dur);
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"; ctx.shadowBlur = 0; ctx.shadowColor = "transparent";
+      try { ctx.filter = "none"; } catch(e){}
+      ctx.fillStyle = cfg.bg; ctx.fillRect(0, 0, w, h);
+      ctx.save();
+      try {
+        if(drawObj) drawFn({ ctx:ctx, w:w, h:h, width:w, height:h, t:t, p:t / dur, s:state, state:state, ease:ease, lerp:lerp, clamp:clamp, range:range, rand:rand, duration:dur });
+        else drawFn(ctx, t, w, h, state);
+      } catch(e){ if(!failed){ failed = true; send({ type:"error", message:(e && e.message) || String(e) }); } }
+      ctx.restore();
+    }
+    var mode = "idle", start = 0, raf = 0, paused = false, pausedAt = 0, recorder = null, lastQ = -1;
+    function loop(now){
+      raf = 0;
+      if(mode === "play"){
+        if(paused) return;
+        var t = (now - start) / 1000;
+        if(t > dur + 0.9){ start = now; t = 0; }
+        frame(Math.min(t, dur));
+        raf = requestAnimationFrame(loop);
+      } else if(mode === "record"){
+        var tr = (now - start) / 1000;
+        frame(Math.min(tr, dur));
+        var q = Math.floor(tr * 4);
+        if(q !== lastQ){ lastQ = q; send({ type:"progress", t:Math.min(tr, dur), dur:dur }); }
+        if(tr >= dur + 0.12){ mode = "stopping"; setTimeout(function(){ try { recorder.stop(); } catch(e){} }, 80); return; }
+        raf = requestAnimationFrame(loop);
+      }
+    }
+    function play(){ mode = "play"; paused = false; start = performance.now(); if(!raf) raf = requestAnimationFrame(loop); }
+    function pickMime(){
+      var list = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4;codecs=avc1", "video/mp4"];
+      for(var i = 0; i < list.length; i++){ try { if(window.MediaRecorder && MediaRecorder.isTypeSupported(list[i])) return list[i]; } catch(e){} }
+      return "";
+    }
+    function record(){
+      if(!window.MediaRecorder || !c.captureStream){ send({ type:"recordError", message:"This browser can't record video." }); return; }
+      var mime = pickMime(), stream = c.captureStream(cfg.fps), chunks = [];
+      try { recorder = new MediaRecorder(stream, mime ? { mimeType:mime, videoBitsPerSecond: Math.round(Math.min(16e6, Math.max(4e6, w * h * cfg.fps * 0.15))) } : undefined); }
+      catch(e){ send({ type:"recordError", message:"Recording isn't available in this browser." }); return; }
+      recorder.ondataavailable = function(e){ if(e.data && e.data.size) chunks.push(e.data); };
+      recorder.onstop = function(){
+        var blob = new Blob(chunks, { type:String(recorder.mimeType || mime || "video/webm").split(";")[0] });
+        stream.getTracks().forEach(function(tr){ tr.stop(); });
+        send({ type:"recorded", blob:blob });
+        play();
+      };
+      if(raf){ cancelAnimationFrame(raf); raf = 0; }
+      frame(0);
+      recorder.start(250);
+      mode = "record"; paused = false; lastQ = -1; start = performance.now();
+      raf = requestAnimationFrame(loop);
+    }
+    window.addEventListener("message", function(e){
+      var m = e.data || {};
+      if(m.cmd === "replay"){ if(mode !== "record" && mode !== "stopping"){ if(raf){ cancelAnimationFrame(raf); raf = 0; } play(); } }
+      else if(m.cmd === "pause"){ if(mode === "play" && !paused){ paused = true; pausedAt = performance.now(); if(raf){ cancelAnimationFrame(raf); raf = 0; } } }
+      else if(m.cmd === "resume"){ if(mode === "play" && paused){ paused = false; start += performance.now() - pausedAt; if(!raf) raf = requestAnimationFrame(loop); } }
+      else if(m.cmd === "record"){ if(mode !== "record" && mode !== "stopping") record(); }
+    });
+    (async function(){
+      try {
+        if(cfg.fonts && cfg.fonts.length && document.fonts){
+          await Promise.race([
+            Promise.all(cfg.fonts.map(function(f){ var p = f.split(":"); return document.fonts.load((p[1] || "400") + ' 48px "' + p[0] + '"').catch(function(){}); })),
+            new Promise(function(r){ setTimeout(r, 5000); })
+          ]);
+        }
+      } catch(e){}
+      if(setupFn){
+        try {
+          var r = setupObj ? await setupFn({ ctx:ctx, w:w, h:h, width:w, height:h, loadImage:loadImage, ease:ease, lerp:lerp, clamp:clamp, range:range, rand:rand, duration:dur }) : await setupFn(ctx, w, h, loadImage);
+          if(r && typeof r === "object") state = r;
+        } catch(e){ send({ type:"error", message:"setup: " + ((e && e.message) || e) }); }
+      }
+      send({ type:"ready" });
+      play();
+    })();
+  }
+  function animRunnerHtml(c, code){
+    var fonts = c.fonts.length ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?' + c.fonts.map(function(f){ var p = f.split(":"); return "family=" + encodeURIComponent(p[0]).replace(/%20/g, "+") + (p[1] ? ":wght@" + p[1] : ""); }).join("&") + '&display=block">' : "";
+    var cfg = JSON.stringify({ dur:c.duration, fps:c.fps, fonts:c.fonts, bg:c.background, origin:location.origin }).replace(/</g, "\\u003c");
+    var safe = String(code || "").replace(/<\/script/gi, "<\\/script").replace(/<!-{2}/g, "<\\!--");
+    var prelude = "window.__A={cfg:" + cfg + ",err:null};window.__A.send=function(m){m.__eloraAnim=1;try{parent.postMessage(m,'*');}catch(e){}};window.onerror=function(msg,src,line){if(window.__A.err)return;window.__A.err=String(msg);window.__A.send({type:'error',message:window.__A.err});};";
+    return '<!doctype html><html><head><meta charset="utf-8">' + fonts +
+      '<style>html,body{margin:0;height:100%;background:' + c.background + ';overflow:hidden}canvas{display:block;width:100%;height:100%;object-fit:contain}</style></head>' +
+      '<body><canvas id="c" width="' + c.width + '" height="' + c.height + '"></canvas>' +
+      '<script>' + prelude + '<\/script><script>\n' + safe + '\n<\/script><script>(' + animRunnerMain.toString() + ')();<\/script></body></html>';
+  }
+  function animFrameOf(fig){ return fig.querySelector("iframe.ec-x-frame"); }
+  function startAnim(fig){
+    if(fig.__started) return;
+    fig.__started = true;
+    var sp = splitAnimSpec((fig.querySelector("textarea.ec-x-raw") || {}).value || ""), c = animConfig(sp.cfg);
+    fig.__cfg = c;
+    var fr = document.createElement("iframe");
+    fr.className = "ec-x-frame";
+    fr.setAttribute("sandbox", "allow-scripts");
+    fr.setAttribute("title", c.title);
+    fr.srcdoc = animRunnerHtml(c, sp.code);
+    fig.querySelector(".ec-x-stage").appendChild(fr);
+  }
+  window.addEventListener("message", function(e){
+    var m = e.data;
+    if(!m || !m.__eloraAnim) return;
+    var fig = null;
+    document.querySelectorAll("figure.ec-anim").forEach(function(f){ var fr = animFrameOf(f); if(fr && fr.contentWindow === e.source) fig = f; });
+    if(!fig) return;
+    if(m.type === "ready") fig.classList.remove("is-loading");
+    else if(m.type === "error"){ fig.classList.remove("is-loading"); showXStatus(fig, "The animation hit a snag: " + String(m.message || "").slice(0, 200) + ". Ask elora to fix it.", true); }
+    else if(m.type === "progress"){ if(fig.__rec) fig.__rec.onProgress(Number(m.t) || 0, Number(m.dur) || 0); }
+    else if(m.type === "recorded"){ if(fig.__rec && m.blob instanceof Blob) fig.__rec.resolve(m.blob); }
+    else if(m.type === "recordError"){ if(fig.__rec) fig.__rec.reject(new Error(m.message || "Recording failed.")); }
+  });
+  async function exportAnim(fig, kind){
+    if(fig.__busy) return;
+    var fr = animFrameOf(fig), c = fig.__cfg;
+    if(!fr || !c){ showXStatus(fig, "The animation is still loading — try again in a second.", true); return; }
+    fig.__busy = true; fig.classList.add("is-busy");
+    try {
+      showXStatus(fig, "Recording… 0.0 / " + c.duration.toFixed(1) + " s — keep this tab open");
+      var blob = await new Promise(function(resolve, reject){
+        fig.__rec = { resolve: resolve, reject: reject, onProgress: function(t, d){ showXStatus(fig, "Recording… " + t.toFixed(1) + " / " + d.toFixed(1) + " s — keep this tab open"); } };
+        fr.contentWindow.postMessage({ cmd:"record" }, "*");
+        setTimeout(function(){ reject(new Error("recording took too long — keep the tab visible while it records")); }, (c.duration + 40) * 1000);
+      });
+      fig.__rec = null;
+      var base = slugify(c.title) || "elora-video";
+      var out = blob, ext = /mp4/.test(blob.type) ? "mp4" : "webm";
+      if((kind === "mp4" && ext !== "mp4") || kind === "gif"){
+        showXStatus(fig, ffReady ? "Converting…" : "Loading the video converter (first time only)…");
+        var ff = await loadFFmpeg(function(pct){ showXStatus(fig, "Loading the video converter — " + pct + "%"); });
+        var inName = "anim-in." + ext, outName = kind === "gif" ? "anim-out.gif" : "anim-out.mp4";
+        var onProg = function(ev){ var pct = Math.max(0, Math.min(100, Math.round((ev.progress || 0) * 100))); showXStatus(fig, "Making the " + kind.toUpperCase() + (pct > 0 && pct < 100 ? " — " + pct + "%" : "…")); };
+        ff.on("progress", onProg);
+        await ff.writeFile(inName, new Uint8Array(await blob.arrayBuffer()));
+        var gw = Math.min(c.width, c.width >= c.height ? 720 : 480);
+        gw -= gw % 2;
+        var args = kind === "gif"
+          ? ["-i", inName, "-vf", "fps=" + Math.min(c.fps, 15) + ",scale=" + gw + ":-2:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4", "-loop", "0", outName]
+          : ["-i", inName, "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-r", String(c.fps), "-movflags", "+faststart", "-an", outName];
+        var code = await ff.exec(args);
+        ff.off("progress", onProg);
+        var data = null;
+        try { data = await ff.readFile(outName); } catch(e){}
+        try { await ff.deleteFile(inName); } catch(e){}
+        try { await ff.deleteFile(outName); } catch(e){}
+        if(!data || !data.length) throw new Error("the conversion didn't finish" + (code ? " (code " + code + ")" : ""));
+        out = new Blob([data.buffer || data], { type: kind === "gif" ? "image/gif" : "video/mp4" });
+        ext = kind === "gif" ? "gif" : "mp4";
+      }
+      var name = base + "." + ext;
+      downloadBlob(out, name);
+      bumpActivity("files", 1);
+      showXStatus(fig, "Saved " + name + " · " + prettyBytes(out.size), false, true);
+    } catch(err){
+      showXStatus(fig, "Couldn't export: " + String(err && err.message || err), true);
+    } finally {
+      fig.__busy = false; fig.__rec = null; fig.classList.remove("is-busy");
+    }
+  }
+  var xObs = null;
+  function xObserver(){
+    if(xObs) return xObs;
+    xObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var fig = en.target;
+        if(fig.classList.contains("ec-diagram")){ if(en.isIntersecting){ xObs.unobserve(fig); renderDiagram(fig); } return; }
+        var fr = animFrameOf(fig);
+        if(en.isIntersecting){
+          if(!fig.__started) startAnim(fig);
+          else if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"resume" }, "*");
+        } else if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"pause" }, "*");
+      });
+    }, { rootMargin:"240px 0px" });
+    return xObs;
+  }
+  function enhanceRichCards(root){
+    (root || document).querySelectorAll("figure.ec-anim:not([data-ready]),figure.ec-diagram:not([data-ready])").forEach(function(fig){
+      fig.setAttribute("data-ready", "1");
+      if(!("IntersectionObserver" in window)){ if(fig.classList.contains("ec-anim")) startAnim(fig); else renderDiagram(fig); return; }
+      xObserver().observe(fig);
+    });
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target.closest && e.target.closest("[data-xact]");
+    if(!b) return;
+    var fig = b.closest(".ec-x");
+    if(!fig) return;
+    var act = b.getAttribute("data-xact");
+    if(act === "code"){ var box = fig.querySelector(".ec-x-code"); if(box){ box.hidden = !box.hidden; b.classList.toggle("is-on", !box.hidden); } return; }
+    if(fig.classList.contains("ec-anim")){
+      if(act === "replay"){ var fr = animFrameOf(fig); if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"replay" }, "*"); }
+      else if(act === "mp4" || act === "gif" || act === "webm") exportAnim(fig, act);
+      return;
+    }
+    if(act === "bg"){ fig.classList.toggle("is-darkbg"); return; }
+    var isDiagram = fig.classList.contains("ec-diagram");
+    var svg = isDiagram ? fig.__svg : (fig.querySelector("textarea.ec-x-raw") || {}).value;
+    if(!svg){ showXStatus(fig, isDiagram ? "The diagram isn't ready yet." : "This drawing is empty.", true); return; }
+    var name = isDiagram ? "elora-diagram" : "elora-design";
+    if(act === "svg"){ downloadBlob(new Blob([svg], { type:"image/svg+xml" }), name + ".svg"); bumpActivity("files", 1); }
+    else if(act === "png"){
+      var bg = isDiagram ? getComputedStyle(fig.querySelector(".ec-x-stage")).backgroundColor : (fig.classList.contains("is-darkbg") ? null : null);
+      b.disabled = true;
+      svgToPng(svg, 2048, bg).then(function(blob){ downloadBlob(blob, name + ".png"); bumpActivity("files", 1); }).catch(function(err){ showXStatus(fig, err.message, true); }).then(function(){ b.disabled = false; });
+    }
+  });
+
   function mdToHtml(raw){
     var codeBlocks = [];
     var text = String(raw == null ? "" : raw).replace(/\r\n?/g, "\n");
     // Fenced code first (an unclosed fence at the end still counts).
     text = text.replace(/```([\w+#.-]*)([^\n`]*)\n?([\s\S]*?)(?:```|$)/g, function(_, lang, info, code){
       if(/^image$/i.test(lang)){ codeBlocks.push(genImageCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
+      if(/^(animation|anim|motion|video)$/i.test(lang) && /draw/.test(code)){ codeBlocks.push(animCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
+      if(/^mermaid$/i.test(lang)){ codeBlocks.push(diagramCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
+      if(/^svg$/i.test(lang) && /<svg[\s>]/i.test(code)){ codeBlocks.push(svgCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       var fname = /filename=([^\s`]+)/.exec(info || "") || /^\s*([\w.\/-]+\.[a-z0-9]{1,6})\s*$/i.exec(info || "");
       var ownLine = /^[ \t]*filename=([^\s`]+)[ \t]*\n/.exec(code);
       if(ownLine){ if(!fname) fname = ownLine; code = code.slice(ownLine[0].length); }
@@ -7696,6 +8144,7 @@ html[data-ec-theme="light"] #wbRun{ color:#11793d; border-color:rgba(17,121,61,.
   // Code blocks get a small header with a Copy button.
   function enhanceCodeBlocks(root){
     enhanceGenImages(root);
+    enhanceRichCards(root);
     root.querySelectorAll("pre").forEach(function(pre){
       if(pre.parentNode && pre.parentNode.classList && pre.parentNode.classList.contains("ec-code")) return;
       var wrap = document.createElement("div");
