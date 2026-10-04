@@ -4213,6 +4213,138 @@ html[data-ec-theme="light"][data-ec-mode="agent"] #chatThread .ec-welcome::befor
 .ec-brain-pulse{ stroke:#c8ffe0; stroke-width:1.9; stroke-dasharray:2.6 8.4; animation:ec-brain-flow 1.25s linear infinite; filter:drop-shadow(0 0 1.5px #3ddc84) drop-shadow(0 0 4px rgba(61,220,132,.9)); }
 @keyframes ec-brain-flow{ to{ stroke-dashoffset:-22; } }
 @keyframes ec-brain-breathe{ 0%,100%{ opacity:.55; transform:scale(.88); } 50%{ opacity:1; transform:scale(1.06); } }
+/* ---- Help train elora: rating card under a reply ---- */
+.ec-act[data-message-reaction]{ position:relative; }
+.ec-act[data-message-reaction="up"].is-selected{ color:var(--ec-green); }
+.ec-act[data-message-reaction="down"].is-selected{ color:var(--ec-text); background:var(--ec-hover); }
+.ec-act.is-pop .ec-i{ animation:ec-fb-pop .45s cubic-bezier(.3,1.7,.45,1); }
+@keyframes ec-fb-pop{ 0%{ transform:scale(1); } 35%{ transform:scale(1.38) rotate(-10deg); } 100%{ transform:scale(1); } }
+.ec-burst{ position:absolute; inset:0; pointer-events:none; }
+.ec-burst i{ position:absolute; left:50%; top:50%; width:4px; height:4px; margin:-2px 0 0 -2px; border-radius:50%; background:currentColor; transform:rotate(var(--a)) translateY(-4px); animation:ec-burst .62s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes ec-burst{ to{ transform:rotate(var(--a)) translateY(-19px) scale(.4); opacity:0; } }
+.ec-fb{ max-width:640px; margin:10px 0 2px; padding:14px 15px 13px; border:1px solid var(--ec-line); border-radius:15px; background:var(--ec-raised); font-family:var(--ec-font); box-shadow:var(--ec-shadow); animation:ec-fb-in .3s var(--ease) both; }
+@keyframes ec-fb-in{ from{ opacity:0; transform:translateY(-6px) scale(.99); } }
+.ec-fb-head{ display:flex; align-items:center; gap:9px; color:var(--ec-text); font-size:14px; }
+.ec-fb-head > .ec-i{ width:16px; height:16px; color:var(--ec-text-2); }
+.ec-fb.is-good .ec-fb-head > .ec-i{ color:var(--ec-green); }
+.ec-fb-head strong{ font-weight:650; }
+.ec-fb-x{ margin-left:auto; width:28px; height:28px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--ec-text-3); cursor:pointer; }
+.ec-fb-x:hover{ background:var(--ec-hover); color:var(--ec-text); }
+.ec-fb-x .ec-i{ width:14px; height:14px; }
+.ec-fb-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+.ec-fb-chip{ height:29px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:999px; background:transparent; color:var(--ec-text-2); font:550 12.5px var(--ec-font); cursor:pointer; transition:background .15s,color .15s,border-color .15s,transform .15s; }
+.ec-fb-chip:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ec-fb-chip:active{ transform:scale(.96); }
+.ec-fb-chip[aria-pressed="true"]{ background:var(--ec-accent); border-color:transparent; color:var(--ec-on-accent); }
+.ec-fb-tools{ display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+.ec-fb-tool{ display:inline-flex; align-items:center; gap:7px; height:31px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:9px; background:var(--ec-raised-2); color:var(--ec-text); font:550 13px var(--ec-font); cursor:pointer; }
+.ec-fb-tool:hover{ background:var(--ec-active); }
+.ec-fb-tool .ec-i{ width:14px; height:14px; }
+.ec-fb-tool.is-main{ background:var(--ec-accent); border-color:transparent; color:var(--ec-on-accent); }
+.ec-fb-tool.is-main:hover{ background:var(--ec-accent-hover); }
+.ec-fb-tool:disabled{ opacity:.45; cursor:default; }
+.ec-fb-edit{ margin-top:11px; }
+.ec-fb-edit textarea{ display:block; width:100%; min-height:170px; max-height:48vh; padding:12px 13px; border:1px solid var(--ec-line-2); border-radius:11px; background:var(--ec-code); color:var(--ec-text); font:13px/1.6 var(--ec-mono); resize:vertical; }
+.ec-fb-edit textarea:focus{ outline:none; border-color:rgba(61,220,132,.55); box-shadow:0 0 0 3px rgba(61,220,132,.12); }
+.ec-fb-edit-row{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:9px; color:var(--ec-text-3); font-size:12.5px; }
+.ec-fb-edit-row > span{ flex:1 1 200px; }
+.ec-fb-status{ display:flex; align-items:center; gap:10px; min-height:26px; margin-top:12px; padding-top:11px; border-top:1px solid var(--ec-line); color:var(--ec-text-2); font-size:12.5px; line-height:1.45; }
+.ec-fb-status .ec-brain{ width:22px; height:22px; }
+.ec-fb-status strong{ color:var(--ec-text); font-weight:650; }
+.ec-fb-status.is-saved strong{ color:var(--ec-green); }
+.ec-fb-status .ec-fb-link{ margin-left:auto; flex:none; padding:0; border:0; background:none; color:var(--ec-text); font:600 12.5px var(--ec-font); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.ec-fb-check{ width:18px; height:18px; flex:none; display:grid; place-items:center; border-radius:50%; background:var(--ec-green); color:#0b0b0b; animation:ec-fb-check .5s cubic-bezier(.3,1.7,.45,1) both; }
+.ec-fb-check .ec-i{ width:11px; height:11px; stroke-width:3; }
+@keyframes ec-fb-check{ from{ transform:scale(0) rotate(-40deg); } }
+.ec-fb-dots::after{ content:"…"; display:inline-block; animation:ec-fb-dots 1s steps(4) infinite; overflow:hidden; vertical-align:bottom; width:1.1em; }
+@keyframes ec-fb-dots{ from{ width:0; } }
+.ec-fb-consent{ position:relative; display:grid; gap:9px; margin-top:12px; padding:13px 14px 12px; border:1px solid rgba(61,220,132,.3); border-radius:13px; background:radial-gradient(130% 160% at 0% 0%,rgba(61,220,132,.13),rgba(61,220,132,0) 58%),var(--ec-raised-2); box-shadow:0 10px 34px -16px rgba(61,220,132,.55); animation:ec-fb-in .35s var(--ease) both; }
+.ec-fb-consent-top{ display:flex; align-items:center; gap:10px; color:var(--ec-text); font-size:13.5px; }
+.ec-fb-consent-top .ec-brain{ width:26px; height:26px; }
+.ec-fb-consent p{ margin:0; color:var(--ec-text-2); font-size:12.5px; line-height:1.55; }
+.ec-fb-consent .ec-fb-tools{ margin-top:2px; }
+.ec-fb-consent .ec-fb-link{ margin-left:auto; padding:0; border:0; background:none; color:var(--ec-text-3); font:600 12.5px var(--ec-font); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+@media (max-width:560px){ .ec-fb{ padding:12px; } .ec-fb-status{ flex-wrap:wrap; } }
+html.reduce-motion .ec-fb,html.reduce-motion .ec-fb-consent,html.reduce-motion .ec-burst,html.reduce-motion .ec-act.is-pop .ec-i,html.reduce-motion .ec-fb-check{ animation:none!important; }
+html.reduce-motion .ec-burst{ display:none; }
+
+/* ---- Owner console: Training data ---- */
+.tr-wrap{ max-width:1080px; }
+.tr-empty{ padding:18px; border:1px solid var(--line); border-radius:14px; color:var(--text-3); font-size:.9rem; }
+.tr-setup{ display:grid; gap:12px; max-width:720px; padding:22px; border:1px solid rgba(61,220,132,.28); border-radius:18px; background:radial-gradient(120% 140% at 0% 0%,rgba(61,220,132,.1),transparent 60%),rgba(255,255,255,.02); }
+.tr-setup ol{ margin:0; padding-left:20px; color:var(--text-2); line-height:1.8; }
+.tr-hero{ position:relative; display:grid; grid-template-columns:auto 1fr; gap:22px; align-items:center; margin-top:20px; padding:24px 26px; border:1px solid rgba(61,220,132,.24); border-radius:20px; background:radial-gradient(90% 160% at 0% 0%,rgba(61,220,132,.12),rgba(61,220,132,0) 55%),linear-gradient(180deg,#151515,#0c0c0c); overflow:hidden; }
+.tr-hero .ec-brain{ width:64px; height:64px; }
+.tr-hero-num{ font-family:var(--font-body); font-weight:800; font-size:2.3rem; line-height:1; color:var(--text-1); letter-spacing:-.02em; }
+.tr-hero-num small{ font-size:1rem; font-weight:600; color:var(--text-3); letter-spacing:0; }
+.tr-hero-label{ margin-top:6px; color:var(--text-2); font-size:.92rem; }
+.tr-meter{ position:relative; grid-column:1 / -1; height:10px; margin:6px 0 30px; border-radius:999px; background:rgba(255,255,255,.07); }
+.tr-meter-fill{ position:absolute; inset:0 auto 0 0; width:var(--p,0%); border-radius:inherit; background:linear-gradient(90deg,#1f8a52,#3ddc84); box-shadow:0 0 18px rgba(61,220,132,.55); transition:width 1.2s var(--ease); }
+.tr-meter-fill::after{ content:""; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent); background-size:40% 100%; background-repeat:no-repeat; animation:tr-sheen 2.4s ease-in-out infinite; }
+@keyframes tr-sheen{ from{ background-position:-40% 0; } to{ background-position:140% 0; } }
+.tr-mark{ position:absolute; top:-4px; width:2px; height:18px; margin-left:-1px; border-radius:2px; background:rgba(255,255,255,.18); }
+.tr-mark.is-hit{ background:#3ddc84; box-shadow:0 0 8px rgba(61,220,132,.8); }
+.tr-mark span{ position:absolute; top:22px; left:50%; transform:translateX(-50%); white-space:nowrap; color:var(--text-3); font-size:.72rem; }
+.tr-mark.is-hit span{ color:var(--text-2); }
+.tr-mark:last-child span{ transform:translateX(-100%); }
+.tr-tiles{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-top:16px; }
+.tr-tile{ padding:16px 16px 14px; border:1px solid var(--line); border-radius:14px; background:rgba(255,255,255,.02); }
+.tr-tile strong{ display:block; font-family:var(--font-body); font-weight:800; font-size:1.5rem; color:var(--text-1); }
+.tr-tile span{ display:block; margin-top:3px; color:var(--text-3); font-size:.8rem; }
+@media (max-width:900px){ .tr-tile:last-child:nth-child(odd){ grid-column:1 / -1; } }
+.tr-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin-top:16px; }
+.tr-card{ padding:18px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.02); min-width:0; }
+.tr-card h3{ margin:0 0 4px; font-family:var(--font-body); font-size:.98rem; color:var(--text-1); }
+.tr-card > p{ margin:0 0 12px; color:var(--text-3); font-size:.8rem; }
+.tr-bars{ display:grid; gap:9px; }
+.tr-bar{ display:grid; grid-template-columns:minmax(80px,140px) 1fr auto; align-items:center; gap:10px; font-size:.83rem; color:var(--text-2); }
+.tr-bar > span:first-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tr-bar-track{ height:8px; border-radius:4px; background:rgba(255,255,255,.06); }
+.tr-bar-fill{ height:100%; border-radius:4px; background:#d6d6d6; width:var(--w,0%); transition:width .9s var(--ease); }
+.tr-bar em{ font-style:normal; color:var(--text-1); font-variant-numeric:tabular-nums; }
+.tr-bar small{ color:var(--text-3); margin-left:4px; }
+.tr-days{ display:flex; align-items:flex-end; gap:2px; height:96px; padding-bottom:2px; border-bottom:1px solid var(--line); }
+.tr-day{ flex:1; min-width:0; height:100%; display:flex; align-items:flex-end; cursor:default; }
+.tr-day i{ display:block; width:100%; min-height:0; border-radius:4px 4px 0 0; background:#d6d6d6; height:var(--h,0%); transition:height .8s var(--ease); }
+.tr-day:hover i{ background:#fff; }
+.tr-days-axis{ display:flex; justify-content:space-between; margin-top:6px; color:var(--text-3); font-size:.72rem; }
+.tr-section{ margin-top:30px; }
+.tr-section h2{ margin:0 0 4px; }
+.tr-toolbar{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:14px 0; }
+.tr-seg{ display:inline-flex; padding:3px; border:1px solid var(--line); border-radius:11px; background:rgba(255,255,255,.02); }
+.tr-seg button{ height:30px; padding:0 12px; border:0; border-radius:8px; background:transparent; color:var(--text-2); font:600 .82rem var(--font-body); cursor:pointer; }
+.tr-seg button.is-on{ background:rgba(255,255,255,.1); color:var(--text-1); }
+.tr-select{ height:36px; padding:0 12px; border-radius:10px; background:rgba(255,255,255,.03); border:1px solid var(--line); color:var(--text-1); font-size:.85rem; }
+.tr-queue{ display:grid; gap:12px; }
+.tr-item{ padding:16px 18px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.02); animation:ec-fb-in .3s var(--ease) both; }
+.tr-item.is-gone{ opacity:0; transform:translateX(18px); transition:opacity .25s,transform .25s; }
+.tr-item-top{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.tr-badge{ display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; border:1px solid var(--line); color:var(--text-2); font-size:.74rem; font-weight:600; white-space:nowrap; }
+.tr-badge .ec-i{ width:12px; height:12px; }
+.tr-badge.is-good{ color:#3ddc84; border-color:rgba(61,220,132,.35); }
+.tr-badge.is-ver{ color:var(--text-1); }
+.tr-item-time{ margin-left:auto; color:var(--text-3); font-size:.76rem; }
+.tr-q{ margin:12px 0 0; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.04); color:var(--text-1); font-size:.88rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+.tr-a{ margin:8px 0 0; padding:10px 12px; border-left:2px solid rgba(255,255,255,.14); color:var(--text-2); font-size:.86rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; }
+.tr-a.is-improved{ border-left-color:#3ddc84; color:var(--text-1); }
+.tr-a-label{ display:block; margin:10px 0 0; color:var(--text-3); font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.tr-item details{ margin-top:8px; }
+.tr-item summary{ cursor:pointer; color:var(--text-3); font-size:.8rem; }
+.tr-convo{ display:grid; gap:6px; margin-top:8px; }
+.tr-convo div{ padding:8px 10px; border-radius:9px; background:rgba(255,255,255,.03); font-size:.82rem; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; max-height:180px; overflow:auto; color:var(--text-2); }
+.tr-convo b{ display:block; color:var(--text-3); font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; }
+.tr-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.tr-edit{ width:100%; min-height:160px; margin-top:10px; padding:12px; border-radius:11px; background:#0b0b0b; border:1px solid var(--line); color:var(--text-1); font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; resize:vertical; }
+.tr-export{ display:grid; gap:12px; max-width:760px; padding:20px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.02); }
+.tr-export-row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tr-export-note{ color:var(--text-3); font-size:.82rem; }
+.tr-howto{ margin-top:4px; }
+.tr-howto summary{ cursor:pointer; color:var(--text-1); font-weight:650; }
+.tr-howto ol{ margin:10px 0 0; padding-left:20px; color:var(--text-2); line-height:1.75; font-size:.88rem; }
+.tr-howto code{ padding:1px 6px; border-radius:6px; background:rgba(255,255,255,.07); font-size:.82rem; }
+@media (max-width:900px){ .tr-tiles{ grid-template-columns:repeat(2,minmax(0,1fr)); } .tr-grid{ grid-template-columns:1fr; } }
+@media (max-width:640px){ #ownerDashboard > .stat-row{ grid-template-columns:repeat(2,minmax(0,1fr))!important; gap:10px; } #ownerDashboard > .stat-row .stat-box{ padding:16px; } }
+@media (max-width:560px){ .tr-hero{ grid-template-columns:1fr; padding:20px; } .tr-hero .ec-brain{ width:48px; height:48px; } .tr-mark span{ display:none; } .tr-meter{ margin-bottom:12px; } .tr-bar{ grid-template-columns:90px 1fr auto; } }
 html[data-ec-theme="light"] .ec-brain-base{ stroke:#16a34a; opacity:.6; }
 html[data-ec-theme="light"] .ec-brain-pulse{ stroke:#15803d; filter:drop-shadow(0 0 2px rgba(34,197,94,.6)); }
 html.reduce-motion .ec-brain::before,html.reduce-motion .ec-brain-pulse{ animation:none!important; }
@@ -5399,6 +5531,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
         <nav class="doc-toc" id="privacyToc">
           <a href="#p-collect" class="is-active">What we collect</a>
           <a href="#p-use">How we use it</a>
+          <a href="#p-training">Helping train elora</a>
           <a href="#p-sharing">Sharing &amp; third parties</a>
           <a href="#p-thirdparty-login">Signing in with Google, Apple, or GitHub</a>
           <a href="#p-retention">Retention &amp; deletion</a>
@@ -5421,6 +5554,19 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
             <li>Delivering and improving chat responses, including internal quality review of flagged conversations.</li>
             <li>Billing and plan management for Private and Premium subscribers.</li>
             <li>Detecting abuse, fraud, or violations of our Guidelines and Terms of Service.</li>
+            <li>Training elorahub's own AI model — only with conversations you chose to share (see below).</li>
+          </ul>
+
+          <h2 id="p-training">Helping train elora (optional)</h2>
+          <p>elorahub is building its own AI model, and you can help by sharing conversations you rate. This is off unless you turn it on, and you can turn it off at any time.</p>
+          <ul>
+            <li><strong>Off by default.</strong> Turn it on in Settings → Privacy → "Help train elora's own model", or when elora asks after you rate a reply. We keep a record of when you agreed.</li>
+            <li><strong>Only what you rate.</strong> When it's on and you rate a reply 👍 or 👎, we save that conversation (up to the last 12 messages), your rating, the reasons you pick, and any better answer you write. Nothing else from your chats is saved for training.</li>
+            <li><strong>Personal details removed first.</strong> Before anything is stored, we automatically remove email addresses, phone numbers, card and bank (IBAN) numbers, public IP addresses, passwords, API keys and access tokens. Automatic removal can miss things, so please don't share other private details in conversations you rate.</li>
+            <li><strong>How it's used.</strong> The elorahub team reviews shared conversations and uses the good ones to train and test elorahub's own AI models. Training may run on a cloud provider under contract. We never sell this data.</li>
+            <li><strong>Ratings without sharing.</strong> If the setting is off or you're signed out, rating a reply only records the rating, the reasons and which model and workspace answered — not the conversation.</li>
+            <li><strong>Changing your mind.</strong> Turning the setting off immediately takes your shared conversations out of the training set. A model that was already trained can't "unlearn" one example, but nothing you shared is used for new training after you opt out. To have the stored copies erased completely, email us.</li>
+            <li><strong>Legal basis.</strong> Your consent (GDPR Article 6(1)(a)), which you can withdraw at any time.</li>
           </ul>
 
           <h2 id="p-sharing">Sharing &amp; third parties</h2>
@@ -5437,6 +5583,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
             <li>Access, correct, or export the personal data we hold about you.</li>
             <li>Delete your account and associated conversation history.</li>
             <li>Turn memory off, or clear what elora remembers, in Settings → Privacy.</li>
+            <li>Turn "Help train elora's own model" on or off in Settings → Privacy.</li>
             <li>Opt out of non-essential communications at any time.</li>
           </ul>
 
@@ -5860,6 +6007,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
           <button class="is-active" data-owner-tab="console">Console</button>
           <button data-owner-tab="users">Users</button>
           <button data-owner-tab="analytics">Analytics</button>
+          <button data-owner-tab="training">Training</button>
           <button data-owner-tab="notifications">Notifications</button>
           <button data-owner-tab="purchases">Purchases</button>
           <button data-owner-tab="announcement">Announcement</button>
@@ -5914,6 +6062,15 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
             <div id="analyticsCharts" style="margin-top:22px;display:flex;flex-direction:column;gap:34px;">
               <div style="color:var(--text-3);font-size:0.88rem;">Loading…</div>
             </div>
+          </div>
+        </div>
+
+        <!-- TRAINING (opt-in rated conversations → elora's own model) -->
+        <div class="owner-panel" data-owner-panel="training">
+          <div class="doc-body tr-wrap" style="margin-top:22px;">
+            <h2 style="margin-top:0;">Training data</h2>
+            <p>Every 👍/👎 on a reply lands here. People who turned on "Help train elora" also share the rated conversation, with personal details removed. Review the best ones, then download files to fine-tune elora's own model.</p>
+            <div id="trainAdmin"><div class="tr-empty">Loading…</div></div>
           </div>
         </div>
 
@@ -6233,7 +6390,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
 
       <section class="es-panel" data-settings-panel="privacy">
         <h2>Privacy</h2>
-        <p class="es-lead">elorahub only uses your data to run the service. It's never sold and never used to train AI models. Read the <button type="button" class="es-inline-link" data-nav="privacy" data-settings-close>Privacy policy</button> for the details.</p>
+        <p class="es-lead">elorahub only uses your data to run the service. It's never sold, and your chats are only used to train elora if you turn that on below. Read the <button type="button" class="es-inline-link" data-nav="privacy" data-settings-close>Privacy policy</button> for the details.</p>
         <details class="es-disclose" data-keywords="security protect encryption safe">
           <summary>How we protect your data<svg class="ec-i"><use href="#i-chevron-right"/></svg></summary>
           <ul>
@@ -6250,7 +6407,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
             <li>Your messages go to elora's AI providers (Groq and Google Gemini) only to write the reply.</li>
             <li>If Memory is on, elora keeps short facts you share so answers fit you better. Turn it off any time.</li>
             <li>Message counts are used to apply your plan's limits.</li>
-            <li>elorahub doesn't sell your data or use your chats to train AI models.</li>
+            <li>elorahub doesn't sell your data. Your chats only help train elora's own model if you turn on "Help train elora" — and only the replies you rate.</li>
             <li>You can export everything below, or ask us to delete your account.</li>
           </ul>
         </details>
@@ -6259,6 +6416,10 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
         <div class="es-row" data-keywords="memory remember personalization">
           <div class="es-copy"><strong>Memory across chats</strong><p>Let elora remember stable facts about you between chats. Turn off to keep every chat separate.</p></div>
           <label class="es-switch"><input type="checkbox" id="memoryToggle" aria-label="Memory across chats"><span></span></label>
+        </div>
+        <div class="es-row" data-keywords="training train model improve elora contribute share data rate feedback">
+          <div class="es-copy"><strong>Help train elora's own model</strong><p>When you rate a reply, share that conversation so elora's own model learns from it. Emails, phone numbers, card and bank numbers, IP addresses and keys are removed first. Off unless you turn it on, and turning it off takes your shared conversations out again. <span id="trainNote" class="es-train-note"></span></p></div>
+          <label class="es-switch"><input type="checkbox" id="trainToggle" aria-label="Help train elora's own model"><span></span></label>
         </div>
         <div class="es-row" data-keywords="location region time zone local weather near me">
           <div class="es-copy"><strong>Location for local answers</strong><p>Share your time zone (like <span id="privacyZone">Asia/Tbilisi</span>) so elora gets local time, weather and "near me" questions right. Never your exact location.</p></div>
@@ -8887,11 +9048,9 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       return;
     }
     var reaction = e.target.closest("[data-message-reaction]");
-    if(reaction){
-      var row = reaction.parentNode;
-      if(row) row.querySelectorAll("[data-message-reaction]").forEach(function(btn){ btn.classList.toggle("is-selected", btn === reaction); });
-      showToast(reaction.getAttribute("data-message-reaction") === "up" ? "Thanks for the feedback." : "Thanks — elora will try a different approach.");
-    }
+    if(reaction){ handleReaction(reaction); return; }
+    var fbEl = e.target.closest(".ec-fb [data-fb]");
+    if(fbEl){ handleFeedbackClick(fbEl); }
   });
 
   function buildMessage(role){
@@ -9368,6 +9527,258 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     } catch(e){ showToast("Couldn't reach the server. Try again in a moment."); return false; }
   }
 
+  /* ---------------- Help train elora ----------------
+     👍/👎 on a reply opens a small card: reasons, "write a better answer",
+     and — for people who opted in — the rated conversation is shared
+     (scrubbed of personal details on the server) so elora's own model can
+     learn from it. Server: api/_lib/training.js via /api/memory. */
+  var trainState = { state:"unknown", shared:0, setup:true, loaded:false };
+  var pendingAlt = null; // the answer a "Try again" replaced — a free preference pair
+  var FB_REASONS = {
+    good: [["accurate","Accurate"],["clear","Clear"],["creative","Creative"],["design","Great design"],["code","Code works"],["sources","Good sources"],["fast","Fast"]],
+    bad: [["wrong","Wrong or made up"],["ignored","Didn't follow my request"],["design","Weak design"],["code","Code doesn't work"],["long","Too long"],["short","Too short"],["outdated","Outdated"],["refused","Refused for no reason"],["other","Something else"]]
+  };
+  function trainHeaders(json){
+    var h = json ? { "Content-Type":"application/json" } : {};
+    if(getAccessToken()) h.Authorization = "Bearer " + getAccessToken();
+    return h;
+  }
+  async function loadTrainState(force){
+    if(trainState.loaded && !force) return trainState;
+    try {
+      var r = await fetch("/api/memory?training=1", { cache:"no-store", headers: trainHeaders(false) });
+      var d = r.ok ? await r.json() : null;
+      if(d) trainState = { state: d.setup === false ? "setup" : (d.state || "unset"), shared: d.shared || 0, setup: d.setup !== false, loaded: true };
+    } catch(e){}
+    renderTrainSetting();
+    return trainState;
+  }
+  window.addEventListener("elorahub:auth-state", function(){ trainState.loaded = false; loadTrainState(true); });
+  async function trainPost(body){
+    var r = await fetch("/api/memory", { method:"POST", headers: trainHeaders(true), body: JSON.stringify(body) });
+    var d = {}; try { d = await r.json(); } catch(e){}
+    if(d.setup === false){ trainState.setup = false; trainState.state = "setup"; }
+    return { ok: r.ok && !d.error && d.setup !== false, data: d };
+  }
+  function trainNudgeSnoozed(){ try { return Date.now() - Number(localStorage.getItem("elorahub_train_nudge") || 0) < 14 * 86400000; } catch(e){ return false; } }
+  function snoozeTrainNudge(){ try { localStorage.setItem("elorahub_train_nudge", String(Date.now())); } catch(e){} }
+
+  function stampReply(msg, result){
+    if(!msg) return;
+    msg.dataset.mode = currentMode();
+    if(result && result.sig) msg.dataset.sig = result.sig;
+    if(result && result.model) msg.dataset.model = result.model;
+    if(pendingAlt){ msg._alt = pendingAlt; pendingAlt = null; }
+  }
+  // The conversation up to (not including) this reply, and the reply itself.
+  function replyContext(msg){
+    var copy = msg.querySelector("[data-copy-message]");
+    var text = copy ? copy.dataset.copyText || "" : "";
+    var idx = -1;
+    for(var i = conversationHistory.length - 1; i >= 0; i--){
+      var m = conversationHistory[i];
+      if(m.role === "assistant" && typeof m.content === "string" && text && (m.content === text || m.content.indexOf(text) === 0)){ idx = i; break; }
+    }
+    var before = idx > -1 ? conversationHistory.slice(0, idx) : conversationHistory.slice();
+    while(before.length && before[before.length - 1].role !== "user") before.pop();
+    return { reply: text, messages: before.slice(-12).map(function(m){ return { role: m.role, content: String(m.content || "") }; }) };
+  }
+  function feedbackPayload(msg){
+    var fb = msg._fb;
+    var p = { action:"feedback", rating: fb.rating, reasons: fb.reasons.slice(), mode: msg.dataset.mode || currentMode(), model: msg.dataset.model || "" };
+    if(fb.id){ p.id = fb.id; p.key = fb.key; }
+    if(trainState.state === "on" && !fb.saved){
+      var c = replyContext(msg);
+      p.messages = c.messages; p.reply = c.reply; p.sig = msg.dataset.sig || "";
+      if(msg._alt) p.rejected = msg._alt;
+    }
+    if(fb.improved) p.improved = fb.improved;
+    return p;
+  }
+  function syncFeedback(msg, now){
+    var fb = msg._fb; if(!fb) return;
+    clearTimeout(fb.timer);
+    fb.timer = setTimeout(function(){ sendFeedback(msg); }, now ? 0 : 650);
+  }
+  async function sendFeedback(msg){
+    var fb = msg._fb;
+    if(fb.busy){ fb.again = true; return; }
+    fb.busy = true; fb.error = false;
+    renderFbStatus(msg);
+    try {
+      var res = await trainPost(feedbackPayload(msg));
+      if(res.ok && res.data.id){
+        fb.id = res.data.id; fb.key = res.data.key;
+        if(res.data.saved && !fb.saved){ fb.saved = true; trainState.shared += 1; fb.justSaved = true; }
+        if(res.data.state) trainState.state = res.data.state;
+      } else if(trainState.setup) fb.error = true;
+    } catch(e){ fb.error = true; }
+    fb.busy = false;
+    renderFbStatus(msg);
+    fb.justSaved = false;
+    if(fb.again){ fb.again = false; sendFeedback(msg); }
+  }
+  function burst(btn){
+    if(document.documentElement.classList.contains("reduce-motion")) return;
+    var b = document.createElement("span");
+    b.className = "ec-burst";
+    for(var i = 0; i < 8; i++){ var dot = document.createElement("i"); dot.style.setProperty("--a", (i * 45) + "deg"); dot.style.animationDelay = (i % 2 ? 40 : 0) + "ms"; b.appendChild(dot); }
+    btn.appendChild(b);
+    setTimeout(function(){ b.remove(); }, 700);
+  }
+  function handleReaction(btn){
+    var msg = btn.closest(".ec-msg"); if(!msg) return;
+    var rating = btn.getAttribute("data-message-reaction") === "up" ? "good" : "bad";
+    var fb = msg._fb || (msg._fb = { reasons: [] });
+    var same = fb.rating === rating;
+    msg.querySelectorAll("[data-message-reaction]").forEach(function(b){ var on = b === btn; b.classList.toggle("is-selected", on); b.setAttribute("aria-pressed", String(on)); });
+    btn.classList.remove("is-pop"); void btn.offsetWidth; btn.classList.add("is-pop");
+    var card = msg.querySelector(".ec-fb");
+    if(same){ if(card){ card.remove(); } else { renderFeedbackCard(msg); } return; }
+    burst(btn);
+    fb.rating = rating; fb.reasons = []; fb.editing = false;
+    renderFeedbackCard(msg);
+    loadTrainState().then(function(){ syncFeedback(msg, true); });
+  }
+  function renderFeedbackCard(msg){
+    var fb = msg._fb;
+    var card = msg.querySelector(".ec-fb");
+    if(!card){
+      card = document.createElement("div");
+      card.className = "ec-fb";
+      card.setAttribute("role", "group");
+      var acts = msg.querySelector(".ec-actions");
+      if(acts && acts.nextSibling) msg.insertBefore(card, acts.nextSibling); else msg.appendChild(card);
+    }
+    var good = fb.rating === "good";
+    card.classList.toggle("is-good", good);
+    card.setAttribute("aria-label", good ? "What made this reply great" : "What went wrong with this reply");
+    var isLast = msg === chatThread.querySelector(".ec-msg.is-ai:last-child");
+    card.innerHTML =
+      '<div class="ec-fb-head">' + icon(good ? "thumb-up" : "thumb-down") + '<strong>' + (good ? "What made it great?" : "What went wrong?") + '</strong>' +
+        '<button type="button" class="ec-fb-x" data-fb="close" aria-label="Close">' + icon("x") + '</button></div>' +
+      '<div class="ec-fb-chips">' + FB_REASONS[fb.rating].map(function(r){ return '<button type="button" class="ec-fb-chip" data-fb="reason" data-reason="' + r[0] + '" aria-pressed="' + (fb.reasons.indexOf(r[0]) > -1) + '">' + r[1] + '</button>'; }).join("") + '</div>' +
+      '<div class="ec-fb-tools">' +
+        '<button type="button" class="ec-fb-tool" data-fb="improve">' + icon("pen") + (good ? "Polish this answer" : "Write a better answer") + '</button>' +
+        (!good && isLast ? '<button type="button" class="ec-fb-tool" data-fb="retry">' + icon("refresh") + 'Try again</button>' : "") +
+      '</div>' +
+      '<div class="ec-fb-edit"' + (fb.editing ? "" : " hidden") + '><textarea aria-label="Your better answer" spellcheck="true"></textarea>' +
+        '<div class="ec-fb-edit-row"><span>Write the answer elora should have given — it becomes a gold example elora learns from.</span>' +
+        '<button type="button" class="ec-fb-tool" data-fb="cancel">Cancel</button><button type="button" class="ec-fb-tool is-main" data-fb="save">' + icon("check") + 'Save answer</button></div></div>' +
+      '<div class="ec-fb-foot"></div>';
+    if(fb.editing){ var ta = card.querySelector("textarea"); ta.value = fb.draft != null ? fb.draft : (fb.improved || replyContext(msg).reply); }
+    renderFbStatus(msg);
+  }
+  function renderFbStatus(msg){
+    var fb = msg._fb, card = msg.querySelector(".ec-fb");
+    if(!card || !fb) return;
+    var foot = card.querySelector(".ec-fb-foot");
+    var st = trainState.state, html = "";
+    if(!trainState.loaded || st === "setup" || st === "unknown"){
+      html = '<div class="ec-fb-status">' + (fb.busy ? '<span class="ec-fb-dots">Sending</span>' : "Thanks — your rating helps elora get better.") + '</div>';
+    } else if(st === "signed-out"){
+      html = '<div class="ec-fb-status">' + brainSvg() + '<span>Thanks! <strong>Sign in</strong> to let your ratings teach elora\'s own model.</span><button type="button" class="ec-fb-link" data-fb="signin">Sign in</button></div>';
+    } else if(st === "unset" && !trainNudgeSnoozed()){
+      html = '<div class="ec-fb-consent">' +
+        '<div class="ec-fb-consent-top">' + brainSvg() + '<strong>Help build elora\'s own model?</strong></div>' +
+        '<p>Share this conversation so elora learns from it. Emails, phone numbers, card numbers and keys are removed first. Only replies you rate are shared, and you can turn it off any time in Settings → Privacy.</p>' +
+        '<div class="ec-fb-tools"><button type="button" class="ec-fb-tool is-main" data-fb="consent">' + icon("check") + 'Share to train elora</button><button type="button" class="ec-fb-tool" data-fb="later">Not now</button><button type="button" class="ec-fb-link" data-fb="learn">How it works</button></div>' +
+      '</div>';
+    } else if(st === "on"){
+      if(fb.busy) html = '<div class="ec-fb-status">' + brainSvg() + '<span class="ec-fb-dots">Adding to elora\'s training set</span></div>';
+      else if(fb.error) html = '<div class="ec-fb-status"><span>Couldn\'t save that.</span><button type="button" class="ec-fb-link" data-fb="resend">Try again</button></div>';
+      else if(fb.saved) html = '<div class="ec-fb-status is-saved">' + (fb.justSaved ? '<span class="ec-fb-check">' + icon("check") + '</span>' : brainSvg()) + '<span><strong>' + (fb.improved ? "Your better answer was added" : "Added to elora\'s training set") + '</strong> · ' + trainState.shared + ' shared so far. Thank you!</span></div>';
+      else html = '<div class="ec-fb-status">' + brainSvg() + '<span>Thanks — your rating helps elora get better.</span></div>';
+    } else {
+      html = '<div class="ec-fb-status"><span>Thanks for the feedback. This conversation isn\'t shared for training.</span><button type="button" class="ec-fb-link" data-fb="settings">Change</button></div>';
+    }
+    foot.innerHTML = html;
+  }
+  async function setTrainConsent(on){
+    if(!currentUser || !getAccessToken()){ openModal("signin"); return false; }
+    var r = await trainPost({ action:"consent", on: on });
+    if(!r.ok){ showToast(trainState.setup ? (r.data.message || "Couldn't change that — try again.") : "Training isn't switched on for elorahub yet."); return false; }
+    trainState.state = on ? "on" : "off"; trainState.loaded = true;
+    if(!on) trainState.shared = 0;
+    renderTrainSetting();
+    if(!on) showToast(r.data.removed ? "Off — " + r.data.removed + " shared conversation" + (r.data.removed === 1 ? " was" : "s were") + " taken out of the training set." : "Off — nothing will be shared for training.");
+    return true;
+  }
+  function handleFeedbackClick(el){
+    var msg = el.closest(".ec-msg"), fb = msg && msg._fb;
+    if(!fb) return;
+    var act = el.getAttribute("data-fb"), card = msg.querySelector(".ec-fb");
+    if(act === "close"){ if(card) card.remove(); return; }
+    if(act === "reason"){
+      var key = el.getAttribute("data-reason"), at = fb.reasons.indexOf(key);
+      if(at > -1) fb.reasons.splice(at, 1); else fb.reasons.push(key);
+      el.setAttribute("aria-pressed", String(at === -1));
+      syncFeedback(msg);
+      return;
+    }
+    if(act === "improve"){
+      fb.editing = true; fb.draft = null;
+      renderFeedbackCard(msg);
+      var ta = card.querySelector("textarea"); if(ta){ ta.focus(); ta.setSelectionRange(0, 0); ta.scrollTop = 0; }
+      return;
+    }
+    if(act === "cancel"){ fb.editing = false; fb.draft = null; renderFeedbackCard(msg); return; }
+    if(act === "save"){
+      var text = (card.querySelector("textarea") || {}).value || "";
+      if(text.trim().length < 2){ showToast("Write the better answer first."); return; }
+      fb.draft = text;
+      if(trainState.state !== "on"){
+        showToast(trainState.state === "signed-out" ? "Sign in and turn on sharing to save this as a training example." : "Turn on sharing below to save this as a training example.");
+        if(trainState.state === "unset") snoozeTrainNudgeClear();
+        renderFbStatus(msg);
+        return;
+      }
+      fb.improved = text; fb.editing = false; fb.draft = null; fb.saved = fb.saved && true;
+      renderFeedbackCard(msg);
+      syncFeedback(msg, true);
+      return;
+    }
+    if(act === "retry"){ var regen = msg.querySelector("[data-regenerate]"); if(regen) regen.click(); return; }
+    if(act === "signin"){ openModal("signin"); return; }
+    if(act === "learn"){ showPage("privacy"); setTimeout(function(){ var h = document.getElementById("p-training"); if(h) h.scrollIntoView({ behavior:"smooth", block:"start" }); }, 350); return; }
+    if(act === "settings"){ openSettings("privacy"); return; }
+    if(act === "later"){ snoozeTrainNudge(); renderFbStatus(msg); return; }
+    if(act === "resend"){ syncFeedback(msg, true); return; }
+    if(act === "consent"){
+      el.disabled = true;
+      setTrainConsent(true).then(function(ok){
+        if(!ok){ el.disabled = false; return; }
+        if(fb.draft && !fb.improved){ fb.improved = fb.draft; fb.editing = false; fb.draft = null; renderFeedbackCard(msg); }
+        syncFeedback(msg, true);
+      });
+    }
+  }
+  function snoozeTrainNudgeClear(){ try { localStorage.removeItem("elorahub_train_nudge"); } catch(e){} }
+  function renderTrainSetting(){
+    var el = document.getElementById("trainToggle"); if(!el) return;
+    var note = document.getElementById("trainNote");
+    var st = trainState.state;
+    el.checked = st === "on";
+    el.disabled = st === "setup";
+    if(!note) return;
+    note.textContent = st === "setup" ? "Coming soon." :
+      (!currentUser || st === "signed-out") ? "Log in to choose." :
+      st === "on" ? (trainState.shared ? "You've shared " + trainState.shared + " conversation" + (trainState.shared === 1 ? "" : "s") + " — thank you!" : "On — rate a reply to share it.") : "";
+  }
+  (function(){
+    var el = document.getElementById("trainToggle"); if(!el) return;
+    el.addEventListener("change", function(){
+      var on = el.checked;
+      if(!currentUser || !getAccessToken()){ el.checked = false; showToast("Log in first to choose this."); return; }
+      el.disabled = true;
+      setTrainConsent(on).then(function(ok){
+        el.disabled = false;
+        if(!ok){ el.checked = !on; return; }
+        if(on) showToast("Thank you — replies you rate will now help train elora.");
+      });
+    });
+  })();
+
   // ---- settings window ----
   var settingsModal = document.getElementById("settingsModal");
   var settingsSearch = document.getElementById("settingsSearch");
@@ -9430,6 +9841,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     var main = document.getElementById("settingsMain");
     if(main) main.scrollTop = 0;
     if(tab === "memory") loadMemorySummary();
+    if(tab === "privacy") loadTrainState(true);
     if(tab === "billing" || tab === "usage") loadPlanInfo();
     if(tab === "billing" && typeof loadBillingSub === "function") loadBillingSub();
     if(tab === "usage"){ renderDeviceStats(); renderUsageV2(); fetchSubscription().then(function(sub){ renderUsageV2(sub); }); }
@@ -10143,7 +10555,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       // Keep Settings → Usage current without an extra request.
       if(planInfo && data.creditsRemaining != null){ planInfo.creditsRemaining = data.creditsRemaining; renderPlanInfo(); }
       if(data.task && data.token) return { autoTask: data };
-      return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null, thinking: data.thinking || "", model: data.model || "", truncated: !!data.truncated, streamed: got.streamed };
+      return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null, thinking: data.thinking || "", model: data.model || "", sig: data.sig || "", truncated: !!data.truncated, streamed: got.streamed };
     } catch(err){
       if(err && err.name === "AbortError") return { aborted: true };
       return { text: "elora couldn't be reached — check your connection and try again.", real: false, serviceError: true };
@@ -10152,6 +10564,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
 
   function sendMessage(){
     if(replyPending) return;
+    pendingAlt = null;
     var text = chatInput.value.trim();
     if(!text && attachedFiles.length === 0) return;
 
@@ -10590,6 +11003,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
           // elora had said them.
           if(result.real) conversationHistory.push({ role: "assistant", content: result.text });
           addMessageTyped(result.text, stepsLine, result.real, !result.real).then(function(msg){
+            if(result.real) stampReply(msg, result);
             if(result.limit){
               var cta = document.createElement("button");
               cta.type = "button"; cta.className = "ecp-btn ecp-btn-main ec-limit-cta"; cta.textContent = "See plans";
@@ -10666,6 +11080,8 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     } else if(regen){
       var msg = regen.closest(".ec-msg");
       if(!msg || msg !== chatThread.querySelector(".ec-msg.is-ai:last-child")) return;
+      var oldCopy = msg.querySelector("[data-copy-message]");
+      pendingAlt = oldCopy ? oldCopy.dataset.copyText || null : null;
       msg.remove();
       if(conversationHistory.length && conversationHistory[conversationHistory.length - 1].role === "assistant") conversationHistory.pop();
       requestReply(lastUserText(), lastRequest.files);
@@ -11021,6 +11437,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       var note = t.files.length ? "\n\n(Files created: " + t.files.map(function(f){ return f.name; }).join(", ") + ")" : "";
       conversationHistory.push({ role: "assistant", content: (fin.reply || "") + note });
       var finalMsg = await addMessageTyped(fin.reply || "Done.", null, true, false);
+      stampReply(finalMsg, { sig: fin.sig || "", model: fin.provider || "" });
       if(t.files.length){
         var files = document.createElement("div");
         files.className = "ec-files";
@@ -12152,6 +12569,234 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     return fetch(path, options);
   }
 
+  /* ---- Training data tab: readiness, quality, review queue, export ---- */
+  var trainAdmin = { status:"pending", rating:"", next:null, stats:null, busy:false };
+  var REASON_LABEL = { accurate:"Accurate", clear:"Clear", creative:"Creative", design:"Design", code:"Code", sources:"Sources", fast:"Fast", wrong:"Wrong or made up", ignored:"Didn't follow request", long:"Too long", short:"Too short", outdated:"Outdated", refused:"Refused for no reason", other:"Something else" };
+  var STAGES = [[0,"Collecting"],[100,"Enough for a first experiment"],[500,"Enough to change elora's style"],[1000,"Ready for a solid fine-tune"],[5000,"Strong, production-grade dataset"]];
+  function fmtN(n){ return Number(n || 0).toLocaleString("en-US"); }
+  function trainBars(list, valueOf, labelOf){
+    if(!list.length) return '<div class="tr-export-note">No ratings yet.</div>';
+    return '<div class="tr-bars">' + list.map(function(x){
+      var v = valueOf(x);
+      return '<div class="tr-bar" title="' + escapeHtml(v.title) + '"><span>' + escapeHtml(labelOf(x)) + '</span><div class="tr-bar-track"><div class="tr-bar-fill" style="--w:' + v.pct + '%"></div></div><em>' + escapeHtml(v.text) + '<small>' + escapeHtml(v.sub || "") + '</small></em></div>';
+    }).join("") + '</div>';
+  }
+  function renderTrainingStats(st){
+    var root = document.getElementById("trainAdmin");
+    var ready = st.sft.approved, goal = 1000;
+    var stage = STAGES.filter(function(x){ return ready >= x[0]; }).pop();
+    var nextStep = st.steps.filter(function(n){ return n > ready; })[0];
+    var max = 5000;
+    var pct = Math.min(100, Math.sqrt(ready / max) * 100);
+    var markAt = function(n){ return Math.sqrt(n / max) * 100; };
+    var peak = Math.max.apply(null, st.daily.map(function(d){ return d.good + d.bad; }).concat([1]));
+    var modeName = { chat:"Chat", code:"Code", studio:"Studio", agent:"Agent" };
+    var satisfactionOf = function(x){ var n = x.good + x.bad; var p = n ? Math.round(x.good / n * 100) : 0; return { pct:p, text:p + "%", sub:" of " + fmtN(n), title: x.good + " great · " + x.bad + " needs work" }; };
+    var reasonMax = Math.max.apply(null, st.badReasons.map(function(r){ return r.count; }).concat([1]));
+    root.innerHTML =
+      '<div class="tr-hero">' + brainSvg() +
+        '<div><div class="tr-hero-num">' + fmtN(ready) + ' <small>approved training examples</small></div>' +
+        '<div class="tr-hero-label">' + escapeHtml(stage[1]) + (nextStep ? ' · ' + fmtN(nextStep - ready) + ' more to the next milestone' : '') + '</div></div>' +
+        '<div class="tr-meter" role="img" aria-label="' + fmtN(ready) + ' of ' + fmtN(goal) + ' examples for a solid fine-tune"><div class="tr-meter-fill" style="--p:' + pct.toFixed(1) + '%"></div>' +
+          st.steps.map(function(n){ return '<i class="tr-mark' + (ready >= n ? " is-hit" : "") + '" style="left:' + markAt(n).toFixed(1) + '%"><span>' + fmtN(n) + '</span></i>'; }).join("") + '</div>' +
+      '</div>' +
+      '<div class="tr-tiles">' +
+        '<div class="tr-tile"><strong>' + fmtN(st.total) + '</strong><span>Ratings</span></div>' +
+        '<div class="tr-tile"><strong>' + (st.satisfaction == null ? "—" : st.satisfaction + "%") + '</strong><span>Rated great</span></div>' +
+        '<div class="tr-tile"><strong>' + fmtN(st.shared) + '</strong><span>Shared by ' + fmtN(st.contributors) + ' ' + (st.contributors === 1 ? "person" : "people") + '</span></div>' +
+        '<div class="tr-tile"><strong>' + fmtN(st.pending) + '</strong><span>Waiting for review</span></div>' +
+        '<div class="tr-tile"><strong>' + fmtN(st.dpo.approved) + '</strong><span>Better-vs-worse pairs</span></div>' +
+      '</div>' +
+      '<div class="tr-grid">' +
+        '<div class="tr-card"><h3>Ratings, last 30 days</h3><p>Every 👍 and 👎, per day. Hover a day for details.</p>' +
+          '<div class="tr-days">' + st.daily.map(function(d, i){ var n = d.good + d.bad; return '<span class="tr-day" title="' + escapeHtml(st.days[i] + ": " + n + " ratings · " + d.good + " great, " + d.bad + " needs work") + '"><i style="--h:' + (n ? Math.max(4, n / peak * 100) : 0) + '%"></i></span>'; }).join("") + '</div>' +
+          '<div class="tr-days-axis"><span>' + escapeHtml(st.days[0].slice(5)) + '</span><span>Peak ' + fmtN(peak === 1 && !st.total ? 0 : peak) + '/day</span><span>Today</span></div></div>' +
+        '<div class="tr-card"><h3>Why replies fall short</h3><p>Reasons people picked on 👎 — the clearest list of what to fix next.</p>' +
+          trainBars(st.badReasons.slice(0, 7), function(r){ return { pct: r.count / reasonMax * 100, text: fmtN(r.count), title: r.count + " times" }; }, function(r){ return REASON_LABEL[r.reason] || r.reason; }) + '</div>' +
+        '<div class="tr-card"><h3>Rated great, by model</h3><p>Share of 👍 for each AI model that answered.</p>' + trainBars(st.byModel, satisfactionOf, function(x){ return modelName ? (modelName(x.name) || x.name) : x.name; }) + '</div>' +
+        '<div class="tr-card"><h3>Rated great, by workspace</h3><p>Chat, Code, Studio and Agent side by side.</p>' + trainBars(st.byMode, satisfactionOf, function(x){ return modeName[x.name] || x.name; }) + '</div>' +
+      '</div>' +
+      '<div class="tr-section"><h2>Review queue</h2><p>Approve conversations that show elora at its best (or fix the answer first). Only approved examples go into the training file by default.</p>' +
+        '<div class="tr-toolbar"><div class="tr-seg" role="tablist" aria-label="Review status">' +
+          [["pending","Waiting (" + fmtN(st.pending) + ")"],["approved","Approved (" + fmtN(st.approved) + ")"],["rejected","Rejected (" + fmtN(st.rejected) + ")"]].map(function(t){ return '<button type="button" data-tr-status="' + t[0] + '" class="' + (trainAdmin.status === t[0] ? "is-on" : "") + '">' + t[1] + '</button>'; }).join("") +
+          '</div><select class="tr-select" id="trRating" aria-label="Filter by rating"><option value="">All ratings</option><option value="good"' + (trainAdmin.rating === "good" ? " selected" : "") + '>Rated great</option><option value="bad"' + (trainAdmin.rating === "bad" ? " selected" : "") + '>Needs work</option></select>' +
+          (st.highQualityPending ? '<button type="button" class="btn btn-primary" id="trApproveHigh" style="margin-left:auto;">Approve ' + fmtN(st.highQualityPending) + ' high-quality</button>' : "") +
+        '</div><div class="tr-queue" id="trQueue"><div class="tr-empty">Loading…</div></div>' +
+        '<div style="margin-top:12px;"><button type="button" class="btn" id="trMore" style="display:none;">Load more</button></div></div>' +
+      '<div class="tr-section"><h2>Export for fine-tuning</h2><p>Downloads a JSONL file in the standard format fine-tuning services accept.</p>' +
+        '<div class="tr-export">' +
+          '<div class="tr-export-row"><select class="tr-select" id="trFormat" aria-label="File type"><option value="sft">Training examples (' + fmtN(st.sft.approved) + ' approved · ' + fmtN(st.sft.all) + ' total)</option><option value="dpo">Better-vs-worse pairs (' + fmtN(st.dpo.approved) + ' approved · ' + fmtN(st.dpo.all) + ' total)</option></select>' +
+          '<select class="tr-select" id="trScope" aria-label="Which examples"><option value="approved">Approved only</option><option value="all">Everything not rejected</option></select>' +
+          '<button type="button" class="btn btn-primary" id="trExport">' + '<svg class="ec-i" aria-hidden="true" style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;"><use href="#i-download"/></svg>Download .jsonl</button></div>' +
+          '<div class="tr-export-note" id="trExportNote">Examples use the chat format <code style="font-size:.78rem;">{"messages":[…]}</code>; pairs use prompt / chosen / rejected (Hugging Face TRL).</div>' +
+          '<details class="tr-howto"><summary>How to turn this into elora-1</summary><ol>' +
+            '<li>Collect about 1,000 approved examples (the meter above tracks it). Quality beats quantity — reject anything you wouldn\'t want elora to copy.</li>' +
+            '<li>Download <strong>Training examples</strong>. Upload the file to a fine-tuning service such as Together AI, Fireworks or Hugging Face, and pick an open model to start from (for example Qwen or Llama).</li>' +
+            '<li>Once that works, download <strong>Better-vs-worse pairs</strong> and run a preference (DPO) round on top — it teaches elora which of two answers is better.</li>' +
+            '<li>Host the finished model on any OpenAI-compatible endpoint, then set <code>LLM_ENDPOINT_URL</code> and <code>LLM_MODEL</code> in Vercel — elora will start answering with your own model.</li>' +
+          '</ol></details>' +
+        '</div></div>';
+    root.querySelectorAll("[data-tr-status]").forEach(function(b){ b.addEventListener("click", function(){ trainAdmin.status = b.getAttribute("data-tr-status"); root.querySelectorAll("[data-tr-status]").forEach(function(x){ x.classList.toggle("is-on", x === b); }); loadTrainQueue(true); }); });
+    document.getElementById("trRating").addEventListener("change", function(){ trainAdmin.rating = this.value; loadTrainQueue(true); });
+    document.getElementById("trMore").addEventListener("click", function(){ loadTrainQueue(false); });
+    document.getElementById("trExport").addEventListener("click", exportTraining);
+    var high = document.getElementById("trApproveHigh");
+    if(high) high.addEventListener("click", async function(){
+      high.disabled = true;
+      var r = await adminFetch("/api/admin/training", { method:"POST", body: JSON.stringify({ action:"approve-high" }) });
+      var d = await r.json().catch(function(){ return {}; });
+      showToast(r.ok ? "Approved " + (d.approved || 0) + " high-quality example" + (d.approved === 1 ? "" : "s") + "." : (d.message || d.error || "Couldn't approve those."));
+      loadTrainingAdmin();
+    });
+    loadTrainQueue(true);
+  }
+  function renderTrainSetup(){
+    document.getElementById("trainAdmin").innerHTML =
+      '<div class="tr-setup">' + brainSvg() +
+        '<h3 style="margin:0;">One-time setup (about 2 minutes)</h3>' +
+        '<ol><li>Open your Supabase project → <strong>SQL Editor</strong> → <strong>New query</strong>.</li><li>Copy the setup code below, paste it in, and press <strong>Run</strong>.</li><li>Come back here and press <strong>Check again</strong>.</li></ol>' +
+        '<div class="tr-export-row"><button type="button" class="btn btn-primary" id="trCopySql">Copy setup code</button><button type="button" class="btn" id="trRecheck">Check again</button></div>' +
+      '</div>';
+    document.getElementById("trCopySql").addEventListener("click", async function(){
+      try {
+        var r = await fetch("/supabase-schema-training.sql", { cache:"no-store" });
+        var sql = await r.text();
+        if(!r.ok || sql.indexOf("training_feedback") === -1) throw new Error("missing");
+        copyToClipboard(sql, "Setup code copied — paste it into Supabase's SQL Editor.");
+      } catch(e){ showToast("Couldn't load the setup code — it's the file supabase-schema-training.sql in the project."); }
+    });
+    document.getElementById("trRecheck").addEventListener("click", loadTrainingAdmin);
+  }
+  async function loadTrainingAdmin(){
+    var root = document.getElementById("trainAdmin");
+    if(!root) return;
+    if(!trainAdmin.stats) root.innerHTML = '<div class="tr-empty">Loading…</div>';
+    try {
+      var r = await adminFetch("/api/admin/training?view=stats");
+      var d = await r.json();
+      if(d.setup === false){ renderTrainSetup(); return; }
+      if(!r.ok){ root.innerHTML = '<div class="tr-empty">' + escapeHtml(d.message || d.error || "Couldn't load training data.") + '</div>'; return; }
+      trainAdmin.stats = d;
+      renderTrainingStats(d);
+    } catch(e){ root.innerHTML = '<div class="tr-empty">Couldn\'t reach the server. Try again in a moment.</div>'; }
+  }
+  function trainItemHtml(it){
+    var msgs = Array.isArray(it.messages) ? it.messages : [];
+    var lastUser = msgs.filter(function(m){ return m.role === "user"; }).pop();
+    var good = it.rating === "good";
+    var when = it.created_at ? timeAgo(it.created_at) : "";
+    return '<div class="tr-item" data-tr-id="' + escapeHtml(it.id) + '">' +
+      '<div class="tr-item-top">' +
+        '<span class="tr-badge' + (good ? " is-good" : "") + '"><svg class="ec-i" aria-hidden="true"><use href="#i-' + (good ? "thumb-up" : "thumb-down") + '"/></svg>' + (good ? "Great" : "Needs work") + '</span>' +
+        '<span class="tr-badge">' + escapeHtml(({ chat:"Chat", code:"Code", studio:"Studio", agent:"Agent" })[it.mode] || it.mode) + '</span>' +
+        (it.model ? '<span class="tr-badge">' + escapeHtml(modelName ? (modelName(it.model) || it.model) : it.model) + '</span>' : "") +
+        (it.verified ? '<span class="tr-badge is-ver" title="Signed by elorahub — this is exactly what elora wrote"><svg class="ec-i" aria-hidden="true"><use href="#i-check"/></svg>Verified</span>' : '<span class="tr-badge" title="Couldn\'t confirm elora wrote this exact text (for example a chat restored from another device)">Unverified</span>') +
+        '<span class="tr-badge" title="Automatic quality estimate">Quality ' + Math.round((it.quality || 0) * 100) + '%</span>' +
+        (it.reasons || []).map(function(r){ return '<span class="tr-badge">' + escapeHtml(REASON_LABEL[r] || r) + '</span>'; }).join("") +
+        '<span class="tr-item-time">' + escapeHtml(when) + '</span>' +
+      '</div>' +
+      (lastUser ? '<div class="tr-q">' + escapeHtml(lastUser.content.slice(0, 600)) + (lastUser.content.length > 600 ? "…" : "") + '</div>' : "") +
+      (it.improved ? '<span class="tr-a-label">Better answer (training target)</span><div class="tr-a is-improved">' + escapeHtml(it.improved) + '</div><span class="tr-a-label">elora\'s original</span>' : '<span class="tr-a-label">elora\'s answer</span>') +
+      '<div class="tr-a">' + escapeHtml(it.reply || "") + '</div>' +
+      (it.rejected ? '<span class="tr-a-label">Earlier answer the user replaced with “Try again”</span><div class="tr-a">' + escapeHtml(it.rejected) + '</div>' : "") +
+      (msgs.length > 1 ? '<details><summary>Show the whole conversation (' + msgs.length + ' messages)</summary><div class="tr-convo">' + msgs.map(function(m){ return '<div><b>' + (m.role === "user" ? "User" : "elora") + '</b>' + escapeHtml(m.content) + '</div>'; }).join("") + '</div></details>' : "") +
+      '<div class="tr-actions">' +
+        (it.status !== "approved" ? '<button type="button" class="btn btn-primary" data-tr-act="approved">Approve</button>' : "") +
+        '<button type="button" class="btn" data-tr-act="edit">' + (it.improved ? "Edit better answer" : "Fix the answer") + '</button>' +
+        (it.status !== "rejected" ? '<button type="button" class="btn" data-tr-act="rejected">Reject</button>' : "") +
+        (it.status !== "pending" ? '<button type="button" class="btn" data-tr-act="pending">Back to queue</button>' : "") +
+      '</div></div>';
+  }
+  async function loadTrainQueue(reset){
+    var box = document.getElementById("trQueue"), more = document.getElementById("trMore");
+    if(!box) return;
+    if(reset){ trainAdmin.next = 0; box.innerHTML = '<div class="tr-empty">Loading…</div>'; }
+    var url = "/api/admin/training?view=queue&status=" + trainAdmin.status + "&offset=" + (trainAdmin.next || 0) + (trainAdmin.rating ? "&rating=" + trainAdmin.rating : "");
+    try {
+      var r = await adminFetch(url);
+      var d = await r.json();
+      if(!r.ok){ box.innerHTML = '<div class="tr-empty">' + escapeHtml(d.message || d.error || "Couldn't load the queue.") + '</div>'; return; }
+      if(reset) box.innerHTML = "";
+      if(reset && !d.items.length) box.innerHTML = '<div class="tr-empty">' + (trainAdmin.status === "pending" ? "Nothing waiting. New shared conversations appear here as people rate replies." : "Nothing here yet.") + '</div>';
+      var items = {};
+      d.items.forEach(function(it){ items[it.id] = it; box.insertAdjacentHTML("beforeend", trainItemHtml(it)); });
+      box.querySelectorAll(".tr-item:not([data-bound])").forEach(function(card){
+        card.setAttribute("data-bound", "1");
+        var it = items[card.getAttribute("data-tr-id")];
+        card.addEventListener("click", function(e){
+          var b = e.target.closest("[data-tr-act]"); if(!b || !it) return;
+          var act = b.getAttribute("data-tr-act");
+          if(act === "edit"){
+            if(card.querySelector(".tr-edit")) return;
+            var ta = document.createElement("textarea");
+            ta.className = "tr-edit"; ta.value = it.improved || it.reply || "";
+            ta.setAttribute("aria-label", "Better answer");
+            var row = document.createElement("div"); row.className = "tr-actions";
+            row.innerHTML = '<button type="button" class="btn btn-primary" data-tr-act="save">Save &amp; approve</button><button type="button" class="btn" data-tr-act="cancel">Cancel</button>';
+            card.appendChild(ta); card.appendChild(row); ta.focus();
+            return;
+          }
+          if(act === "cancel"){ var t = card.querySelector(".tr-edit"); if(t) t.remove(); b.parentNode.remove(); return; }
+          var body = { id: it.id, status: act === "save" ? "approved" : act };
+          if(act === "save") body.improved = card.querySelector(".tr-edit").value;
+          card.querySelectorAll("button").forEach(function(x){ x.disabled = true; });
+          adminFetch("/api/admin/training", { method:"POST", body: JSON.stringify(body) }).then(function(res){
+            return res.json().catch(function(){ return {}; }).then(function(out){
+              if(!res.ok){ showToast(out.message || out.error || "Couldn't save that."); card.querySelectorAll("button").forEach(function(x){ x.disabled = false; }); return; }
+              showToast(body.status === "approved" ? "Approved — it's in the training set." : body.status === "rejected" ? "Rejected — it won't be used." : "Moved back to the queue.");
+              card.classList.add("is-gone");
+              setTimeout(function(){ card.remove(); if(!box.querySelector(".tr-item")) loadTrainingAdmin(); }, 260);
+              refreshTrainCounts();
+            });
+          });
+        });
+      });
+      trainAdmin.next = d.next;
+      if(more) more.style.display = d.next == null ? "none" : "";
+    } catch(e){ box.innerHTML = '<div class="tr-empty">Couldn\'t reach the server.</div>'; }
+  }
+  async function refreshTrainCounts(){
+    try {
+      var r = await adminFetch("/api/admin/training?view=stats");
+      var d = await r.json(); if(!r.ok || d.setup === false) return;
+      trainAdmin.stats = d;
+      var segs = document.querySelectorAll("[data-tr-status]");
+      var label = { pending:"Waiting (" + fmtN(d.pending) + ")", approved:"Approved (" + fmtN(d.approved) + ")", rejected:"Rejected (" + fmtN(d.rejected) + ")" };
+      segs.forEach(function(b){ b.textContent = label[b.getAttribute("data-tr-status")]; });
+      var num = document.querySelector(".tr-hero-num");
+      if(num) num.innerHTML = fmtN(d.sft.approved) + " <small>approved training examples</small>";
+      var fill = document.querySelector(".tr-meter-fill");
+      if(fill) fill.style.setProperty("--p", Math.min(100, Math.sqrt(d.sft.approved / 5000) * 100).toFixed(1) + "%");
+    } catch(e){}
+  }
+  async function exportTraining(){
+    var btn = document.getElementById("trExport"), note = document.getElementById("trExportNote");
+    var format = document.getElementById("trFormat").value, scope = document.getElementById("trScope").value;
+    btn.disabled = true;
+    var parts = [], total = 0, offset = 0, guard = 0;
+    try {
+      while(offset != null && guard++ < 200){
+        note.textContent = "Preparing… " + fmtN(total) + " so far";
+        var r = await adminFetch("/api/admin/training?view=export&format=" + format + "&scope=" + scope + "&offset=" + offset);
+        var d = await r.json();
+        if(!r.ok) throw new Error(d.message || d.error || "export failed");
+        if(d.lines) parts.push(d.lines);
+        total += d.count || 0;
+        offset = d.next;
+      }
+      if(!total){ note.textContent = scope === "approved" ? "Nothing approved yet — approve some examples first, or choose “Everything not rejected”." : "No usable examples yet."; return; }
+      var blob = new Blob(parts, { type:"application/jsonl" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "elora-" + (format === "dpo" ? "preference-pairs" : "training-examples") + "-" + new Date().toISOString().slice(0, 10) + ".jsonl";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      note.textContent = "Downloaded " + fmtN(total) + " " + (format === "dpo" ? "pairs" : "examples") + " (" + (blob.size / 1048576).toFixed(2) + " MB).";
+    } catch(e){
+      note.textContent = "Export failed: " + (e.message || "try again.");
+    } finally { btn.disabled = false; }
+  }
+
   document.querySelectorAll(".owner-tabs button").forEach(function(btn){
     btn.addEventListener("click", function(){
       document.querySelectorAll(".owner-tabs button").forEach(function(b){ b.classList.remove("is-active"); });
@@ -12165,6 +12810,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       // console visit whether you look at them or not.
       if(target === "users") loadUsers();
       if(target === "analytics") loadAnalytics();
+      if(target === "training") loadTrainingAdmin();
       if(target === "announcement") loadBanner();
       if(target === "status") loadStatus();
     });

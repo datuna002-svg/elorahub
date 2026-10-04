@@ -14,6 +14,7 @@ import { handleImage, rewriteImageLinks } from "./_lib/images.js";
 import { CAPABILITIES, pickSkills, skillGuide, isHeavy, prefersGemini } from "./_lib/skills.js";
 import { research, readLinks, sourcesContext, appendSources, wantsResearch, hostOf, searchDiag } from "./_lib/research.js";
 import { normalizeMode, codeModeGuide, CODE_REVIEW_SYSTEM, studioModeGuide, AGENT_PLAN_GUIDE, AGENT_STEP_GUIDE } from "./_lib/modes.js";
+import { signReply } from "./_lib/training.js";
 
 // Live progress: when the browser asks for it (body.stream), the reply is
 // sent as newline-delimited JSON — {"type":"step"} lines while elora works,
@@ -729,7 +730,7 @@ async function runTaskPhase(res, ctx) {
     if (updated && updated.trim() && updated !== memorySummary) await saveUserMemory(email, updated);
   }
   const finalTaskReply = prevSources.length ? appendSources(normalizeFences(result.reply), prevSources) : normalizeFences(result.reply);
-  return res.status(200).json({ reply: finalTaskReply, provider: result.label, sources: prevSources.length ? prevSources.map((x, k) => ({ n: k + 1, title: x.title, url: x.url, site: x.site })) : undefined });
+  return res.status(200).json({ reply: finalTaskReply, sig: signReply(finalTaskReply), provider: result.label, sources: prevSources.length ? prevSources.map((x, k) => ({ n: k + 1, title: x.title, url: x.url, site: x.site })) : undefined });
 }
 
 async function taskFailure(res, failures) {
@@ -1208,6 +1209,7 @@ async function chatHandler(req, res) {
   if (sources.length) finalReply = appendSources(finalReply, sources);
   return res.status(200).json({
     reply: finalReply,
+    sig: signReply(finalReply),
     sources: sources.length ? sources.map((x, i) => ({ n: i + 1, title: x.title, url: x.url, site: x.site })) : undefined,
     research: researchNote || undefined,
     fallbacks: failures.length ? describeFailures(failures) : undefined,

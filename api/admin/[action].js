@@ -16,8 +16,9 @@ import roles from "../_admin/roles.js";
 import status from "../_admin/status.js";
 import users from "../_admin/users.js";
 import whoami from "../_admin/whoami.js";
+import training from "../_lib/training.js";
 
-const routes = { analytics, logs, overview, roles, status, users, whoami };
+const routes = { analytics, logs, overview, roles, status, users, whoami, training };
 
 export default async function handler(req, res) {
   const action = String(req.query?.action || "");
