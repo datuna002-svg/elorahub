@@ -4213,6 +4213,152 @@ html[data-ec-theme="light"][data-ec-mode="agent"] #chatThread .ec-welcome::befor
 .ec-brain-pulse{ stroke:#c8ffe0; stroke-width:1.9; stroke-dasharray:2.6 8.4; animation:ec-brain-flow 1.25s linear infinite; filter:drop-shadow(0 0 1.5px #3ddc84) drop-shadow(0 0 4px rgba(61,220,132,.9)); }
 @keyframes ec-brain-flow{ to{ stroke-dashoffset:-22; } }
 @keyframes ec-brain-breathe{ 0%,100%{ opacity:.55; transform:scale(.88); } 50%{ opacity:1; transform:scale(1.06); } }
+/* ================================================================
+   STUDIO — a creative workspace: pick what to make up top, each
+   creation shows as an info card + a big result card, and the
+   composer carries the size / style / count controls.
+   ================================================================ */
+.st-switch,.st-tools,.st-credits{ display:none; }
+html[data-ec-mode="studio"] .st-switch{ display:flex; }
+html[data-ec-mode="studio"] .st-tools:not([hidden]){ display:flex; }
+html[data-ec-mode="studio"] .st-credits:not([hidden]){ display:inline-flex; }
+html[data-ec-mode="studio"] #modeCtxBar,html[data-ec-mode="studio"] #taskToggle,html[data-ec-mode="studio"] .ec-mode-wrap{ display:none!important; }
+html[data-ec-mode="studio"] .ec-title-wrap{ max-width:calc(50% - 200px); }
+
+.st-switch{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:6; align-items:center; gap:2px; padding:4px; border:1px solid var(--ec-line); border-radius:15px; background:var(--ec-raised); box-shadow:0 10px 30px -10px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04); }
+.st-switch button{ position:relative; z-index:1; width:42px; height:36px; display:grid; place-items:center; padding:0; border:0; border-radius:11px; background:transparent; color:var(--ec-text-2); cursor:pointer; transition:color .25s; }
+.st-switch button:hover{ color:var(--ec-text); }
+.st-switch button .ec-i{ width:19px; height:19px; transition:transform .3s cubic-bezier(.3,1.6,.5,1); }
+.st-switch button:active .ec-i{ transform:scale(.88); }
+.st-switch button.is-on{ color:var(--ec-on-accent); }
+.st-switch button.is-on .ec-i{ transform:scale(1.04); }
+.st-glider{ position:absolute; top:4px; left:0; width:42px; height:36px; border-radius:11px; background:var(--ec-accent); box-shadow:0 4px 16px -4px rgba(255,255,255,.28); opacity:0; transition:transform .42s cubic-bezier(.3,1.25,.4,1),width .42s,opacity .2s; }
+.st-switch.is-ready .st-glider{ opacity:1; }
+.st-switch-sep{ width:1px; height:20px; margin:0 4px; background:var(--ec-line-2); }
+.st-switch button::after{ content:attr(data-tip); position:absolute; top:calc(100% + 10px); left:50%; z-index:9; padding:5px 9px; border-radius:8px; background:var(--ec-accent); color:var(--ec-on-accent); font:650 12px var(--ec-font); white-space:nowrap; opacity:0; pointer-events:none; transform:translate(-50%,-4px); transition:opacity .15s,transform .15s; }
+.st-switch button:hover::after,.st-switch button:focus-visible::after{ opacity:1; transform:translate(-50%,0); }
+@media (max-width:1180px){
+  html[data-ec-mode="studio"] .st-switch{ top:calc(100% + 4px); transform:translateX(-50%); }
+  html[data-ec-mode="studio"] .ec-title-wrap{ max-width:none; }
+  html[data-ec-mode="studio"] .ec-scroll,html[data-ec-mode="studio"] .st-lib{ padding-top:58px; }
+  .ec-msg.st-gen{ scroll-margin-top:62px; }
+}
+@media (max-width:420px){ .st-switch button{ width:37px; } .st-glider{ width:37px; } .st-switch-sep{ margin:0 2px; } }
+
+/* composer controls */
+.st-tools{ align-items:center; gap:2px; min-width:0; }
+.st-tool{ height:34px; min-width:34px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:0 9px; border:0; border-radius:10px; background:transparent; color:var(--ec-text-2); font:650 13px var(--ec-font); white-space:nowrap; cursor:pointer; transition:background .15s,color .15s; }
+.st-tool:hover,.st-tool[aria-expanded="true"]{ background:var(--ec-hover); color:var(--ec-text); }
+.st-tool .ec-i{ width:17px; height:17px; flex:none; }
+.st-tool.is-set{ color:var(--ec-text); }
+.st-tool .st-tool-caret{ width:13px; height:13px; opacity:.6; }
+.st-tool-sep{ width:1px; height:18px; margin:0 4px; background:var(--ec-line-2); }
+.st-tool-pill{ padding:0 10px 0 8px; border:1px solid var(--ec-line-2); border-radius:999px; height:32px; margin-left:2px; }
+.st-credits{ align-items:center; gap:6px; height:32px; margin-right:6px; padding:0 11px; border-radius:10px; background:rgba(61,220,132,.1); color:var(--ec-green); font:750 13.5px var(--ec-font); }
+.st-credits .ec-i{ width:16px; height:16px; }
+@media (max-width:620px){ .st-tool[data-ctx="studioStyle"] .st-tool-label{ display:none; } .st-tool{ padding:0 7px; } .st-tool-sep{ display:none; } .st-credits{ padding:0 8px; } }
+
+/* the feed: info card + result */
+html[data-ec-mode="studio"] .ec-thread{ max-width:min(1140px,100%); gap:22px; }
+.ec-msg.is-user:has(+ .st-gen),.ec-msg.is-user:has(+ .st-typing){ display:none; }
+.ec-msg.st-gen{ display:grid; grid-template-columns:minmax(220px,272px) minmax(0,1fr); column-gap:16px; row-gap:12px; align-items:start; }
+.st-gen > .st-info{ grid-column:1; grid-row:1 / span 40; position:sticky; top:8px; }
+.st-gen > :not(.st-info){ grid-column:2; min-width:0; }
+.st-info{ display:flex; flex-direction:column; gap:12px; min-height:200px; padding:16px 16px 12px; border:1px solid var(--ec-line); border-radius:22px; background:linear-gradient(180deg,var(--ec-raised),var(--ec-bg)); font-family:var(--ec-font); box-shadow:0 18px 50px -34px rgba(0,0,0,.9); animation:ec-in .3s ease both; }
+.st-info-top{ display:flex; align-items:center; gap:9px; min-width:0; font-size:13.5px; }
+.st-mark{ width:26px; height:26px; flex:none; display:grid; place-items:center; border-radius:8px; background:var(--ec-raised-2); border:1px solid var(--ec-line); color:var(--ec-text); }
+.st-mark .ec-i{ width:15px; height:15px; }
+.st-info-top b{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ec-text); font-weight:750; }
+.st-info-top small{ flex:none; color:var(--ec-text-3); font-size:12px; font-variant-numeric:tabular-nums; }
+.st-prompt{ margin:0; color:var(--ec-text); font-size:14px; line-height:1.55; overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:7; -webkit-box-orient:vertical; overflow:hidden; cursor:text; }
+.st-prompt.is-open{ display:block; }
+.st-notes{ color:var(--ec-text-2); font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
+.st-notes:not(.is-open){ display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.st-notes p,.st-notes ul,.st-notes ol{ margin:0 0 6px; }
+.st-notes ul,.st-notes ol{ padding-left:18px; }
+.st-notes h1,.st-notes h2,.st-notes h3,.st-notes h4{ margin:0 0 4px; font-size:13px; }
+.st-more{ align-self:flex-start; margin-top:-6px; padding:0; border:0; background:none; color:var(--ec-text-3); font:650 12px var(--ec-font); cursor:pointer; }
+.st-more:hover{ color:var(--ec-text); }
+.st-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; padding-top:2px; }
+.st-chip{ height:24px; display:inline-flex; align-items:center; padding:0 9px; border-radius:7px; background:var(--ec-raised-2); border:1px solid var(--ec-line); color:var(--ec-text); font:750 11.5px var(--ec-font); letter-spacing:.03em; text-transform:uppercase; }
+.st-info .ec-actions{ opacity:1; flex-wrap:wrap; margin:0 -6px -2px; padding-top:8px; border-top:1px solid var(--ec-line); }
+.st-info .ec-thought,.st-info .ec-steps{ margin:0; }
+.st-gen > .ec-msg-text{ display:grid; gap:14px; align-content:start; }
+.st-gen > .ec-msg-text.is-multi{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+.st-gen > .ec-msg-text > :not(figure){ grid-column:1 / -1; }
+.st-gen .ec-gen,.st-gen .ec-x{ margin:0; max-width:none; border-radius:22px; background:var(--ec-raised); box-shadow:0 24px 60px -36px rgba(0,0,0,.95); animation:st-pop .55s cubic-bezier(.2,.9,.3,1.1) both; }
+.st-gen .ec-msg-text > figure:nth-child(2){ animation-delay:.08s; } .st-gen .ec-msg-text > figure:nth-child(3){ animation-delay:.16s; } .st-gen .ec-msg-text > figure:nth-child(4){ animation-delay:.24s; }
+.st-gen .ec-gen-frame{ max-height:min(72vh,760px); }
+.st-gen .ec-x.ec-anim{ justify-self:start; }
+@keyframes st-pop{ from{ opacity:0; transform:translateY(10px) scale(.985); filter:blur(6px); } }
+.st-gen > .ec-followups{ margin-top:0; }
+.ec-msg.st-gen{ scroll-margin-top:12px; }
+.st-gen .ec-gen-cap{ display:none; }
+.st-gen .ec-svgcard{ display:block; width:min(100%,440px); margin:0; }
+.st-gen .is-multi > .ec-svgcard,.st-tile .ec-svgcard{ display:block; width:100%; margin:0; }
+.st-gen .ec-gen figcaption{ justify-content:flex-end; }
+.st-gen figcaption,.st-tile figcaption{ flex-wrap:wrap; row-gap:8px; }
+.st-gen .ec-x-cap,.st-tile .ec-x-cap{ flex:1 1 120px; }
+.st-gen .ec-x-cap em,.st-tile .ec-x-cap em{ white-space:nowrap; }
+.st-gen .ec-x-acts,.st-tile .ec-x-acts{ flex:1 1 auto; }
+.st-gen > .ec-fb{ margin-top:0; }
+
+/* while it's being made */
+.st-pending .st-info .ec-think{ gap:10px; }
+.st-pending .st-info .ec-think-sub{ margin:0!important; }
+.st-pending .st-info .ec-think-list{ margin:0; }
+.st-canvases{ display:grid; gap:14px; }
+.st-canvases.is-multi{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+.st-canvas{ position:relative; overflow:hidden; display:grid; place-items:center; max-width:100%; border:1px solid var(--ec-line); border-radius:22px; background:radial-gradient(55% 55% at 50% 46%,rgba(61,220,132,.09),rgba(61,220,132,0) 70%),var(--ec-raised); box-shadow:0 24px 60px -36px rgba(0,0,0,.95); }
+.st-canvas::before{ content:""; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.2px); background-size:18px 18px; -webkit-mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 80%); mask-image:radial-gradient(70% 70% at 50% 50%,#000 30%,transparent 80%); }
+.st-canvas::after{ content:""; position:absolute; inset:0; background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.06) 50%,transparent 62%); background-size:260% 100%; animation:st-sweep 2.8s linear infinite; }
+@keyframes st-sweep{ from{ background-position:130% 0; } to{ background-position:-130% 0; } }
+.st-sketch{ position:relative; z-index:1; width:min(38%,170px); height:auto; overflow:visible; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.st-sketch *{ stroke:#3ddc84; stroke-width:2.4; stroke-dasharray:1; stroke-dashoffset:1; filter:drop-shadow(0 0 3px rgba(61,220,132,.8)); animation:st-draw 3.8s cubic-bezier(.6,0,.25,1) infinite; animation-delay:calc(var(--i,0) * .2s); }
+.st-sketch .is-ink{ stroke:var(--ec-text); stroke-width:2; filter:none; opacity:.9; }
+@keyframes st-draw{ 0%{ stroke-dashoffset:1; opacity:1; } 42%{ stroke-dashoffset:0; opacity:1; } 82%{ stroke-dashoffset:0; opacity:1; } 100%{ stroke-dashoffset:0; opacity:0; } }
+.st-canvas-label{ position:absolute; z-index:1; left:0; right:0; bottom:16px; text-align:center; color:var(--ec-text-2); font:650 13px var(--ec-font); }
+.st-canvas-label b{ font-weight:650; }
+html.reduce-motion .st-canvas::after,html.reduce-motion .st-gen .ec-gen,html.reduce-motion .st-gen .ec-x,html.reduce-motion .st-info{ animation:none; }
+html.reduce-motion .st-sketch *{ animation:none; stroke-dashoffset:0; }
+
+@media (max-width:760px){
+  .ec-msg.st-gen{ grid-template-columns:minmax(0,1fr); }
+  .st-gen > .st-info{ grid-row:auto; position:static; min-height:0; }
+  .st-gen > :not(.st-info){ grid-column:1; }
+  .st-gen > .ec-msg-text.is-multi,.st-canvases.is-multi{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .st-prompt{ -webkit-line-clamp:3; }
+}
+
+/* library */
+#chatMain.st-lib-open .ec-scroll,#chatMain.st-lib-open .ec-dock{ display:none; }
+.st-lib{ flex:1; min-height:0; overflow-y:auto; padding:18px 24px 40px; font-family:var(--ec-font); animation:ec-in .3s ease both; }
+.st-lib[hidden]{ display:none; }
+.st-lib-head{ display:flex; align-items:flex-end; flex-wrap:wrap; gap:14px; max-width:1180px; margin:0 auto 18px; }
+.st-lib-head h2{ margin:0; color:var(--ec-text); font:800 26px/1.1 var(--ec-font); letter-spacing:-.02em; }
+.st-lib-head p{ margin:4px 0 0; color:var(--ec-text-3); font-size:13.5px; }
+.st-lib-filters{ display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+.st-lib-filters button{ height:32px; display:inline-flex; align-items:center; gap:7px; padding:0 12px; border:1px solid var(--ec-line-2); border-radius:999px; background:transparent; color:var(--ec-text-2); font:650 13px var(--ec-font); cursor:pointer; }
+.st-lib-filters button .ec-i{ width:15px; height:15px; }
+.st-lib-filters button small{ color:var(--ec-text-3); font-size:12px; }
+.st-lib-filters button.is-on{ background:var(--ec-accent); border-color:transparent; color:var(--ec-on-accent); }
+.st-lib-filters button.is-on small{ color:inherit; opacity:.65; }
+.st-lib-grid{ max-width:1180px; margin:0 auto; columns:3 280px; column-gap:16px; }
+.st-tile{ break-inside:avoid; margin:0 0 16px; border:1px solid var(--ec-line); border-radius:20px; background:var(--ec-raised); overflow:hidden; animation:st-pop .5s cubic-bezier(.2,.9,.3,1.1) both; animation-delay:calc(var(--i,0) * 40ms); }
+.st-tile[hidden]{ display:none; }
+.st-tile .ec-gen,.st-tile .ec-x{ margin:0; max-width:none!important; border:0; border-radius:0; background:transparent; }
+.st-tile .ec-gen figcaption .ec-gen-cap{ display:none; }
+.st-tile footer{ display:flex; align-items:center; gap:10px; padding:10px 12px 12px; border-top:1px solid var(--ec-line); }
+.st-tile-prompt{ flex:1; min-width:0; margin:0; color:var(--ec-text-2); font-size:12.5px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.st-tile-open{ flex:none; height:30px; display:inline-flex; align-items:center; gap:6px; padding:0 10px; border:1px solid var(--ec-line-2); border-radius:9px; background:var(--ec-raised-2); color:var(--ec-text); font:650 12.5px var(--ec-font); cursor:pointer; }
+.st-tile-open:hover{ background:var(--ec-active); }
+.st-tile-open .ec-i{ width:14px; height:14px; }
+.st-lib-empty{ max-width:460px; margin:9vh auto 0; display:grid; justify-items:center; gap:12px; text-align:center; color:var(--ec-text-2); }
+.st-lib-empty .ec-brain{ width:56px; height:56px; }
+.st-lib-empty h3{ margin:4px 0 0; color:var(--ec-text); font:750 18px var(--ec-font); }
+.st-lib-empty p{ margin:0; font-size:14px; line-height:1.55; }
+@media (max-width:620px){ .st-lib{ padding:14px 14px 30px; } .st-lib-filters{ margin-left:0; } .st-lib-grid{ columns:2 150px; column-gap:10px; } .st-tile{ margin-bottom:10px; border-radius:16px; } .st-tile .ec-x figcaption,.st-tile .ec-gen figcaption{ flex-wrap:wrap; } }
+
 /* ---- Help train elora: rating card under a reply ---- */
 .ec-act[data-message-reaction]{ position:relative; }
 .ec-act[data-message-reaction="up"].is-selected{ color:var(--ec-green); }
@@ -4603,6 +4749,13 @@ html.reduce-motion .hx2-code .ln{ clip-path:none!important; }
       <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/></symbol>
       <symbol id="i-cap" viewBox="0 0 24 24"><path d="m2.5 9.5 9.5-5 9.5 5-9.5 5zM6.5 11.6V16c1.5 1.5 3.5 2.5 5.5 2.5s4-1 5.5-2.5v-4.4M21.5 9.5V15"/></symbol>
       <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+      <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="9.6" r="1.7"/><path d="m4 17.2 4.6-4.6a1.6 1.6 0 0 1 2.2 0l2.4 2.4M12.4 14.2l1.9-1.9a1.6 1.6 0 0 1 2.2 0l3.5 3.5"/></symbol>
+      <symbol id="i-film" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M7.5 5v14M16.5 5v14M3.5 9.7h4M3.5 14.3h4M16.5 9.7h4M16.5 14.3h4"/></symbol>
+      <symbol id="i-poster" viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 13.5h7M8.5 16.5h4.5"/><path d="M8.5 10.2 10.6 7.6l1.6 1.8 1.2-1.2 2.1 2"/></symbol>
+      <symbol id="i-nib" viewBox="0 0 24 24"><path d="M12 3.5 6.5 9.8 8.8 17h6.4l2.3-7.2z"/><path d="M12 3.5v7.2"/><circle cx="12" cy="12.2" r="1.5"/><path d="M8.5 20.5h7"/></symbol>
+      <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3.5" y="4" width="6.5" height="5" rx="1.4"/><rect x="14" y="4" width="6.5" height="5" rx="1.4"/><rect x="8.75" y="15" width="6.5" height="5" rx="1.4"/><path d="M6.75 9v2.5a1.5 1.5 0 0 0 1.5 1.5h7.5a1.5 1.5 0 0 0 1.5-1.5V9M12 13v2"/></symbol>
+      <symbol id="i-ratio" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M7 9.5v-1h2M17 14.5v1h-2"/></symbol>
+      <symbol id="i-coin" viewBox="0 0 24 24"><ellipse cx="10" cy="8" rx="6" ry="3"/><path d="M4 8v4c0 1.7 2.7 3 6 3s6-1.3 6-3V8"/><path d="M8.5 14.8V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-4c0-1.6-2.3-2.8-5.4-3"/></symbol>
       <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 1.9-.8 1.9-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h2.1a4.2 4.2 0 0 0 4.2-4.2C21 6.7 17 3.5 12 3.5z"/><circle cx="7.6" cy="11.2" r="1.1"/><circle cx="10.4" cy="7.5" r="1.1"/><circle cx="15" cy="7.6" r="1.1"/></symbol>
       <symbol id="i-agent" viewBox="0 0 24 24"><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2"/><circle cx="12" cy="12" r="5.6"/><path d="m12 9.2 1 1.8 1.8 1-1.8 1-1 1.8-1-1.8-1.8-1 1.8-1z"/></symbol>
       <symbol id="i-brain" viewBox="0 0 32 32"><path d="M16 6.6C14.6 5 12 5 10.9 6.6 8.9 6.3 7.2 7.9 7.4 9.9 5.6 10.6 4.9 12.8 5.9 14.4c-1.3 1.2-1.3 3.5.1 4.6-.6 2 .8 4 2.8 4.1.6 1.9 2.6 2.9 4.4 2.2.8 1 2 1.3 2.8.9M16 6.6c1.4-1.6 4-1.6 5.1 0 2-.3 3.7 1.3 3.5 3.3 1.8.7 2.5 2.9 1.5 4.5 1.3 1.2 1.3 3.5-.1 4.6.6 2-.8 4-2.8 4.1-.6 1.9-2.6 2.9-4.4 2.2-.8 1-2 1.3-2.8.9M16 6.6v19.6"/><path d="M10.9 6.6c.7 1.6 2.5 2 3.3 3.4M7.4 9.9c1.2.7 2 1.9 1.8 3.3M5.9 14.4c1.7-.2 3.7.6 4.5 2.2M6 19c1.6-.4 3.4.2 4.2 1.6M8.8 23.1c1-1.3 3-1.5 4.2-.7M21.1 6.6c-.7 1.6-2.5 2-3.3 3.4M24.6 9.9c-1.2.7-2 1.9-1.8 3.3M26.1 14.4c-1.7-.2-3.7.6-4.5 2.2M26 19c-1.6-.4-3.4.2-4.2 1.6M23.2 23.1c-1-1.3-3-1.5-4.2-.7"/></symbol>
@@ -5070,6 +5223,17 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
               <button type="button" role="menuitem" id="forgetMeBtn"><svg class="ec-i"><use href="#i-eraser"/></svg>Forget what elora remembers</button>
             </div>
           </div>
+          <nav class="st-switch" id="studioSwitch" role="tablist" aria-label="What to create">
+            <span class="st-glider" aria-hidden="true"></span>
+            <button type="button" role="tab" data-st-tab="auto" aria-label="Anything" data-tip="Anything"><svg class="ec-i"><use href="#i-wand"/></svg></button>
+            <button type="button" role="tab" data-st-tab="image" aria-label="Image" data-tip="Image"><svg class="ec-i"><use href="#i-image"/></svg></button>
+            <button type="button" role="tab" data-st-tab="design" aria-label="Poster and design" data-tip="Poster &amp; design"><svg class="ec-i"><use href="#i-poster"/></svg></button>
+            <button type="button" role="tab" data-st-tab="video" aria-label="Video and GIF" data-tip="Video &amp; GIF"><svg class="ec-i"><use href="#i-film"/></svg></button>
+            <button type="button" role="tab" data-st-tab="logo" aria-label="Logo and icons" data-tip="Logo &amp; icons"><svg class="ec-i"><use href="#i-nib"/></svg></button>
+            <button type="button" role="tab" data-st-tab="diagram" aria-label="Diagram" data-tip="Diagram"><svg class="ec-i"><use href="#i-flow"/></svg></button>
+            <span class="st-switch-sep" aria-hidden="true"></span>
+            <button type="button" role="tab" data-st-tab="library" aria-label="Library" data-tip="Library"><svg class="ec-i"><use href="#i-folder"/></svg></button>
+          </nav>
           <div class="ec-top-actions">
             <button type="button" class="ec-btn ec-btn-ghost ec-auth" id="chatSignInBtn">Log in</button>
             <button type="button" class="ec-btn ec-btn-solid ec-auth" id="chatSignUpBtn">Sign up</button>
@@ -5089,6 +5253,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
               </section>
             </div>
           </div>
+          <section class="st-lib" id="studioLibrary" hidden aria-labelledby="studioLibTitle"></section>
 
           <div class="ec-dock">
             <div class="ec-ctxbar" id="modeCtxBar" hidden></div>
@@ -5113,8 +5278,10 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
                     <button type="button" role="menuitem" id="composerOptionsBtn"><svg class="ec-i"><use href="#i-sliders"/></svg>Reply settings</button>
                   </div>
                 </div>
+                <div class="st-tools" id="studioTools" hidden></div>
                 <button type="button" class="ec-task-toggle" id="taskToggle" aria-pressed="false" title="Run as a multi-step task"><svg class="ec-i"><use href="#i-bolt"/></svg><span>Task</span></button>
                 <span class="ec-spacer"></span>
+                <span class="st-credits" id="studioCredits" hidden></span>
                 <div class="mode-picker ec-mode-wrap">
                   <button type="button" class="ec-mode" id="modePickerTrigger" aria-haspopup="menu" aria-expanded="false" aria-controls="modePickerMenu" title="Reply mode"><span id="modePickerLabel">Balanced</span><svg class="ec-i"><use href="#i-chevron-down"/></svg></button>
                   <div class="ec-pop ec-pop-up ec-pop-right ec-pop-modes" id="modePickerMenu" role="menu" aria-label="Reply mode" hidden>
@@ -7857,7 +8024,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
   function ctxValue(key){
     var p = chatPreferences;
     if(key === "webMode") return p.webSearch === false ? "off" : (p.webMode || "auto");
-    if(key === "studioType") return (p.studio && p.studio.type) || "auto";
+    if(key === "studioType" || key === "studioSub") return (p.studio && p.studio.type) || "auto";
     if(key === "studioAspect") return (p.studio && p.studio.aspect) || "auto";
     if(key === "studioStyle") return (p.studio && p.studio.style) || "auto";
     if(key === "studioCount") return String((p.studio && p.studio.count) || 1);
@@ -7871,7 +8038,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     var p = chatPreferences;
     p.studio = p.studio && typeof p.studio === "object" ? p.studio : {};
     if(key === "webMode"){ p.webSearch = v !== "off"; p.webMode = v === "off" ? "auto" : v; var tg = document.getElementById("webSearchToggle"); if(tg) tg.checked = p.webSearch; }
-    else if(key === "studioType") p.studio.type = v;
+    else if(key === "studioType" || key === "studioSub") p.studio.type = v;
     else if(key === "studioAspect") p.studio.aspect = v;
     else if(key === "studioStyle") p.studio.style = v;
     else if(key === "studioCount") p.studio.count = Number(v) || 1;
@@ -7904,10 +8071,11 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     });
     bar.innerHTML = html;
     bar.hidden = false;
+    renderStudioChrome();
   }
-  function closeCtxMenu(){ var m = document.getElementById("ctxMenu"); if(m) m.remove(); document.querySelectorAll(".ec-ctx-chip[aria-expanded='true']").forEach(function(b){ b.setAttribute("aria-expanded", "false"); }); }
+  function closeCtxMenu(){ var m = document.getElementById("ctxMenu"); if(m) m.remove(); document.querySelectorAll(".ec-ctx-chip[aria-expanded='true'],.st-tool[aria-expanded='true']").forEach(function(b){ b.setAttribute("aria-expanded", "false"); }); }
   function openCtxMenu(btn){
-    var key = btn.getAttribute("data-ctx"), o = CTX_OPTIONS[key], v = ctxValue(key);
+    var key = btn.getAttribute("data-ctx"), o = key === "studioSub" ? studioSubOptions() : CTX_OPTIONS[key], v = ctxValue(key);
     closeCtxMenu();
     var menu = document.createElement("div");
     menu.className = "ec-pop ec-ctx-menu"; menu.id = "ctxMenu"; menu.setAttribute("role", "menu");
@@ -7928,12 +8096,341 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     });
   }
   document.addEventListener("click", function(e){
-    var chip = e.target.closest && e.target.closest(".ec-ctx-chip[data-ctx]");
+    var chip = e.target.closest && e.target.closest(".ec-ctx-chip[data-ctx],.st-tool[data-ctx]");
     if(chip){ if(chip.getAttribute("aria-expanded") === "true") closeCtxMenu(); else openCtxMenu(chip); return; }
     var tg = e.target.closest && e.target.closest("[data-ctx-toggle]");
     if(tg){ var k = tg.getAttribute("data-ctx-toggle"), t = CTX_TOGGLES[k], on = chatPreferences[k] == null ? t.def : chatPreferences[k] !== false; chatPreferences[k] = !on; saveChatPreferences(); renderCtxBar(); showToast(t.label + (on ? " off" : " on")); return; }
     if(!(e.target.closest && e.target.closest("#ctxMenu"))) closeCtxMenu();
   });
+
+  /* ---------------- Studio workspace ----------------
+     What to make (top switcher) → each creation as an info card + a big
+     result card → composer with size / style / count. Uses the same
+     replies and rich cards as chat; this only changes how Studio looks
+     and how its settings are picked. */
+  var STUDIO_TABS = {
+    auto:    { type:"auto",    label:"Anything",        ph:"Describe what to create — a picture, poster, video, logo…", make:"Creating" },
+    image:   { type:"image",   label:"Image",           ph:"Describe your image…", make:"Painting your image" },
+    design:  { type:"poster",  label:"Poster & design", ph:"Describe your poster, thumbnail or post…", make:"Laying out your design", subs:["poster","thumbnail","social"] },
+    video:   { type:"video",   label:"Video & GIF",     ph:"Describe your video or GIF…", make:"Animating your video", subs:["video","gif"] },
+    logo:    { type:"logo",    label:"Logo & icons",    ph:"Describe your brand or icon set…", make:"Sketching concepts", subs:["logo","icon"] },
+    diagram: { type:"diagram", label:"Diagram",         ph:"Describe the flow, process or idea to map…", make:"Drawing your diagram" }
+  };
+  var STUDIO_RATIO = { square:[1,1], landscape:[16,9], portrait:[9,16], tall:[4,5] };
+  var STUDIO_TYPE_RATIO = { auto:[1,1], image:[1,1], poster:[4,5], thumbnail:[16,9], social:[4,5], video:[16,9], gif:[1,1], logo:[1,1], icon:[1,1], diagram:[16,10] };
+  var studioLibOpen = false, lastStudioSnap = null;
+  function studioPrefs(){ var p = chatPreferences.studio && typeof chatPreferences.studio === "object" ? chatPreferences.studio : (chatPreferences.studio = {}); return p; }
+  function studioTabOf(type){
+    type = type || "auto";
+    for(var k in STUDIO_TABS){ if(STUDIO_TABS[k].type === type || (STUDIO_TABS[k].subs && STUDIO_TABS[k].subs.indexOf(type) > -1)) return k; }
+    return "auto";
+  }
+  function studioSnapshot(){ var p = studioPrefs(); return { type: p.type || "auto", aspect: p.aspect || "auto", style: p.style || "auto", count: Number(p.count) || 1 }; }
+  function studioRatio(snap){ return (snap.aspect && STUDIO_RATIO[snap.aspect]) || STUDIO_TYPE_RATIO[snap.type] || [1,1]; }
+  function ratioLabel(w, h){
+    w = Number(w); h = Number(h);
+    if(!w || !h) return "";
+    var known = [[1,1],[16,9],[9,16],[4,5],[5,4],[3,2],[2,3],[4,3],[3,4],[21,9],[16,10]];
+    var r = w / h, best = null;
+    known.forEach(function(k){ var d = Math.abs(k[0] / k[1] - r); if(!best || d < best.d) best = { d:d, k:k }; });
+    return best && best.d < 0.03 ? best.k[0] + ":" + best.k[1] : w + "×" + h;
+  }
+  function itemLabel(key, v){ var o = CTX_OPTIONS[key]; var it = o && o.items.filter(function(x){ return x[0] === v; })[0]; return it ? it[1] : v; }
+  function studioSubOptions(){
+    var tab = studioTabOf(studioPrefs().type);
+    var subs = (STUDIO_TABS[tab] && STUDIO_TABS[tab].subs) || [];
+    return { label: STUDIO_TABS[tab].label, icon:"layers", items: CTX_OPTIONS.studioType.items.filter(function(it){ return subs.indexOf(it[0]) > -1; }) };
+  }
+  function studioPlaceholder(empty){
+    var tab = STUDIO_TABS[studioTabOf(studioPrefs().type)];
+    return empty ? tab.ph : "Ask for a variation, a new format or a change…";
+  }
+
+  // ---- top switcher ----
+  var studioSwitch = document.getElementById("studioSwitch");
+  function moveStudioGlider(){
+    if(!studioSwitch) return;
+    var on = studioSwitch.querySelector("button.is-on"), g = studioSwitch.querySelector(".st-glider");
+    if(!on || !g || !on.offsetWidth) return;
+    g.style.width = on.offsetWidth + "px";
+    g.style.transform = "translateX(" + on.offsetLeft + "px)";
+    studioSwitch.classList.add("is-ready");
+  }
+  function renderStudioSwitch(){
+    if(!studioSwitch) return;
+    var active = studioLibOpen ? "library" : studioTabOf(studioPrefs().type);
+    studioSwitch.querySelectorAll("[data-st-tab]").forEach(function(b){ var on = b.getAttribute("data-st-tab") === active; b.classList.toggle("is-on", on); b.setAttribute("aria-selected", String(on)); });
+    requestAnimationFrame(moveStudioGlider);
+  }
+  if(studioSwitch){
+    studioSwitch.addEventListener("click", function(e){
+      var b = e.target.closest("[data-st-tab]"); if(!b) return;
+      var tab = b.getAttribute("data-st-tab");
+      if(tab === "library"){ if(studioLibOpen) closeStudioLibrary(); else openStudioLibrary(); return; }
+      closeStudioLibrary();
+      var p = studioPrefs();
+      if(studioTabOf(p.type) !== tab){ p.type = STUDIO_TABS[tab].type; saveChatPreferences(); }
+      renderCtxBar();
+      if(chatInput && window.innerWidth > 760) chatInput.focus();
+    });
+    window.addEventListener("resize", moveStudioGlider);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(moveStudioGlider);
+    // The switcher has no size while the chat page is hidden; place the
+    // highlight as soon as it becomes visible.
+    if("ResizeObserver" in window) new ResizeObserver(function(){ moveStudioGlider(); }).observe(studioSwitch);
+  }
+
+  // ---- composer controls ----
+  function renderStudioTools(){
+    var box = document.getElementById("studioTools");
+    if(!box) return;
+    var on = currentMode() === "studio";
+    box.hidden = !on;
+    if(!on) return;
+    var snap = studioSnapshot(), tab = studioTabOf(snap.type), subs = STUDIO_TABS[tab].subs;
+    var ratio = snap.aspect === "auto" ? "Auto" : ratioLabel(STUDIO_RATIO[snap.aspect][0], STUDIO_RATIO[snap.aspect][1]);
+    var html = '<button type="button" class="st-tool" data-st-ref="1" title="Add a reference image" aria-label="Add a reference image">' + icon("image") + '</button><span class="st-tool-sep" aria-hidden="true"></span>';
+    if(subs) html += '<button type="button" class="st-tool st-tool-pill is-set" data-ctx="studioSub" aria-haspopup="menu" aria-expanded="false" title="Format">' + '<span>' + escapeHtml(itemLabel("studioType", snap.type)) + '</span>' + '<svg class="ec-i st-tool-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>';
+    html += '<button type="button" class="st-tool' + (snap.aspect !== "auto" ? " is-set" : "") + '" data-ctx="studioAspect" aria-haspopup="menu" aria-expanded="false" title="Size — ' + escapeAttr(itemLabel("studioAspect", snap.aspect)) + '" aria-label="Size: ' + escapeAttr(ratio) + '">' + icon("ratio") + '<span class="st-tool-label">' + escapeHtml(ratio) + '</span></button>';
+    html += '<button type="button" class="st-tool' + (snap.style !== "auto" ? " is-set" : "") + '" data-ctx="studioStyle" aria-haspopup="menu" aria-expanded="false" title="Style" aria-label="Style: ' + escapeAttr(itemLabel("studioStyle", snap.style)) + '">' + icon("spark") + (snap.style !== "auto" ? '<span class="st-tool-label">' + escapeHtml(itemLabel("studioStyle", snap.style)) + '</span>' : "") + '</button>';
+    html += '<button type="button" class="st-tool' + (snap.count > 1 ? " is-set" : "") + '" data-ctx="studioCount" aria-haspopup="menu" aria-expanded="false" title="How many versions" aria-label="Versions: ' + snap.count + '">' + icon("layers") + '<span>' + snap.count + '</span></button>';
+    box.innerHTML = html;
+  }
+  document.addEventListener("click", function(e){
+    var ref = e.target.closest && e.target.closest("[data-st-ref]");
+    if(ref){ var pick = document.querySelector('[data-attach-action="files"]'); if(pick) pick.click(); }
+  });
+  function renderStudioCredits(){
+    var el = document.getElementById("studioCredits");
+    if(!el) return;
+    var show = currentMode() === "studio" && planInfo && (planInfo.unlimited || planInfo.creditsRemaining != null);
+    el.hidden = !show;
+    if(!show) return;
+    var n = planInfo.unlimited ? "∞" : String(planInfo.creditsRemaining);
+    el.innerHTML = icon("coin") + "<span>" + escapeHtml(n) + "</span>";
+    el.title = planInfo.unlimited ? "Unlimited creations on your plan" : planInfo.creditsRemaining + " messages left on your plan";
+  }
+  function renderStudioChrome(){
+    var studio = currentMode() === "studio";
+    if(!studio && studioLibOpen) closeStudioLibrary();
+    renderStudioTools();
+    renderStudioCredits();
+    if(studio){
+      renderStudioSwitch();
+      if(chatInput) chatInput.placeholder = studioPlaceholder(chatMain ? chatMain.classList.contains("is-empty") : true);
+    }
+  }
+
+  // ---- a creation: info card + result ----
+  function studioMediaInfo(fig){
+    if(fig.classList.contains("ec-gen")) return { ratio: ratioLabel(fig.getAttribute("data-w"), fig.getAttribute("data-h")), fmt:"Image" };
+    var raw = (fig.querySelector("textarea.ec-x-raw") || {}).value || "";
+    if(fig.classList.contains("ec-anim")){
+      var c = animConfig(splitAnimSpec(raw).cfg);
+      return fig.classList.contains("is-still") ? { ratio: ratioLabel(c.width, c.height), fmt:"PNG" } : { ratio: ratioLabel(c.width, c.height), fmt:"MP4", extra: c.duration + "s" };
+    }
+    if(fig.classList.contains("ec-svgcard")) return { ratio:"", fmt:"SVG", extra:"Vector" };
+    if(fig.classList.contains("ec-diagram")) return { ratio:"", fmt:"SVG", extra:"Diagram" };
+    return { ratio:"", fmt:"" };
+  }
+  function studioTopHtml(msg){
+    var model = msg.dataset.model ? modelName(msg.dataset.model) : "elora Studio";
+    var secs = msg.dataset.secs ? msg.dataset.secs + "s" : "";
+    return '<span class="st-mark">' + icon("palette") + '</span><b>' + escapeHtml(model) + '</b>' + (secs ? '<small>' + escapeHtml(secs) + '</small>' : "");
+  }
+  function studioChipsHtml(msg, figs){
+    var chips = [], add = function(t){ t = String(t || "").trim(); if(t && chips.indexOf(t) === -1) chips.push(t); };
+    var first = figs[0] ? studioMediaInfo(figs[0]) : {};
+    add(first.ratio); add(first.fmt); add(first.extra);
+    var snap = null; try { snap = msg.dataset.studio ? JSON.parse(msg.dataset.studio) : null; } catch(e){}
+    if(snap && snap.style && snap.style !== "auto") add(itemLabel("studioStyle", snap.style));
+    if(figs.length > 1) add("×" + figs.length);
+    return chips.map(function(c){ return '<span class="st-chip">' + escapeHtml(c) + '</span>'; }).join("");
+  }
+  function studioDecorate(msg){
+    if(!msg || msg.classList.contains("st-gen") || msg.classList.contains("ec-thinking-row")) return;
+    if(!msg.isConnected){ setTimeout(function(){ if(msg.isConnected) studioDecorate(msg); }, 0); return; }
+    msg.classList.remove("st-typing");
+    var text = msg.querySelector(".ec-msg-text");
+    if(!text) return;
+    var figs = [].slice.call(text.querySelectorAll("figure.ec-gen, figure.ec-x"));
+    if(!figs.length) return;
+    // Media straight under the result; words go to the info card.
+    figs.forEach(function(f){ if(f.parentNode !== text){ var top = f; while(top.parentNode && top.parentNode !== text) top = top.parentNode; text.insertBefore(f, top); } });
+    var notes = document.createElement("div");
+    notes.className = "st-notes";
+    [].slice.call(text.childNodes).forEach(function(node){
+      if(node.nodeType === 3){ if(node.textContent.trim()){ var p = document.createElement("p"); p.textContent = node.textContent; notes.appendChild(p); } node.remove(); return; }
+      if(node.nodeType !== 1) return;
+      if(/^(P|UL|OL|H1|H2|H3|H4|H5|H6|BLOCKQUOTE|HR)$/.test(node.tagName) && !node.querySelector("figure")){ if(node.tagName !== "HR" && node.textContent.trim()) notes.appendChild(node); else node.remove(); }
+    });
+    msg.classList.add("st-gen");
+    text.classList.toggle("is-multi", figs.length > 1);
+    var prev = msg.previousElementSibling, prompt = "";
+    if(prev && prev.classList.contains("is-user")){ var pc = prev.querySelector("[data-copy-message]"); prompt = pc ? pc.dataset.copyText || "" : (prev.querySelector(".ec-msg-text") || {}).textContent || ""; }
+    var info = document.createElement("div");
+    info.className = "st-info";
+    info.innerHTML = '<div class="st-info-top">' + studioTopHtml(msg) + '</div>' + (prompt ? '<p class="st-prompt" title="Click to show all"></p>' : "");
+    if(prompt) info.querySelector(".st-prompt").textContent = prompt;
+    [].slice.call(msg.children).forEach(function(ch){ if(ch !== text && !ch.classList.contains("ec-actions") && !ch.classList.contains("ec-followups") && !ch.classList.contains("ec-fb")) info.appendChild(ch); });
+    if(notes.childNodes.length){
+      info.appendChild(notes);
+      if(notes.textContent.length > 180){ var more = document.createElement("button"); more.type = "button"; more.className = "st-more"; more.setAttribute("data-st-more", "1"); more.textContent = "More"; info.appendChild(more); }
+    }
+    var chips = document.createElement("div"); chips.className = "st-chips"; chips.innerHTML = studioChipsHtml(msg, figs); info.appendChild(chips);
+    var acts = msg.querySelector(":scope > .ec-actions");
+    if(acts){
+      if(prompt){ var reuse = document.createElement("button"); reuse.type = "button"; reuse.className = "ec-act"; reuse.setAttribute("data-st-reuse", "1"); reuse.title = "Use this prompt again"; reuse.setAttribute("aria-label", "Use this prompt again"); reuse.innerHTML = icon("repeat"); acts.insertBefore(reuse, acts.children[1] || null); info._prompt = prompt; }
+      info.appendChild(acts);
+    }
+    msg.insertBefore(info, msg.firstChild);
+    if(msg === chatThread.lastElementChild) studioReveal(msg);
+  }
+  function studioReveal(el){
+    requestAnimationFrame(function(){
+      if(!el.isConnected) return;
+      var reduce = document.documentElement.classList.contains("reduce-motion");
+      try { el.scrollIntoView({ block:"start", behavior: reduce ? "auto" : "smooth" }); } catch(e){ el.scrollIntoView(true); }
+    });
+  }
+  function studioRefreshInfo(msg){
+    if(!msg || !msg.classList.contains("st-gen")) return;
+    var top = msg.querySelector(".st-info-top"); if(top) top.innerHTML = studioTopHtml(msg);
+    var chips = msg.querySelector(".st-chips"); if(chips) chips.innerHTML = studioChipsHtml(msg, [].slice.call(msg.querySelectorAll(".ec-msg-text > figure")));
+  }
+  document.addEventListener("click", function(e){
+    if(!e.target.closest) return;
+    var more = e.target.closest("[data-st-more]");
+    if(more){ var n = more.parentNode.querySelector(".st-notes"); if(n){ var open = n.classList.toggle("is-open"); more.textContent = open ? "Less" : "More"; } return; }
+    var pr = e.target.closest(".st-prompt");
+    if(pr){ pr.classList.toggle("is-open"); return; }
+    var reuse = e.target.closest("[data-st-reuse]");
+    if(reuse){ var info = reuse.closest(".st-info"); if(info && info._prompt && chatInput){ chatInput.value = info._prompt; autoGrow(); chatInput.focus(); showToast("Prompt is in the box — change it or press Enter."); } }
+  });
+
+  // ---- while elora is making it ----
+  var STUDIO_SKETCH = {
+    image: '<rect class="is-ink" x="12" y="18" width="96" height="84" rx="10" style="--i:0" pathLength="1"/><circle cx="80" cy="44" r="10" style="--i:2" pathLength="1"/><path d="M14 92 42 60l18 18 16-16 30 30" style="--i:3" pathLength="1"/><path class="is-ink" d="M28 102h64" style="--i:5" pathLength="1"/>',
+    design: '<rect class="is-ink" x="26" y="10" width="68" height="100" rx="8" style="--i:0" pathLength="1"/><path d="M38 30h44M38 42h30" style="--i:2" pathLength="1"/><circle cx="72" cy="66" r="9" style="--i:3" pathLength="1"/><path d="M38 88h44M38 97h24" class="is-ink" style="--i:4" pathLength="1"/>',
+    video: '<rect class="is-ink" x="12" y="24" width="96" height="66" rx="10" style="--i:0" pathLength="1"/><path d="M52 44v26l22-13z" style="--i:2" pathLength="1"/><path d="M14 102h60M84 102h22" style="--i:3" pathLength="1"/><path class="is-ink" d="M30 14l8 10M54 14l8 10M78 14l8 10" style="--i:4" pathLength="1"/>',
+    logo: '<circle class="is-ink" cx="60" cy="60" r="44" style="--i:0" pathLength="1"/><path d="M60 22 38 52l9 34h26l9-34z" style="--i:2" pathLength="1"/><path d="M60 22v34" style="--i:3" pathLength="1"/><circle cx="60" cy="60" r="5" style="--i:4" pathLength="1"/>',
+    diagram: '<rect class="is-ink" x="10" y="14" width="34" height="24" rx="6" style="--i:0" pathLength="1"/><rect class="is-ink" x="76" y="14" width="34" height="24" rx="6" style="--i:1" pathLength="1"/><rect x="43" y="82" width="34" height="24" rx="6" style="--i:3" pathLength="1"/><path d="M27 38v14a6 6 0 0 0 6 6h54a6 6 0 0 0 6-6V38M60 58v24" style="--i:2" pathLength="1"/>',
+    auto: '<path class="is-ink" d="M22 98 74 46" style="--i:0" pathLength="1"/><path d="M80 18v12M74 24h12M98 40v8M94 44h8M58 22v6M55 25h6" style="--i:2" pathLength="1"/><circle cx="88" cy="74" r="8" style="--i:3" pathLength="1"/><path class="is-ink" d="M66 54 74 46" style="--i:1" pathLength="1"/>'
+  };
+  function studioCanvasHtml(snap){
+    var r = studioRatio(snap), tab = studioTabOf(snap.type);
+    var sketch = STUDIO_SKETCH[tab] || STUDIO_SKETCH.auto;
+    return '<div class="st-canvas" style="aspect-ratio:' + r[0] + '/' + r[1] + ';width:min(100%,calc(64vh * ' + r[0] + ' / ' + r[1] + '))">' +
+      '<svg class="st-sketch" viewBox="0 0 120 120" aria-hidden="true">' + sketch + '</svg>' +
+      '<div class="st-canvas-label"><span class="typing-label">' + escapeHtml(STUDIO_TABS[tab].make) + '</span></div></div>';
+  }
+  function studioPending(row, prompt){
+    var snap = lastStudioSnap || studioSnapshot();
+    var think = row.querySelector(".ec-think"), sub = row.querySelector(".ec-think-sub");
+    var label = row.querySelector(".ec-think-label");
+    if(label) label.textContent = "Creating";
+    var info = document.createElement("div");
+    info.className = "st-info";
+    if(think) info.appendChild(think);
+    if(prompt){ var p = document.createElement("p"); p.className = "st-prompt"; p.textContent = prompt; info.appendChild(p); }
+    if(sub) info.appendChild(sub);
+    var chips = [];
+    var r = studioRatio(snap); chips.push(snap.aspect === "auto" ? "Auto size" : ratioLabel(r[0], r[1]));
+    if(snap.type !== "auto") chips.push(snap.type === "image" ? "Image" : itemLabel("studioType", snap.type));
+    if(snap.style !== "auto") chips.push(itemLabel("studioStyle", snap.style));
+    if(snap.count > 1) chips.push("×" + snap.count);
+    var chipBox = document.createElement("div"); chipBox.className = "st-chips";
+    chipBox.innerHTML = chips.map(function(c){ return '<span class="st-chip">' + escapeHtml(c) + '</span>'; }).join("");
+    info.appendChild(chipBox);
+    var canv = document.createElement("div");
+    canv.className = "st-canvases" + (snap.count > 1 ? " is-multi" : "");
+    var n = Math.max(1, Math.min(4, snap.count)), html = "";
+    for(var i = 0; i < n; i++) html += studioCanvasHtml(snap);
+    canv.innerHTML = html;
+    row.innerHTML = "";
+    row.appendChild(info); row.appendChild(canv);
+    row.classList.add("st-gen", "st-pending");
+  }
+
+  // ---- library: everything made in Studio, newest first ----
+  var STUDIO_KINDS = [["all","All","grid"],["image","Images","image"],["design","Designs","poster"],["video","Videos","film"],["logo","Logos & vectors","nib"],["diagram","Diagrams","flow"]];
+  var studioLibFilter = "all";
+  function studioCreations(){
+    var sessions = chatSessions.filter(function(s){ return modeOf(s.mode) === "studio"; });
+    if(activeConversation && activeConversation.started && modeOf(activeConversation.mode) === "studio" && sessions.indexOf(activeConversation) === -1) sessions.unshift(activeConversation);
+    var out = [];
+    sessions.forEach(function(s){
+      var hist = s === activeConversation ? conversationHistory : (s.history || []), lastUser = "", mine = [];
+      hist.forEach(function(m){
+        var body = String(m.content || "");
+        if(m.role === "user"){ lastUser = body; return; }
+        var re = /```([\w+#.-]*)([^\n`]*)\n?([\s\S]*?)```/g, mm;
+        while((mm = re.exec(body))){
+          var lang = mm[1].toLowerCase(), code = mm[3], kind = null, html = "";
+          if(lang === "image"){ kind = "image"; html = genImageCard(code); }
+          else if(/^(animation|anim|motion|video)$/.test(lang) && /draw/.test(code)){ kind = "video"; html = animCard(code); }
+          else if(/^(design|graphic|poster)$/.test(lang) && /draw/.test(code)){ kind = "design"; html = animCard(code, true); }
+          else if(lang === "svg" && /<svg[\s>]/i.test(code)){ kind = "logo"; html = svgCard(code); }
+          else if(lang === "mermaid"){ kind = "diagram"; html = diagramCard(code); }
+          if(kind) mine.push({ kind:kind, html:html, prompt:lastUser, id:s.id });
+        }
+      });
+      out = out.concat(mine.reverse());
+    });
+    return out.slice(0, 80);
+  }
+  function renderStudioLibrary(){
+    var lib = document.getElementById("studioLibrary");
+    if(!lib) return;
+    var items = studioCreations();
+    var counts = { all: items.length };
+    items.forEach(function(it){ counts[it.kind] = (counts[it.kind] || 0) + 1; });
+    if(studioLibFilter !== "all" && !counts[studioLibFilter]) studioLibFilter = "all";
+    var head = '<div class="st-lib-head"><div><h2 id="studioLibTitle">Library</h2><p>' + (items.length ? items.length + (items.length === 1 ? " creation" : " creations") + " from your Studio chats" : "Everything you make in Studio collects here") + '</p></div>' +
+      (items.length ? '<div class="st-lib-filters" role="tablist" aria-label="Filter creations">' + STUDIO_KINDS.filter(function(k){ return k[0] === "all" || counts[k[0]]; }).map(function(k){ return '<button type="button" role="tab" data-st-filter="' + k[0] + '" class="' + (studioLibFilter === k[0] ? "is-on" : "") + '" aria-selected="' + (studioLibFilter === k[0]) + '">' + icon(k[2]) + escapeHtml(k[1]) + ' <small>' + counts[k[0]] + '</small></button>'; }).join("") + '</div>' : "") + '</div>';
+    if(!items.length){
+      lib.innerHTML = head + '<div class="st-lib-empty">' + brainSvg() + '<h3>Nothing here yet</h3><p>Pictures, posters, videos, logos and diagrams you make in Studio will collect here, ready to download again.</p><button type="button" class="ecp-btn ecp-btn-main" data-st-create="1">Create something</button></div>';
+      return;
+    }
+    lib.innerHTML = head + '<div class="st-lib-grid">' + items.map(function(it, i){
+      return '<article class="st-tile" data-kind="' + it.kind + '" style="--i:' + Math.min(i, 12) + '"' + (studioLibFilter !== "all" && it.kind !== studioLibFilter ? " hidden" : "") + '>' + it.html +
+        '<footer><p class="st-tile-prompt">' + escapeHtml(it.prompt || "Untitled") + '</p><button type="button" class="st-tile-open" data-st-open="' + it.id + '" title="Open the chat this came from">' + icon("chat") + 'Open</button></footer></article>';
+    }).join("") + '</div>';
+    enhanceRichCards(lib);
+    enhanceGenImages(lib);
+  }
+  function openStudioLibrary(){
+    var lib = document.getElementById("studioLibrary");
+    if(!lib || currentMode() !== "studio") return;
+    studioLibOpen = true;
+    renderStudioLibrary();
+    lib.hidden = false;
+    if(chatMain) chatMain.classList.add("st-lib-open");
+    renderStudioSwitch();
+    lib.scrollTop = 0;
+  }
+  function closeStudioLibrary(){
+    if(!studioLibOpen) return;
+    studioLibOpen = false;
+    var lib = document.getElementById("studioLibrary");
+    if(lib){ lib.hidden = true; lib.innerHTML = ""; }
+    if(chatMain) chatMain.classList.remove("st-lib-open");
+    renderStudioSwitch();
+  }
+  document.addEventListener("click", function(e){
+    if(!e.target.closest || !studioLibOpen) return;
+    var f = e.target.closest("[data-st-filter]");
+    if(f){
+      studioLibFilter = f.getAttribute("data-st-filter");
+      document.querySelectorAll("[data-st-filter]").forEach(function(b){ var on = b === f; b.classList.toggle("is-on", on); b.setAttribute("aria-selected", String(on)); });
+      document.querySelectorAll("#studioLibrary .st-tile").forEach(function(t){ t.hidden = studioLibFilter !== "all" && t.getAttribute("data-kind") !== studioLibFilter; });
+      return;
+    }
+    var open = e.target.closest("[data-st-open]");
+    if(open){ var id = Number(open.getAttribute("data-st-open")); closeStudioLibrary(); if(!activeConversation || activeConversation.id !== id) openSavedConversation(id); return; }
+    if(e.target.closest("[data-st-create]")){ closeStudioLibrary(); if(chatInput) chatInput.focus(); }
+  });
+
   document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeCtxMenu(); });
   window.addEventListener("resize", closeCtxMenu);
 
@@ -8043,7 +8540,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
   // once a message is sent the box docks to the bottom of the screen.
   function setChatEmpty(empty){
     if(chatMain) chatMain.classList.toggle("is-empty", !!empty);
-    if(chatInput) chatInput.placeholder = MODES[currentMode()].ph[empty ? 0 : 1];
+    if(chatInput) chatInput.placeholder = currentMode() === "studio" ? studioPlaceholder(empty) : MODES[currentMode()].ph[empty ? 0 : 1];
   }
   function renderChatWelcome(){
     if(!chatThread || !chatWelcomeTemplate) return;
@@ -8979,6 +9476,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       (chatPreferences.readAloud !== false ? '<button type="button" class="ec-act ec-speak" data-speak="1" aria-label="Read aloud" title="Read aloud">' + icon("volume") + '</button>' : "");
     tools.querySelector("[data-copy-message]").dataset.copyText = sourceText || "";
     msg.appendChild(tools);
+    if(currentMode() === "studio") studioDecorate(msg);
   }
   function addUserTools(msg, sourceText){
     var tools = document.createElement("div");
@@ -9228,7 +9726,8 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       // Progress follows the clock, not the tick count: a background tab
       // throttles timers to ~1/s, and the reply still finishes on time.
       var duration = Math.min(2600, 600 + total * 4), started = Date.now();
-      if(document.documentElement.classList.contains("reduce-motion") || chatPreferences.typing === false) duration = 0;
+      if(document.documentElement.classList.contains("reduce-motion") || chatPreferences.typing === false || currentMode() === "studio") duration = 0;
+      if(currentMode() === "studio" && !isError) parts.msg.classList.add("st-typing");
       skipTyping = false;
       var timer = setInterval(function(){
         var stickToBottom = isNearBottom();
@@ -9493,6 +9992,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     var upBtn = document.getElementById("settingsUpgradeBtn");
     if(upBtn) upBtn.textContent = plan === "free" ? "Upgrade" : "Adjust plan";
     renderUsageV2();
+    if(typeof renderStudioCredits === "function") renderStudioCredits();
   }
   async function loadPlanInfo(){
     try {
@@ -9569,6 +10069,8 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     if(result && result.sig) msg.dataset.sig = result.sig;
     if(result && result.model) msg.dataset.model = result.model;
     if(pendingAlt){ msg._alt = pendingAlt; pendingAlt = null; }
+    if(lastStudioSnap && currentMode() === "studio") msg.dataset.studio = JSON.stringify(lastStudioSnap);
+    studioRefreshInfo(msg);
   }
   // The conversation up to (not including) this reply, and the reply itself.
   function replyContext(msg){
@@ -9647,8 +10149,8 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
       card = document.createElement("div");
       card.className = "ec-fb";
       card.setAttribute("role", "group");
-      var acts = msg.querySelector(".ec-actions");
-      if(acts && acts.nextSibling) msg.insertBefore(card, acts.nextSibling); else msg.appendChild(card);
+      var acts = msg.querySelector(":scope > .ec-actions");
+      if(!msg.classList.contains("st-gen") && acts && acts.nextSibling) msg.insertBefore(card, acts.nextSibling); else msg.appendChild(card);
     }
     var good = fb.rating === "good";
     card.classList.toggle("is-good", good);
@@ -10966,8 +11468,11 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
     setReplyPending(true);
 
     var typingRow = createThinkingRow();
+    lastStudioSnap = currentMode() === "studio" ? studioSnapshot() : null;
+    if(lastStudioSnap) studioPending(typingRow, text);
     chatThread.appendChild(typingRow);
     scrollToBottom();
+    if(lastStudioSnap) studioReveal(typingRow);
     saveActiveConversation();
     if(chatStatusDot){ chatStatusDot.classList.add("is-active"); }
 
@@ -11003,7 +11508,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
           // elora had said them.
           if(result.real) conversationHistory.push({ role: "assistant", content: result.text });
           addMessageTyped(result.text, stepsLine, result.real, !result.real).then(function(msg){
-            if(result.real) stampReply(msg, result);
+            if(result.real){ msg.dataset.secs = ((Date.now() - startTime) / 1000).toFixed(1); stampReply(msg, result); }
             if(result.limit){
               var cta = document.createElement("button");
               cta.type = "button"; cta.className = "ecp-btn ecp-btn-main ec-limit-cta"; cta.textContent = "See plans";
@@ -12376,6 +12881,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
 
   function openSavedConversation(id){
     if(replyPending) return;
+    closeStudioLibrary();
     if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
     if(window.EloraNav) window.EloraNav.record({ page:"chat", conv:id });
     var target = chatSessions.find(function(session){ return session.id === id; });
@@ -12428,6 +12934,7 @@ startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
 
   function resetConversation(message, removeActive){
     if(replyPending) return;
+    closeStudioLibrary();
     if(window.EloraWorkspace && window.EloraWorkspace.closePage) window.EloraWorkspace.closePage();
     if(window.EloraNav && currentPageName === "chat" && activeConversation && activeConversation.started) window.EloraNav.record({ page:"chat", conv:"new" });
     if(removeActive && activeConversation){
