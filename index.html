@@ -2178,7 +2178,8 @@ html[data-ec-theme="light"] #page-chat .workspace-panel{ color-scheme:light; }
 .ec-mode-tab .ec-i{ width:16px; height:16px; }
 .ec-mode-tab:hover{ color:var(--ec-text); }
 .ec-mode-tab.is-active{ background:var(--ec-raised-2); color:var(--ec-text); box-shadow:0 1px 2px rgba(0,0,0,.25),0 0 0 1px var(--ec-line); }
-html[data-ec-mode="code"] .ec-suggest-set[data-set="chat"],html:not([data-ec-mode="code"]) .ec-suggest-set[data-set="code"]{ display:none; }
+.ec-suggest .ec-suggest-set{ display:none!important; }
+html:not([data-ec-mode]) .ec-suggest-set[data-set="chat"],html[data-ec-mode="chat"] .ec-suggest-set[data-set="chat"],html[data-ec-mode="code"] .ec-suggest-set[data-set="code"],html[data-ec-mode="studio"] .ec-suggest-set[data-set="studio"],html[data-ec-mode="agent"] .ec-suggest-set[data-set="agent"]{ display:contents!important; }
 .ec-suggest-set{ display:contents; }
 .ec-chat-row{ position:relative; }
 .ec-chat-row .ec-chat-item{ padding-right:34px; }
@@ -4135,6 +4136,292 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   .ec-x figcaption{ flex-wrap:wrap; }
   .ec-svgcard{ width:100%; margin-right:0; }
 }
+
+/* ============================================================
+   Workspaces: Chat · Code · Studio · Agent
+   ============================================================ */
+:root{ --mode-chat:#e9e9ea; --mode-code:#3ddc84; --mode-studio:#b98cff; --mode-agent:#5fb4ff; }
+html[data-ec-theme="light"]{ --mode-chat:#1a1a1a; --mode-code:#15803d; --mode-studio:#7c3aed; --mode-agent:#1d6fd6; }
+.ec-modes-mini{ display:none!important; }
+.ec-modebar{ display:grid; grid-template-columns:repeat(4,1fr); gap:3px; margin:2px 10px 10px; padding:3px; border:1px solid var(--ec-line); border-radius:13px; background:rgba(255,255,255,.025); }
+html[data-ec-theme="light"] .ec-modebar{ background:rgba(0,0,0,.025); }
+.ec-modebar-tab{ position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; height:46px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--ec-text-3); font:600 11.5px/1 var(--ec-font); cursor:pointer; transition:background .18s ease,color .18s ease,box-shadow .2s ease; }
+.ec-modebar-tab .ec-i{ width:17px; height:17px; transition:color .2s ease,filter .2s ease,transform .25s cubic-bezier(.2,.8,.2,1); }
+.ec-modebar-tab:hover{ color:var(--ec-text); background:var(--ec-hover); }
+.ec-modebar-tab:hover .ec-i{ transform:translateY(-1px); }
+.ec-modebar-tab.is-active{ color:var(--ec-text); background:var(--ec-raised-2); box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px var(--ec-line-2),0 4px 12px rgba(0,0,0,.28); }
+.ec-modebar-tab[data-workspace-mode="chat"].is-active .ec-i{ color:var(--mode-chat); }
+.ec-modebar-tab[data-workspace-mode="code"].is-active .ec-i{ color:var(--mode-code); filter:drop-shadow(0 0 6px rgba(61,220,132,.45)); }
+.ec-modebar-tab[data-workspace-mode="studio"].is-active .ec-i{ color:var(--mode-studio); filter:drop-shadow(0 0 6px rgba(185,140,255,.5)); }
+.ec-modebar-tab[data-workspace-mode="agent"].is-active .ec-i{ color:var(--mode-agent); filter:drop-shadow(0 0 6px rgba(95,180,255,.5)); }
+html[data-ec-theme="light"] .ec-modebar-tab.is-active .ec-i{ filter:none; }
+.ec-modebar-tab.is-active::after{ content:""; position:absolute; left:34%; right:34%; bottom:3px; height:2px; border-radius:2px; background:currentColor; opacity:.0; }
+.ec-modebar-tab[data-workspace-mode="code"].is-active::after{ opacity:1; background:var(--mode-code); }
+.ec-modebar-tab[data-workspace-mode="studio"].is-active::after{ opacity:1; background:var(--mode-studio); }
+.ec-modebar-tab[data-workspace-mode="agent"].is-active::after{ opacity:1; background:var(--mode-agent); }
+
+/* settings bar above the message box */
+.ec-ctxbar{ display:flex; align-items:center; gap:6px; width:100%; max-width:var(--ec-col); margin:0 auto 8px; padding:0 4px; overflow-x:auto; scrollbar-width:none; }
+.ec-ctxbar::-webkit-scrollbar{ display:none; }
+.ec-ctxbar[hidden]{ display:none!important; }
+.ec-ctx-badge{ display:inline-flex; align-items:center; gap:6px; flex:none; height:28px; padding:0 10px 0 8px; border-radius:999px; color:var(--ec-text-2); font:650 12.5px var(--ec-font); }
+.ec-ctx-badge .ec-i{ width:15px; height:15px; }
+.ec-ctx-badge[data-mode="chat"] .ec-i{ color:var(--mode-chat); }
+.ec-ctx-badge[data-mode="code"]{ color:var(--mode-code); background:rgba(61,220,132,.09); }
+.ec-ctx-badge[data-mode="studio"]{ color:var(--mode-studio); background:rgba(185,140,255,.1); }
+.ec-ctx-badge[data-mode="agent"]{ color:var(--mode-agent); background:rgba(95,180,255,.1); }
+.ec-ctx-chip{ display:inline-flex; align-items:center; gap:6px; flex:none; height:28px; padding:0 9px 0 9px; border:1px solid var(--ec-line); border-radius:999px; background:transparent; color:var(--ec-text-2); font:600 12.5px var(--ec-font); white-space:nowrap; cursor:pointer; transition:background .15s ease,color .15s ease,border-color .15s ease; }
+.ec-ctx-chip .ec-i{ width:14px; height:14px; }
+.ec-ctx-chip .ec-i:last-child:not(:first-child){ width:12px; height:12px; opacity:.6; margin-left:-2px; }
+.ec-ctx-chip:hover,.ec-ctx-chip[aria-expanded="true"]{ background:var(--ec-hover); color:var(--ec-text); border-color:var(--ec-line-2); }
+.ec-ctx-chip.is-set{ color:var(--ec-text); border-color:var(--ec-line-2); background:var(--ec-raised); }
+.ec-ctxbar[data-mode="studio"] .ec-ctx-chip.is-set{ border-color:rgba(185,140,255,.4); }
+.ec-ctxbar[data-mode="code"] .ec-ctx-chip.is-set{ border-color:rgba(61,220,132,.35); }
+.ec-ctxbar[data-mode="agent"] .ec-ctx-chip.is-set{ border-color:rgba(95,180,255,.4); }
+.ec-ctx-toggle .ec-i{ opacity:.55; }
+.ec-ctx-toggle.is-on{ color:var(--ec-text); border-color:rgba(61,220,132,.4); background:rgba(61,220,132,.07); }
+.ec-ctx-toggle.is-on .ec-i{ opacity:1; color:var(--mode-code); }
+.ec-ctx-menu{ position:fixed!important; z-index:400; width:250px; max-height:min(420px,60vh); overflow:auto; padding:6px; border:1px solid var(--ec-line-2); border-radius:14px; background:var(--ec-raised); box-shadow:0 18px 50px rgba(0,0,0,.45); animation:ec-in .16s ease both; }
+.ec-ctx-menu-head{ padding:6px 10px 6px; color:var(--ec-text-3); font:600 12px var(--ec-font); }
+.ec-ctx-menu button{ display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border:0; border-radius:9px; background:transparent; color:var(--ec-text); font:500 13.5px var(--ec-font); text-align:left; cursor:pointer; }
+.ec-ctx-menu button:hover{ background:var(--ec-hover); }
+.ec-ctx-menu button .ec-i{ width:15px; height:15px; margin-left:auto; color:var(--mode-code); }
+.ec-ctx-copy{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.ec-ctx-copy b{ font-weight:600; }
+.ec-ctx-copy small{ color:var(--ec-text-3); font-size:12px; }
+html[data-ec-mode="agent"] #taskToggle{ display:none!important; }
+
+/* greetings per workspace */
+html[data-ec-mode="studio"] #chatThread .ec-welcome,html[data-ec-mode="agent"] #chatThread .ec-welcome{ display:grid; grid-template-columns:auto auto; justify-content:center; align-items:center; column-gap:14px; row-gap:14px; }
+html[data-ec-mode="studio"] #chatThread .ec-welcome::before,html[data-ec-mode="agent"] #chatThread .ec-welcome::before{ grid-column:1/-1; justify-self:center; padding:6px 12px 6px 26px; border-radius:999px; font:700 12px/1 var(--ec-font); letter-spacing:.02em; }
+html[data-ec-mode="studio"] #chatThread .ec-welcome::before{ content:"elora Studio"; border:1px solid rgba(185,140,255,.35); background:rgba(185,140,255,.1) radial-gradient(circle at 13px 50%,#b98cff 0 3.5px,transparent 4.5px) no-repeat; color:#d4bcff; }
+html[data-ec-mode="agent"] #chatThread .ec-welcome::before{ content:"elora Agent"; border:1px solid rgba(95,180,255,.35); background:rgba(95,180,255,.1) radial-gradient(circle at 13px 50%,#5fb4ff 0 3.5px,transparent 4.5px) no-repeat; color:#a9d4ff; }
+html[data-ec-mode="studio"] #chatThread .ec-welcome::after,html[data-ec-mode="agent"] #chatThread .ec-welcome::after{ grid-column:1/-1; justify-self:center; color:var(--ec-text-3); font:500 13px/1.4 var(--ec-font); text-align:center; }
+html[data-ec-mode="studio"] #chatThread .ec-welcome::after{ content:"Pictures, posters, thumbnails, videos and logos — made to the last pixel"; }
+html[data-ec-mode="agent"] #chatThread .ec-welcome::after{ content:"Give it a goal: it searches the web, reads the sources, plans and delivers"; }
+@media (max-width:760px){ html[data-ec-mode="studio"] #chatThread .ec-welcome,html[data-ec-mode="agent"] #chatThread .ec-welcome{ grid-template-columns:1fr; justify-items:center; } }
+html[data-ec-theme="light"][data-ec-mode="studio"] #chatThread .ec-welcome::before{ color:#6d28d9; }
+html[data-ec-theme="light"][data-ec-mode="agent"] #chatThread .ec-welcome::before{ color:#1d6fd6; }
+
+/* ============================================================
+   Thinking brain, live task progress, sources
+   ============================================================ */
+.ec-brain{ position:relative; display:inline-grid; place-items:center; width:26px; height:26px; flex:none; isolation:isolate; }
+.ec-brain::before{ content:""; position:absolute; inset:-35%; z-index:-1; border-radius:50%; background:radial-gradient(circle,rgba(61,220,132,.42) 0%,rgba(61,220,132,.12) 38%,rgba(61,220,132,0) 66%); animation:ec-brain-breathe 1.9s ease-in-out infinite; }
+.ec-brain svg{ width:100%; height:100%; overflow:visible; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.ec-brain-base{ stroke:#3ddc84; stroke-width:1.55; opacity:.5; }
+.ec-brain-pulse{ stroke:#c8ffe0; stroke-width:1.9; stroke-dasharray:2.6 8.4; animation:ec-brain-flow 1.25s linear infinite; filter:drop-shadow(0 0 1.5px #3ddc84) drop-shadow(0 0 4px rgba(61,220,132,.9)); }
+@keyframes ec-brain-flow{ to{ stroke-dashoffset:-22; } }
+@keyframes ec-brain-breathe{ 0%,100%{ opacity:.55; transform:scale(.88); } 50%{ opacity:1; transform:scale(1.06); } }
+html[data-ec-theme="light"] .ec-brain-base{ stroke:#16a34a; opacity:.6; }
+html[data-ec-theme="light"] .ec-brain-pulse{ stroke:#15803d; filter:drop-shadow(0 0 2px rgba(34,197,94,.6)); }
+html.reduce-motion .ec-brain::before,html.reduce-motion .ec-brain-pulse{ animation:none!important; }
+@media (prefers-reduced-motion:reduce){ .ec-brain::before,.ec-brain-pulse{ animation:none; } }
+.ec-thinking-row .ec-brain{ width:24px; height:24px; }
+.ec-think-sub{ margin-left:34px!important; }
+
+/* task: header, segmented progress bar, live "now" line */
+.ec-task-head .ec-task-brain{ width:22px; height:22px; }
+.ec-task.is-done .ec-task-brain::before,.ec-task.is-failed .ec-task-brain::before{ animation:none; opacity:.35; transform:none; }
+.ec-task.is-done .ec-task-brain .ec-brain-pulse{ animation:none; stroke-dasharray:none; opacity:.85; }
+.ec-task.is-failed .ec-task-brain .ec-brain-base,.ec-task.is-failed .ec-task-brain .ec-brain-pulse{ stroke:var(--ec-danger); animation:none; stroke-dasharray:none; filter:none; }
+.ec-task.is-failed .ec-task-brain::before{ background:radial-gradient(circle,rgba(255,107,107,.3),transparent 66%); }
+.ec-task-pct,.ec-task-time{ flex:none; color:var(--ec-text-3); font:600 12px var(--ec-font); font-variant-numeric:tabular-nums; }
+.ec-task-pct{ color:#7ff0b0; min-width:34px; text-align:right; }
+html[data-ec-theme="light"] .ec-task-pct{ color:#15803d; }
+.ec-task.is-failed .ec-task-pct{ color:var(--ec-danger); }
+.ec-task-prog{ position:relative; margin:12px 0 4px; }
+.ec-task-prog .ec-task-bar{ height:6px!important; margin:0!important; border-radius:99px; background:rgba(255,255,255,.06)!important; overflow:hidden; }
+html[data-ec-theme="light"] .ec-task-prog .ec-task-bar{ background:rgba(0,0,0,.06)!important; }
+.ec-task-prog .ec-task-bar i{ position:relative; display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#1fae62,#3ddc84 60%,#9dffc9)!important; box-shadow:0 0 12px rgba(61,220,132,.55); transition:width .7s cubic-bezier(.2,.8,.2,1); animation:none!important; overflow:hidden; }
+.ec-task-prog .ec-task-bar i::after{ content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent); transform:translateX(-100%); animation:ec-bar-sheen 1.6s ease-in-out infinite; }
+.ec-task.is-done .ec-task-prog .ec-task-bar i::after,.ec-task.is-failed .ec-task-prog .ec-task-bar i::after{ animation:none; display:none; }
+.ec-task.is-failed .ec-task-prog .ec-task-bar i{ background:var(--ec-danger)!important; box-shadow:none; }
+@keyframes ec-bar-sheen{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(220%); } }
+.ec-task-segs{ display:none; position:absolute; inset:0; gap:3px; pointer-events:none; }
+.ec-task-prog.has-segs .ec-task-segs{ display:flex; }
+.ec-task-seg{ flex:1; border-right:3px solid color-mix(in srgb,var(--ec-bg) 95%,#fff); }
+.ec-task-seg:last-child{ border-right:0; }
+.ec-task-now{ display:flex; align-items:center; gap:9px; margin:9px 0 2px; min-height:20px; color:var(--ec-text-2); font:500 13.5px/1.4 var(--ec-font); }
+.ec-task-now-pulse{ position:relative; width:8px; height:8px; flex:none; border-radius:50%; background:#3ddc84; box-shadow:0 0 0 0 rgba(61,220,132,.6); animation:ec-now-ping 1.4s ease-out infinite; }
+@keyframes ec-now-ping{ 0%{ box-shadow:0 0 0 0 rgba(61,220,132,.55); } 80%,100%{ box-shadow:0 0 0 8px rgba(61,220,132,0); } }
+.ec-task-now-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ec-task-now-text.is-in{ animation:ec-now-in .42s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes ec-now-in{ from{ opacity:0; transform:translateY(6px); filter:blur(3px); } to{ opacity:1; transform:none; filter:none; } }
+.ec-task:not(.is-done):not(.is-failed) .ec-task-now-text{ background:linear-gradient(90deg,var(--ec-text-3) 0%,var(--ec-text) 40%,var(--ec-text-3) 80%); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:ec-shimmer 2s linear infinite; }
+.ec-task:not(.is-done):not(.is-failed) .ec-task-now-text.is-in{ animation:ec-now-in .42s cubic-bezier(.2,.8,.2,1) both,ec-shimmer 2s linear .42s infinite; }
+.ec-task.is-done .ec-task-now,.ec-task.is-failed .ec-task-now{ display:none; }
+.ec-trail-row{ animation:ec-trail-in .45s cubic-bezier(.2,.8,.2,1) both!important; }
+@keyframes ec-trail-in{ from{ opacity:0; transform:translateX(-8px); filter:blur(2px); } to{ opacity:1; transform:none; filter:none; } }
+.ec-trail-sites{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 4px; }
+.ec-trail-sites a{ display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px 0 6px; border:1px solid var(--ec-line); border-radius:999px; background:var(--ec-raised); color:var(--ec-text-2); font:500 12px var(--ec-font); text-decoration:none; animation:ec-trail-in .4s cubic-bezier(.2,.8,.2,1) both; }
+.ec-trail-sites a:hover{ color:var(--ec-text); border-color:var(--ec-line-2); }
+.ec-trail-sites img{ width:14px; height:14px; border-radius:3px; }
+html.reduce-motion .ec-task-now-pulse,html.reduce-motion .ec-task-prog .ec-task-bar i::after,html.reduce-motion .ec-trail-row,html.reduce-motion .ec-task-now-text{ animation:none!important; }
+
+/* working bar along the top of the chat */
+.ec-top{ position:relative; }
+.ec-main .ec-top::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:linear-gradient(90deg,transparent,#3ddc84 40%,#9dffc9 50%,#3ddc84 60%,transparent); background-size:50% 100%; background-repeat:no-repeat; opacity:0; transition:opacity .3s ease; pointer-events:none; }
+.ec-main.is-working .ec-top::after{ opacity:.9; animation:ec-workbar 1.4s ease-in-out infinite; }
+.ec-main.is-working.is-task-progress .ec-top::after{ animation:none; background:linear-gradient(90deg,#1fae62,#3ddc84); background-size:var(--work-p,0%) 100%; background-position:0 0; transition:background-size .7s cubic-bezier(.2,.8,.2,1),opacity .3s ease; box-shadow:0 0 10px rgba(61,220,132,.45); }
+@keyframes ec-workbar{ 0%{ background-position:-60% 0; } 100%{ background-position:160% 0; } }
+html.reduce-motion .ec-main.is-working .ec-top::after{ animation:none; }
+
+/* sources under answers */
+.ec-sources{ margin:18px 0 4px; padding:12px; border:1px solid var(--ec-line); border-radius:14px; background:rgba(255,255,255,.02); }
+html[data-ec-theme="light"] .ec-sources{ background:rgba(0,0,0,.015); }
+.ec-sources-head{ display:flex; align-items:center; gap:7px; margin:0 2px 10px; color:var(--ec-text-3); font:600 12.5px var(--ec-font); }
+.ec-sources-head .ec-i{ width:14px; height:14px; }
+.ec-sources-list{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:8px; }
+.ec-source{ display:grid; grid-template-columns:auto auto 1fr; grid-template-rows:auto auto; align-items:center; column-gap:7px; row-gap:2px; padding:9px 10px; border:1px solid var(--ec-line); border-radius:11px; background:var(--ec-raised); color:var(--ec-text)!important; text-decoration:none!important; transition:border-color .15s ease,background .15s ease,transform .15s ease; }
+.ec-source:hover{ border-color:var(--ec-line-2); background:var(--ec-raised-2); transform:translateY(-1px); }
+.ec-source-n{ grid-row:1; display:grid; place-items:center; min-width:18px; height:18px; padding:0 4px; border-radius:6px; background:rgba(95,180,255,.14); color:#8cc8ff; font:700 11px var(--ec-font); }
+html[data-ec-theme="light"] .ec-source-n{ color:#1d6fd6; }
+.ec-source img{ grid-row:1; width:16px; height:16px; border-radius:4px; }
+.ec-source-t{ grid-row:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:600 13px/1.3 var(--ec-font); }
+.ec-source-h{ grid-column:1/-1; grid-row:2; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ec-text-3); font:500 12px var(--ec-font); }
+.ec-cite{ display:inline-grid; place-items:center; min-width:17px; height:17px; margin:0 1px; padding:0 4px; border-radius:5px; background:rgba(95,180,255,.14); color:#8cc8ff!important; font:700 10.5px/1 var(--ec-font)!important; text-decoration:none!important; vertical-align:2px; transition:background .15s ease; }
+.ec-cite:hover{ background:rgba(95,180,255,.28); }
+html[data-ec-theme="light"] .ec-cite{ color:#1d6fd6!important; }
+
+/* Workbench: changes view */
+.ec-wb-ver{ margin-left:6px; padding:2px 7px; border-radius:999px; background:var(--ec-hover); color:var(--ec-text-3); font:600 11.5px var(--ec-font); }
+.ec-wb-ver:empty{ display:none; }
+.ec-wb-seg button[hidden]{ display:none; }
+.ec-wb-act[hidden]{ display:none; }
+.ec-wb-code.is-diff code{ counter-reset:none; }
+.ec-wb-code.is-diff .ec-ln::before{ content:none; }
+.ec-diff-sum{ display:block; padding:2px 14px 10px; color:var(--tk-com); font:600 12px var(--ec-font); }
+.ec-diff-sum .is-add{ color:#3ddc84; } .ec-diff-sum .is-del{ color:#ff7b7b; }
+.ec-diff-row{ display:block; padding-right:14px; white-space:pre; }
+.ec-diff-row i{ display:inline-block; width:3.2em; padding-right:.8em; color:var(--tk-com); opacity:.6; font-style:normal; text-align:right; user-select:none; }
+.ec-diff-row s{ display:inline-block; width:1.4em; text-decoration:none; color:var(--tk-com); user-select:none; }
+.ec-diff-row.is-add{ background:rgba(61,220,132,.12); color:#c6f6d8; }
+.ec-diff-row.is-add s{ color:#3ddc84; }
+.ec-diff-row.is-del{ background:rgba(255,107,107,.1); color:#f3b3b3; text-decoration:line-through; text-decoration-color:rgba(255,107,107,.45); }
+.ec-diff-row.is-del s{ color:#ff7b7b; }
+html[data-ec-theme="light"] .ec-diff-row.is-add{ color:#14532d; } html[data-ec-theme="light"] .ec-diff-row.is-del{ color:#7f1d1d; }
+.ec-diff-gap{ display:block; padding:4px 14px; color:var(--tk-com); font:500 12px var(--ec-font); background:rgba(255,255,255,.025); }
+
+/* ============================================================
+   Home: the elora console — one window, four workspaces
+   ============================================================ */
+.hero-visual.hx2-wrap{ max-width:560px!important; width:100%; margin-left:auto; }
+.hx2{ --hx-accent:170,190,255; position:relative; isolation:isolate; font-family:var(--font-body); }
+.hx2[data-scene="code"]{ --hx-accent:61,220,132; }
+.hx2[data-scene="studio"]{ --hx-accent:185,140,255; }
+.hx2[data-scene="agent"]{ --hx-accent:95,180,255; }
+.hx2-halo{ position:absolute; inset:8% -6% -4% -6%; z-index:-1; border-radius:40%; background:radial-gradient(60% 55% at 50% 45%,rgba(var(--hx-accent),.30),rgba(var(--hx-accent),.08) 55%,transparent 75%); filter:blur(30px); transition:background 1.1s ease; }
+.hx2-win{ position:relative; overflow:hidden; border-radius:22px; border:1px solid rgba(255,255,255,.09); background:linear-gradient(180deg,#18181c 0%,#0f0f12 100%); box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 50px 110px -20px rgba(0,0,0,.75),0 0 0 1px rgba(0,0,0,.4); }
+.hx2-win::before{ content:""; position:absolute; left:0; right:0; top:0; height:1px; background:linear-gradient(90deg,transparent,rgba(var(--hx-accent),.7),transparent); transition:background 1.1s ease; }
+.hx2-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; height:56px; padding:0 12px 0 16px; border-bottom:1px solid rgba(255,255,255,.06); }
+.hx2-brand{ display:inline-flex; align-items:center; gap:9px; color:#f1f1f1; font-weight:750; font-size:15px; letter-spacing:-.01em; }
+.hx2-brain{ width:22px!important; height:22px!important; }
+.hx2-tabs{ position:relative; display:flex; gap:2px; padding:3px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); }
+.hx2-tabs button{ position:relative; z-index:1; height:30px; padding:0 12px; border:0; border-radius:9px; background:transparent; color:#8f8f95; font:650 12.5px var(--font-body); cursor:pointer; transition:color .25s ease; }
+.hx2-tabs button:hover{ color:#d8d8dc; }
+.hx2-tabs button.is-on{ color:#fff; }
+.hx2-tabs button:focus-visible{ outline:2px solid rgba(var(--hx-accent),.8); outline-offset:1px; }
+.hx2-glider{ position:absolute; z-index:0; top:3px; bottom:3px; left:0; width:0; border-radius:9px; background:rgba(255,255,255,.09); box-shadow:inset 0 0 0 1px rgba(var(--hx-accent),.45),0 0 18px rgba(var(--hx-accent),.18); transition:transform .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1),box-shadow 1s ease; }
+.hx2-body{ position:relative; height:318px; }
+.hx2-scene{ position:absolute; inset:0; padding:18px 18px 14px; opacity:0; visibility:hidden; transform:translateY(8px); transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1),visibility 0s linear .45s; }
+.hx2-scene.is-on{ opacity:1; visibility:visible; transform:none; transition:opacity .45s ease,transform .55s cubic-bezier(.2,.8,.2,1),visibility 0s; }
+.hx2-scene .hx2-in{ opacity:0; transform:translateY(8px); filter:blur(3px); }
+.hx2-scene.is-play .hx2-in{ animation:hx2-in .6s cubic-bezier(.2,.8,.2,1) both; animation-delay:calc(var(--i,0) * 160ms); }
+@keyframes hx2-in{ to{ opacity:1; transform:none; filter:none; } }
+
+/* chat */
+.hx2-user{ margin-left:auto; width:max-content; max-width:80%; padding:10px 14px; border-radius:16px 16px 4px 16px; background:#26262b; color:#f2f2f2; font-size:14px; line-height:1.45; }
+.hx2-trace{ display:flex; gap:14px; margin:14px 0 10px; color:#7e7e86; font-size:12.5px; font-weight:600; }
+.hx2-trace span{ display:inline-flex; align-items:center; gap:6px; }
+.hx2-trace span::before{ content:""; width:12px; height:12px; border-radius:50%; background:#3ddc84 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.3 6.2l1.8 1.8 3.6-3.8' fill='none' stroke='%2306250f' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; }
+.hx2-answer p{ margin:0 0 8px; color:#dcdce0; font-size:14px; line-height:1.5; }
+.hx2-answer b{ color:#fff; font-weight:750; }
+.hx2-answer sup,.hx2-sources em{ display:inline-grid; place-items:center; min-width:16px; height:16px; margin-left:4px; padding:0 4px; border-radius:5px; background:rgba(95,180,255,.16); color:#9cd0ff; font:700 10px/1 var(--font-body); font-style:normal; vertical-align:2px; }
+.hx2-sources{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.hx2-sources span{ display:inline-flex; align-items:center; gap:7px; height:28px; padding:0 10px 0 6px; border:1px solid rgba(255,255,255,.08); border-radius:9px; background:rgba(255,255,255,.03); color:#b7b7bd; font-size:12px; font-weight:600; }
+.hx2-sources em{ margin:0; }
+
+/* code */
+.hx2-split{ display:grid; grid-template-columns:1.25fr 1fr; gap:12px; height:236px; }
+.hx2-code{ margin:0; padding:14px 0 14px 14px; overflow:hidden; border-radius:14px; background:#0b0b0e; border:1px solid rgba(255,255,255,.06); color:#cfd3d8; font:12px/1.8 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; white-space:pre; }
+.hx2-code .ln{ display:block; }
+.hx2-scene.is-play .hx2-code .ln{ animation:hx2-type .5s steps(18,end) both; animation-delay:calc(var(--i,0) * 210ms + 150ms); clip-path:inset(0 100% 0 0); }
+@keyframes hx2-type{ to{ clip-path:inset(0 0 0 0); } }
+.hx2-code .c-k{ color:#c792ea; } .hx2-code .c-f{ color:#7ff0b0; } .hx2-code .c-s{ color:#f5c97a; } .hx2-code .c-n{ color:#9ecbff; }
+.hx2-preview{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; border-radius:14px; background:radial-gradient(120% 90% at 50% 0%,#1d2b23 0%,#111714 70%); border:1px solid rgba(61,220,132,.18); }
+.hx2-ring{ position:relative; width:118px; height:118px; display:grid; place-items:center; }
+.hx2-ring svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+.hx2-ring circle{ fill:none; stroke:rgba(255,255,255,.08); stroke-width:6; }
+.hx2-ring .hx2-ring-fill{ stroke:#3ddc84; stroke-linecap:round; stroke-dasharray:264; stroke-dashoffset:264; filter:drop-shadow(0 0 6px rgba(61,220,132,.6)); }
+.hx2-scene.is-play .hx2-ring-fill{ animation:hx2-ring 2.4s cubic-bezier(.2,.8,.2,1) .9s both; }
+@keyframes hx2-ring{ to{ stroke-dashoffset:12; } }
+.hx2-ring b{ color:#fff; font-size:26px; font-weight:800; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.hx2-ring small{ position:absolute; bottom:30px; color:#7fd9a6; font-size:11px; font-weight:700; }
+.hx2-pv-btns{ display:flex; gap:6px; }
+.hx2-pv-btns span{ padding:6px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.12); color:#cfd3d8; font-size:12px; font-weight:700; }
+.hx2-pv-btns .is-main{ background:#3ddc84; border-color:#3ddc84; color:#05230f; }
+.hx2-check{ display:flex; align-items:center; gap:8px; margin-top:12px; color:#9be8bd; font-size:12.5px; font-weight:650; }
+.hx2-check-i{ width:16px; height:16px; border-radius:50%; background:#3ddc84 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.3 6.2l1.8 1.8 3.6-3.8' fill='none' stroke='%2306250f' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; box-shadow:0 0 10px rgba(61,220,132,.5); }
+
+/* studio */
+.hx2-studio{ display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:center; height:100%; }
+.hx2-poster{ position:relative; width:186px; aspect-ratio:4/5; overflow:hidden; border-radius:12px; background:linear-gradient(170deg,#140b2e 0%,#2b1259 45%,#4c1d79 70%,#0e2f3d 100%); box-shadow:0 20px 50px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08); }
+.hx2-moon{ position:absolute; top:18%; right:16%; width:46px; height:46px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#fff7e0,#f6d58a 55%,#d9a441); box-shadow:0 0 30px 8px rgba(246,213,138,.45); }
+.hx2-hills{ position:absolute; left:-10%; right:-10%; bottom:-6%; height:42%; background:radial-gradient(120% 90% at 30% 100%,#080314 55%,transparent 56%),radial-gradient(110% 80% at 85% 100%,#120a27 52%,transparent 53%); }
+.hx2-poster strong{ position:absolute; left:14px; bottom:44px; color:transparent; background:linear-gradient(180deg,#ffffff,#d8c4ff); -webkit-background-clip:text; background-clip:text; font:900 36px/0.9 var(--font-body); letter-spacing:-.03em; filter:drop-shadow(0 0 12px rgba(185,140,255,.55)); }
+.hx2-poster small{ position:absolute; left:15px; bottom:22px; color:#9ef0ff; font-size:11px; font-weight:800; letter-spacing:.02em; }
+.hx2-scene.is-play .hx2-poster{ animation:hx2-poster 1s cubic-bezier(.2,.8,.2,1) .2s both; }
+@keyframes hx2-poster{ from{ opacity:0; transform:scale(.94) rotate(-2deg); filter:blur(6px) saturate(.4); } to{ opacity:1; transform:none; filter:none; } }
+.hx2-studio-side{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+.hx2-render{ display:grid; grid-template-columns:1fr auto; gap:8px 10px; color:#b9b9c0; font-size:12.5px; font-weight:650; }
+.hx2-render b{ color:#e6dcff; font-variant-numeric:tabular-nums; }
+.hx2-render-bar{ grid-column:1/-1; height:5px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden; }
+.hx2-render-bar i{ display:block; width:var(--p,0%); height:100%; border-radius:inherit; background:linear-gradient(90deg,#8b5cf6,#b98cff); box-shadow:0 0 10px rgba(185,140,255,.6); transition:width .12s linear; }
+.hx2-exports{ display:flex; gap:6px; }
+.hx2-exports span{ padding:7px 13px; border-radius:9px; border:1px solid rgba(255,255,255,.1); color:#d4d4da; font-size:12.5px; font-weight:750; }
+.hx2-exports .is-main{ border-color:rgba(185,140,255,.55); color:#e3d4ff; background:rgba(185,140,255,.12); }
+.hx2-studio-side p{ margin:0; color:#7e7e86; font-size:12.5px; line-height:1.5; }
+
+/* agent */
+.hx2-agent-top{ display:flex; align-items:center; gap:10px; color:#f1f1f1; font-size:14.5px; }
+.hx2-agent-top b{ flex:1; font-weight:750; }
+.hx2-pct{ color:#9cd0ff; font-style:normal; font-weight:800; font-size:13px; font-variant-numeric:tabular-nums; }
+.hx2-agent-bar{ height:6px; margin:12px 0 16px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden; }
+.hx2-agent-bar i{ display:block; width:var(--p,0%); height:100%; border-radius:inherit; background:linear-gradient(90deg,#2f8cf0,#5fb4ff 60%,#b6dcff); box-shadow:0 0 12px rgba(95,180,255,.55); transition:width .8s cubic-bezier(.2,.8,.2,1); }
+.hx2-agent-steps{ list-style:none; margin:0; padding:0 0 0 2px; display:grid; gap:13px; }
+.hx2-agent-steps li{ display:flex; align-items:center; gap:11px; color:#6f6f77; font-size:13.5px; font-weight:600; transition:color .3s ease; }
+.hx2-dot{ position:relative; width:16px; height:16px; flex:none; border-radius:50%; border:1.6px solid #3a3a41; transition:all .3s ease; }
+.hx2-agent-steps li.is-now{ color:#f0f0f2; }
+.hx2-agent-steps li.is-now .hx2-dot{ border-color:#5fb4ff; box-shadow:0 0 0 4px rgba(95,180,255,.15); }
+.hx2-agent-steps li.is-now .hx2-dot::after{ content:""; position:absolute; inset:3px; border-radius:50%; background:#5fb4ff; animation:ec-pulse 1s ease-in-out infinite; }
+.hx2-agent-steps li.is-done{ color:#b4b4bb; }
+.hx2-agent-steps li.is-done .hx2-dot{ border-color:transparent; background:#3ddc84 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.3 6.2l1.8 1.8 3.6-3.8' fill='none' stroke='%2306250f' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat; }
+
+/* the prompt line */
+.hx2-prompt{ display:flex; align-items:center; gap:2px; height:52px; margin:0 12px 12px; padding:0 8px 0 16px; border-radius:15px; border:1px solid rgba(255,255,255,.09); background:rgba(255,255,255,.035); color:#e9e9ec; font-size:14px; font-weight:550; }
+.hx2-prompt-text{ overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.hx2-caret{ width:2px; height:18px; margin-left:1px; border-radius:2px; background:rgba(var(--hx-accent),1); animation:hx2-blink 1s steps(2,start) infinite; }
+@keyframes hx2-blink{ to{ visibility:hidden; } }
+.hx2-send{ display:grid; place-items:center; width:34px; height:34px; margin-left:auto; flex:none; border-radius:11px; background:#2a2a30; color:#9a9aa2; transition:background .3s ease,color .3s ease,transform .25s cubic-bezier(.2,.8,.2,1); }
+.hx2-send svg{ width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+.hx2.is-typing .hx2-send{ background:rgba(var(--hx-accent),.9); color:#0b0b0d; }
+.hx2.is-sent .hx2-send{ transform:scale(.86); background:rgba(var(--hx-accent),1); color:#0b0b0d; }
+@media (max-width:620px){
+  .hx2-bar{ height:auto; padding:10px 10px 10px 12px; flex-wrap:wrap; }
+  .hx2-tabs button{ padding:0 9px; }
+  .hx2-body{ height:330px; }
+  .hx2-split{ grid-template-columns:1fr; height:auto; }
+  .hx2-code{ max-height:150px; font-size:11px; }
+  .hx2-preview{ flex-direction:row; padding:10px; }
+  .hx2-ring{ width:86px; height:86px; } .hx2-ring b{ font-size:19px; } .hx2-ring small{ bottom:18px; }
+  .hx2-poster{ width:140px; }
+  .hx2-poster strong{ font-size:28px; }
+}
+@media (prefers-reduced-motion:reduce){ .hx2 *,.hx2 *::before,.hx2 *::after{ animation:none!important; transition:none!important; } .hx2-scene .hx2-in{ opacity:1; transform:none; filter:none; } .hx2-code .ln{ clip-path:none!important; } .hx2-ring-fill{ stroke-dashoffset:12; } }
+html.reduce-motion .hx2 *,html.reduce-motion .hx2 *::before,html.reduce-motion .hx2 *::after{ animation:none!important; transition:none!important; }
+html.reduce-motion .hx2-scene .hx2-in{ opacity:1; transform:none; filter:none; }
+html.reduce-motion .hx2-code .ln{ clip-path:none!important; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
@@ -4184,6 +4471,9 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17z"/></symbol>
       <symbol id="i-cap" viewBox="0 0 24 24"><path d="m2.5 9.5 9.5-5 9.5 5-9.5 5zM6.5 11.6V16c1.5 1.5 3.5 2.5 5.5 2.5s4-1 5.5-2.5v-4.4M21.5 9.5V15"/></symbol>
       <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
+      <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.2 0 1.9-.8 1.9-1.8 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8h2.1a4.2 4.2 0 0 0 4.2-4.2C21 6.7 17 3.5 12 3.5z"/><circle cx="7.6" cy="11.2" r="1.1"/><circle cx="10.4" cy="7.5" r="1.1"/><circle cx="15" cy="7.6" r="1.1"/></symbol>
+      <symbol id="i-agent" viewBox="0 0 24 24"><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2"/><circle cx="12" cy="12" r="5.6"/><path d="m12 9.2 1 1.8 1.8 1-1.8 1-1 1.8-1-1.8-1.8-1 1.8-1z"/></symbol>
+      <symbol id="i-brain" viewBox="0 0 32 32"><path d="M16 6.6C14.6 5 12 5 10.9 6.6 8.9 6.3 7.2 7.9 7.4 9.9 5.6 10.6 4.9 12.8 5.9 14.4c-1.3 1.2-1.3 3.5.1 4.6-.6 2 .8 4 2.8 4.1.6 1.9 2.6 2.9 4.4 2.2.8 1 2 1.3 2.8.9M16 6.6c1.4-1.6 4-1.6 5.1 0 2-.3 3.7 1.3 3.5 3.3 1.8.7 2.5 2.9 1.5 4.5 1.3 1.2 1.3 3.5-.1 4.6.6 2-.8 4-2.8 4.1-.6 1.9-2.6 2.9-4.4 2.2-.8 1-2 1.3-2.8.9M16 6.6v19.6"/><path d="M10.9 6.6c.7 1.6 2.5 2 3.3 3.4M7.4 9.9c1.2.7 2 1.9 1.8 3.3M5.9 14.4c1.7-.2 3.7.6 4.5 2.2M6 19c1.6-.4 3.4.2 4.2 1.6M8.8 23.1c1-1.3 3-1.5 4.2-.7M21.1 6.6c-.7 1.6-2.5 2-3.3 3.4M24.6 9.9c-1.2.7-2 1.9-1.8 3.3M26.1 14.4c-1.7-.2-3.7.6-4.5 2.2M26 19c-1.6-.4-3.4.2-4.2 1.6M23.2 23.1c-1-1.3-3-1.5-4.2-.7"/></symbol>
       <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.8 2.8 0 0 0 5 0zM19 8l-2.5 6a2.8 2.8 0 0 0 5 0z"/></symbol>
       <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 19V6.5A2.5 2.5 0 0 1 7.5 4h9A2.5 2.5 0 0 1 19 6.5v7a2.5 2.5 0 0 1-2.5 2.5H8.5z"/></symbol>
       <symbol id="i-stop" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2"/></symbol>
@@ -4283,45 +4573,93 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         </div>
         <div class="hero-meta">
           <div><strong>Free</strong><span>To start, no card</span></div>
-          <div><strong>Chat · Code</strong><span>Two focused modes</span></div>
-          <div><strong>Text · Images · Code</strong><span>Attach and ask</span></div>
+          <div><strong>Four workspaces</strong><span>Chat, Code, Studio, Agent</span></div>
+          <div><strong>Live web</strong><span>Reads links, cites sources</span></div>
         </div>
         <div class="model-credit">elora runs on leading open-weight and Gemini models, with automatic fallback — if one model is busy, the next one answers.</div>
       </div>
 
-      <div class="hero-visual reveal">
-        <div class="hx-orb-stage">
-          <button class="hx-orb hx-glass" type="button" data-nav="chat" aria-label="Start chatting with elora" title="Start chatting with elora">
-            <span class="hx-glass-glow" aria-hidden="true"></span>
-            <span class="hx-glass-body" aria-hidden="true">
-              <span class="hx-glass-sheen"></span>
-              <span class="hx-glass-ember"></span>
-              <span class="hx-glass-horizon"></span>
-              <span class="hx-glass-spark"></span>
-              <span class="hx-glass-sweep"></span>
-              <span class="hx-glass-glint"></span>
-              <span class="hx-glass-glint hx-glass-glint-2"></span>
-              <span class="hx-glass-rim"></span>
-            </span>
-            <span class="hx-glass-orbit" aria-hidden="true"><i><span></span></i></span>
-            <span class="hx-orb-label"><span class="hx-orb-dot" aria-hidden="true"></span>Thinking</span>
-          </button>
-          <span class="hx-chip hx-chip-1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h10a1 1 0 0 0 1-1V8z"/><path d="M14 3.5V8h4.5"/></svg>Reads files &amp; images</span>
-          <span class="hx-chip hx-chip-2" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z"/></svg>Searches the web</span>
-          <span class="hx-chip hx-chip-3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4"/></svg>Writes real code</span>
-        </div>
-        <p class="hx-orb-caption">A little space to think before the answer.</p>
-        <div class="chat-mock">
-          <div class="chat-mock-head">
-            <span class="dots-group"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
-            <span class="label">elora — live preview</span>
+      <div class="hero-visual hx2-wrap reveal">
+        <div class="hx2" id="heroConsole" data-scene="chat">
+          <div class="hx2-halo" aria-hidden="true"></div>
+          <div class="hx2-win">
+            <div class="hx2-bar">
+              <span class="hx2-brand"><span class="ec-brain hx2-brain" aria-hidden="true"><svg viewBox="0 0 32 32"><use href="#i-brain" class="ec-brain-base"/><use href="#i-brain" class="ec-brain-pulse"/></svg></span><b>elora</b></span>
+              <div class="hx2-tabs" role="tablist" aria-label="What elora can do">
+                <button type="button" role="tab" data-scene="chat" aria-selected="true" class="is-on">Chat</button>
+                <button type="button" role="tab" data-scene="code" aria-selected="false">Code</button>
+                <button type="button" role="tab" data-scene="studio" aria-selected="false">Studio</button>
+                <button type="button" role="tab" data-scene="agent" aria-selected="false">Agent</button>
+                <span class="hx2-glider" aria-hidden="true"></span>
+              </div>
+            </div>
+
+            <div class="hx2-body">
+              <section class="hx2-scene is-on" data-scene="chat" aria-label="Chat: answers with sources">
+                <div class="hx2-user">Plan 3 days in Tbilisi on a small budget</div>
+                <div class="hx2-trace"><span>Searched the web</span><span>Read 4 sources</span></div>
+                <div class="hx2-answer">
+                  <p><b>Day 1.</b> Old Town on foot, the sulphur baths, sunset from Narikala<sup>1</sup></p>
+                  <p><b>Day 2.</b> Day trip to Mtskheta by marshrutka from Didube<sup>2</sup></p>
+                  <p><b>Day 3.</b> Dry Bridge market, Fabrika, dinner in Sololaki<sup>3</sup></p>
+                </div>
+                <div class="hx2-sources">
+                  <span><em>1</em>georgia.travel</span><span><em>2</em>wikivoyage.org</span><span><em>3</em>lonelyplanet.com</span>
+                </div>
+              </section>
+
+              <section class="hx2-scene" data-scene="code" aria-label="Code: builds and previews">
+                <div class="hx2-split">
+                  <pre class="hx2-code"><span class="c-k">const</span> timer = <span class="c-f">createTimer</span>(<span class="c-n">25</span> * <span class="c-n">60</span>);
+timer.<span class="c-f">on</span>(<span class="c-s">"tick"</span>, (left) =&gt; {
+  ring.<span class="c-f">set</span>(left / timer.total);
+  label.textContent = <span class="c-f">fmt</span>(left);
+});
+timer.<span class="c-f">on</span>(<span class="c-s">"done"</span>, () =&gt; chime.<span class="c-f">play</span>());
+startBtn.<span class="c-f">onclick</span> = timer.start;</pre>
+                  <div class="hx2-preview" aria-hidden="true">
+                    <div class="hx2-ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42"/><circle class="hx2-ring-fill" cx="50" cy="50" r="42"/></svg><b>24:59</b><small>Focus</small></div>
+                    <div class="hx2-pv-btns"><span class="is-main">Start</span><span>Reset</span></div>
+                  </div>
+                </div>
+                <div class="hx2-check"><span class="hx2-check-i"></span>Double-checked the code. No problems found.</div>
+              </section>
+
+              <section class="hx2-scene" data-scene="studio" aria-label="Studio: posters, videos and more">
+                <div class="hx2-studio">
+                  <div class="hx2-poster" aria-hidden="true">
+                    <span class="hx2-moon"></span>
+                    <span class="hx2-hills"></span>
+                    <strong>NIGHT<br>OWLS</strong>
+                    <small>Friday, 10 PM</small>
+                  </div>
+                  <div class="hx2-studio-side">
+                    <div class="hx2-render"><span>Rendering frames</span><b class="hx2-count">0 / 180</b><div class="hx2-render-bar"><i></i></div></div>
+                    <div class="hx2-exports"><span>PNG</span><span class="is-main">MP4</span><span>GIF</span></div>
+                    <p>Exact text, exact colours, 1080 × 1350.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="hx2-scene" data-scene="agent" aria-label="Agent: researches and delivers">
+                <div class="hx2-agent">
+                  <div class="hx2-agent-top"><b>Best budget laptop for coding</b><em class="hx2-pct">0%</em></div>
+                  <div class="hx2-agent-bar"><i></i></div>
+                  <ol class="hx2-agent-steps">
+                    <li><span class="hx2-dot"></span>Searched three angles: reviews, benchmarks, prices</li>
+                    <li><span class="hx2-dot"></span>Read notebookcheck.net, rtings.com, pcmag.com</li>
+                    <li><span class="hx2-dot"></span>Compared keyboards, battery life and RAM</li>
+                    <li><span class="hx2-dot"></span>Writing the recommendation</li>
+                  </ol>
+                </div>
+              </section>
+            </div>
+
+            <div class="hx2-prompt" aria-hidden="true">
+              <span class="hx2-prompt-text"></span><span class="hx2-caret"></span>
+              <span class="hx2-send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span>
+            </div>
           </div>
-          <div class="bubble user">My fetch works locally but hangs forever in prod — any idea why?</div>
-          <div class="bubble ai">
-            <span class="tag"><span class="think-dot"></span> thought for 4.1s</span>
-            <span id="heroTypedReply"></span><span class="type-caret"></span>
-          </div>
-          <div class="bubble user hero-followup" style="opacity:0;">Clean catch. Can you add a retry with backoff too?</div>
         </div>
       </div>
     </div>
@@ -4500,11 +4838,13 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
             <button type="button" class="ec-dot ec-dot-full" data-window-dot="full" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 6.5V3h3.5M7 3.5V7H3.5"/></svg></button>
           </div>
           <div class="ec-histnav" role="group" aria-label="Back and forward"><button type="button" class="ec-iconbtn ec-hist" id="navBackBtn" aria-label="Go back" title="Back" disabled><svg class="ec-i"><use href="#i-back"/></svg></button><button type="button" class="ec-iconbtn ec-hist" id="navFwdBtn" aria-label="Go forward" title="Forward" disabled><svg class="ec-i"><use href="#i-forward"/></svg></button></div>
-          <div class="ec-modes ec-modes-mini" role="tablist" aria-label="Workspace mode">
-            <button type="button" role="tab" class="ec-mode-tab is-active" aria-selected="true" data-workspace-mode="chat" aria-label="Chat" title="Chat"><svg class="ec-i"><use href="#i-chats"/></svg></button>
-            <button type="button" role="tab" class="ec-mode-tab" aria-selected="false" data-workspace-mode="code" aria-label="Code" title="Code"><svg class="ec-i"><use href="#i-code"/></svg></button>
-          </div>
           <button type="button" class="ec-iconbtn" id="sidebarCollapseBtn" aria-label="Close sidebar" title="Close sidebar"><svg class="ec-i"><use href="#i-panel"/></svg></button>
+        </div>
+        <div class="ec-modebar" role="tablist" aria-label="Workspace">
+          <button type="button" role="tab" class="ec-modebar-tab is-active" aria-selected="true" data-workspace-mode="chat"><svg class="ec-i"><use href="#i-chats"/></svg><span>Chat</span></button>
+          <button type="button" role="tab" class="ec-modebar-tab" aria-selected="false" data-workspace-mode="code"><svg class="ec-i"><use href="#i-code"/></svg><span>Code</span></button>
+          <button type="button" role="tab" class="ec-modebar-tab" aria-selected="false" data-workspace-mode="studio"><svg class="ec-i"><use href="#i-palette"/></svg><span>Studio</span></button>
+          <button type="button" role="tab" class="ec-modebar-tab" aria-selected="false" data-workspace-mode="agent"><svg class="ec-i"><use href="#i-agent"/></svg><span>Agent</span></button>
         </div>
 
         <label class="ec-search" for="chatSearchInput">
@@ -4619,6 +4959,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           </div>
 
           <div class="ec-dock">
+            <div class="ec-ctxbar" id="modeCtxBar" hidden></div>
             <div class="ec-composer" id="composerBox">
               <div class="ec-attachments" id="attachRow" style="display:none;"></div>
               <input type="file" id="fileInput" multiple accept="image/*,video/*,audio/*,.gif,.mov,.mkv,.txt,.md,.csv,.tsv,.json,.log,.py,.js,.mjs,.ts,.jsx,.tsx,.html,.htm,.css,.scss,.java,.kt,.c,.h,.cpp,.hpp,.cs,.go,.rs,.rb,.php,.swift,.dart,.sql,.sh,.yml,.yaml,.toml,.ini,.xml,.vue,.svelte,.lua" hidden>
@@ -4663,6 +5004,20 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
               <button type="button" class="ec-chip" data-fill="Write a complete, runnable script that "><svg class="ec-i"><use href="#i-terminal"/></svg>Write a script</button>
               <button type="button" class="ec-chip" data-fill="Help me fix this error. Here's the message and the code around it:&#10;&#10;"><svg class="ec-i"><use href="#i-bug"/></svg>Fix an error</button>
               </span>
+              <span class="ec-suggest-set" data-set="studio">
+              <button type="button" class="ec-chip" data-fill="A cinematic photo of "><svg class="ec-i"><use href="#i-wand"/></svg>Photo</button>
+              <button type="button" class="ec-chip" data-fill="Design a poster for "><svg class="ec-i"><use href="#i-doc"/></svg>Poster</button>
+              <button type="button" class="ec-chip" data-fill="Make a YouTube thumbnail for a video called "><svg class="ec-i"><use href="#i-window"/></svg>Thumbnail</button>
+              <button type="button" class="ec-chip" data-fill="Make a 6-second animated intro for "><svg class="ec-i"><use href="#i-play"/></svg>Video intro</button>
+              <button type="button" class="ec-chip" data-fill="Design 3 logo concepts for "><svg class="ec-i"><use href="#i-spark"/></svg>Logo</button>
+              </span>
+              <span class="ec-suggest-set" data-set="agent">
+              <button type="button" class="ec-chip" data-fill="Research and compare the best options for "><svg class="ec-i"><use href="#i-binoculars"/></svg>Research &amp; compare</button>
+              <button type="button" class="ec-chip" data-fill="Find the latest news about "><svg class="ec-i"><use href="#i-news"/></svg>Latest news</button>
+              <button type="button" class="ec-chip" data-fill="Plan a trip to "><svg class="ec-i"><use href="#i-calendar"/></svg>Plan a trip</button>
+              <button type="button" class="ec-chip" data-fill="Analyse this link and summarise what matters: "><svg class="ec-i"><use href="#i-globe"/></svg>Analyse a link</button>
+              <button type="button" class="ec-chip" data-fill="Write a report on "><svg class="ec-i"><use href="#i-doc"/></svg>Write a report</button>
+              </span>
               <span class="ec-suggest-set" data-set="chat">
               <button type="button" class="ec-chip" data-fill="Help me write "><svg class="ec-i"><use href="#i-pen"/></svg>Write</button>
               <button type="button" class="ec-chip" data-fill="Create an image of "><svg class="ec-i"><use href="#i-wand"/></svg>Create an image</button>
@@ -4699,7 +5054,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       <aside class="ec-progress ec-wb" id="workbenchPanel" aria-label="Workbench" hidden>
         <div class="ec-progress-head"><strong>Workbench</strong><span class="ec-wb-count" id="wbCount"></span><span class="ec-wb-spacer"></span><button type="button" class="ec-iconbtn" id="wbZip" aria-label="Download all files as ZIP" title="Download all as ZIP"><svg class="ec-i"><use href="#i-zip"/></svg></button><button type="button" class="ec-iconbtn" id="wbClose" aria-label="Close the workbench" title="Close"><svg class="ec-i"><use href="#i-x"/></svg></button></div>
         <div class="ec-wb-tabs" id="wbTabs" role="tablist" aria-label="Files"></div>
-        <div class="ec-wb-tools"><div class="ec-wb-seg" role="tablist"><button type="button" data-wb-view="code" class="is-active">Code</button><button type="button" data-wb-view="preview">Preview</button></div><span class="ec-wb-spacer"></span><button type="button" class="ec-wb-act" id="wbRun"><svg class="ec-i"><use href="#i-play"/></svg>Run</button><button type="button" class="ec-wb-act" id="wbCopy"><svg class="ec-i"><use href="#i-copy"/></svg>Copy</button><button type="button" class="ec-wb-act" id="wbDownload"><svg class="ec-i"><use href="#i-download"/></svg></button></div>
+        <div class="ec-wb-tools"><div class="ec-wb-seg" role="tablist"><button type="button" data-wb-view="code" class="is-active">Code</button><button type="button" data-wb-view="changes" title="What changed since the last version">Changes</button><button type="button" data-wb-view="preview">Preview</button></div><span class="ec-wb-ver" id="wbVer"></span><span class="ec-wb-spacer"></span><button type="button" class="ec-wb-act" id="wbOpenTab" title="Open the preview in a new tab"><svg class="ec-i"><use href="#i-external"/></svg></button><button type="button" class="ec-wb-act" id="wbRun"><svg class="ec-i"><use href="#i-play"/></svg>Run</button><button type="button" class="ec-wb-act" id="wbCopy"><svg class="ec-i"><use href="#i-copy"/></svg>Copy</button><button type="button" class="ec-wb-act" id="wbDownload"><svg class="ec-i"><use href="#i-download"/></svg></button></div>
         <div class="ec-wb-body"><pre class="ec-wb-code" id="wbCode"><code></code></pre><iframe class="ec-wb-frame" id="wbFrame" title="Preview" sandbox="allow-scripts allow-forms allow-modals allow-popups" hidden></iframe><div class="ec-run-out ec-wb-out" id="wbOut" hidden></div><div class="ec-wb-empty" id="wbEmpty"><svg class="ec-i"><use href="#i-code"/></svg><strong>Your files show up here</strong><span>Ask elora to build something — every file it writes lands in the workbench, ready to preview, run and download.</span></div></div>
       </aside>
 
@@ -7028,6 +7383,99 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     renderAuthState();
   }
 
+  /* ---------------- Home: the elora console (Chat · Code · Studio · Agent) ---------------- */
+  (function(){
+    var root = document.getElementById("heroConsole");
+    if(!root) return;
+    var reduce = document.documentElement.classList.contains("reduce-motion") || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var order = ["chat", "code", "studio", "agent"];
+    var prompts = { chat:"Plan 3 days in Tbilisi on a small budget", code:"Build a focus timer that chimes when it's done", studio:"Neon poster for Night Owls, Friday 10 PM", agent:"Find the best budget laptop for coding" };
+    var tabs = root.querySelectorAll(".hx2-tabs [data-scene]"), glider = root.querySelector(".hx2-glider");
+    var promptEl = root.querySelector(".hx2-prompt-text");
+    var idx = 0, timers = [], hover = false, holdUntil = 0, visible = false, started = false;
+    // Staggered entrances: mark what animates in, in order.
+    var stagger = function(sel, list){ list.forEach(function(el, i){ if(el){ el.classList.add("hx2-in"); el.style.setProperty("--i", i); } }); };
+    var sc = function(n){ return root.querySelector('.hx2-scene[data-scene="' + n + '"]'); };
+    stagger(null, [sc("chat").querySelector(".hx2-user"), sc("chat").querySelector(".hx2-trace")].concat([].slice.call(sc("chat").querySelectorAll(".hx2-answer p")), [sc("chat").querySelector(".hx2-sources")]));
+    var pre = sc("code").querySelector(".hx2-code");
+    pre.innerHTML = pre.innerHTML.split("\n").map(function(line, i){ return '<span class="ln" style="--i:' + i + '">' + (line || " ") + "</span>"; }).join("");
+    var pv = sc("code").querySelector(".hx2-preview"); pv.classList.add("hx2-in"); pv.style.setProperty("--i", 4);
+    var ck = sc("code").querySelector(".hx2-check"); ck.classList.add("hx2-in"); ck.style.setProperty("--i", 9);
+    stagger(null, [null].concat([].slice.call(sc("studio").querySelectorAll(".hx2-studio-side > *"))));
+    stagger(null, [sc("agent").querySelector(".hx2-agent-top"), sc("agent").querySelector(".hx2-agent-bar")].concat([].slice.call(sc("agent").querySelectorAll(".hx2-agent-steps li"))));
+    function later(fn, ms){ timers.push(setTimeout(fn, ms)); }
+    function clearAll(){ timers.forEach(clearTimeout); timers = []; }
+    function moveGlider(){
+      var on = root.querySelector(".hx2-tabs .is-on");
+      if(!on || !glider) return;
+      glider.style.width = on.offsetWidth + "px";
+      glider.style.transform = "translateX(" + (on.offsetLeft - 3) + "px)";
+    }
+    function playScene(name, scene){
+      if(name === "studio"){
+        var count = scene.querySelector(".hx2-count"), bar = scene.querySelector(".hx2-render-bar");
+        var t0 = Date.now(), dur = reduce ? 0 : 2600;
+        (function tick(){
+          var p = dur ? Math.min(1, (Date.now() - t0) / dur) : 1;
+          count.textContent = Math.round(p * 180) + " / 180"; bar.style.setProperty("--p", (p * 100).toFixed(1) + "%");
+          if(p < 1) later(tick, 60);
+          else count.textContent = "Ready";
+        })();
+      }
+      if(name === "agent"){
+        var lis = scene.querySelectorAll(".hx2-agent-steps li"), pct = scene.querySelector(".hx2-pct"), abar = scene.querySelector(".hx2-agent-bar");
+        var set = function(done, now, p){ lis.forEach(function(li, k){ li.className = "hx2-in" + (k < done ? " is-done" : k === now ? " is-now" : ""); li.style.setProperty("--i", k + 2); }); pct.textContent = p + "%"; abar.style.setProperty("--p", p + "%"); };
+        set(0, -1, 0);
+        if(reduce){ set(3, 3, 82); return; }
+        later(function(){ set(0, 0, 12); }, 500);
+        later(function(){ set(1, 1, 36); }, 1400);
+        later(function(){ set(2, 2, 61); }, 2400);
+        later(function(){ set(3, 3, 84); }, 3500);
+      }
+    }
+    function show(name){
+      clearAll();
+      idx = order.indexOf(name);
+      root.setAttribute("data-scene", name);
+      tabs.forEach(function(t){ var on = t.getAttribute("data-scene") === name; t.classList.toggle("is-on", on); t.setAttribute("aria-selected", String(on)); });
+      moveGlider();
+      var swap = function(){ root.querySelectorAll(".hx2-scene").forEach(function(s){ if(s !== scene) s.classList.remove("is-on", "is-play"); }); scene.classList.remove("is-play"); };
+      var scene = sc(name), text = prompts[name];
+      if(reduce){ swap(); promptEl.textContent = text; scene.classList.add("is-on", "is-play"); playScene(name, scene); return; }
+      promptEl.textContent = "";
+      root.classList.add("is-typing");
+      var i = 0;
+      (function type(){
+        if(i <= text.length){ promptEl.textContent = text.slice(0, i); i++; later(type, 24 + Math.random() * 28); return; }
+        root.classList.remove("is-typing"); root.classList.add("is-sent");
+        later(function(){
+          root.classList.remove("is-sent");
+          promptEl.textContent = "";
+          swap();
+          scene.classList.add("is-on");
+          requestAnimationFrame(function(){ scene.classList.add("is-play"); });
+          playScene(name, scene);
+          later(next, name === "agent" ? 6400 : name === "code" ? 6200 : 5600);
+        }, 360);
+      })();
+    }
+    function next(){
+      if(hover || !visible || Date.now() < holdUntil){ later(next, 1200); return; }
+      show(order[(idx + 1) % order.length]);
+    }
+    tabs.forEach(function(t){ t.addEventListener("click", function(){ holdUntil = Date.now() + 9000; show(t.getAttribute("data-scene")); }); });
+    root.addEventListener("mouseenter", function(){ hover = true; });
+    root.addEventListener("mouseleave", function(){ hover = false; });
+    root.addEventListener("focusin", function(){ hover = true; });
+    root.addEventListener("focusout", function(){ hover = false; });
+    window.addEventListener("resize", moveGlider);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(moveGlider);
+    var start = function(){ if(started) return; started = true; show("chat"); };
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(entries){ entries.forEach(function(e){ visible = e.isIntersecting; if(visible) start(); }); }, { threshold:0.25 }).observe(root);
+    } else { visible = true; start(); }
+    setTimeout(moveGlider, 60);
+  })();
   /* ---------------- Hero mock: typewriter code reply ---------------- */
   (function(){
     var target = document.getElementById("heroTypedReply");
@@ -7223,6 +7671,111 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   })();
 
   /* ---------------- Chat ---------------- */
+  /* ================================================================
+     WORKSPACES — Chat · Code · Studio · Agent. Each keeps its own chats,
+     greeting, starters and a bar of settings above the message box.
+     ================================================================ */
+  var MODES = {
+    chat:   { label:"Chat",   icon:"chats",   recents:"Recents",    empty:"Your chats will show up here.",          ph:["How can I help you today?", "Reply to elora…"] },
+    code:   { label:"Code",   icon:"code",    recents:"Code chats", empty:"Your coding chats will show up here.",   ph:["Describe what to build, paste an error, or ask about code…", "Ask for a change, a fix or the next feature…"], greet:"What are we building" },
+    studio: { label:"Studio", icon:"palette", recents:"Creations",  empty:"Your creations will show up here.",      ph:["Describe what to create — a picture, poster, video, logo…", "Ask for a variation, a new format or a change…"], greet:"What are we creating" },
+    agent:  { label:"Agent",  icon:"agent",   recents:"Agent runs", empty:"Your agent runs will show up here.",     ph:["Give elora a goal — it researches, plans and delivers…", "Give the next instruction…"], greet:"What should I get done" }
+  };
+  function modeOf(v){ return v === "code" || v === "studio" || v === "agent" ? v : "chat"; }
+  var CTX_OPTIONS = {
+    webMode: { label:"Web", icon:"globe", items:[["auto","Auto","Searches when the question needs fresh facts"],["always","Always","Checks the web for every question"],["deep","Deep","Reads more sources for every answer"],["off","Off","Answers from what elora knows"]] },
+    studioType: { label:"Make", icon:"wand", items:[["auto","Anything","elora picks the best format"],["image","Picture","Photos, art, scenes"],["poster","Poster","Crisp text and a generated picture"],["thumbnail","Thumbnail","YouTube 1920×1080"],["social","Social post","Instagram, stories"],["video","Video","Intros, ads, reels — MP4"],["gif","GIF","Short loops"],["logo","Logo","3 vector concepts"],["icon","Icon set","Matching vector icons"],["diagram","Diagram","Flowcharts, mind maps"]] },
+    studioAspect: { label:"Format", icon:"window", items:[["auto","Auto",""],["square","Square","1:1"],["landscape","Landscape","16:9"],["portrait","Portrait","9:16 — stories, reels"],["tall","Feed","4:5 — Instagram"]] },
+    studioStyle: { label:"Style", icon:"spark", items:[["auto","Auto",""],["photorealistic","Photoreal",""],["cinematic","Cinematic",""],["3D render","3D",""],["anime","Anime",""],["illustration","Illustration",""],["minimal flat","Minimal",""],["neon cyberpunk","Neon",""],["watercolor","Watercolor",""],["luxury editorial","Luxury",""],["retro 80s","Retro",""]] },
+    studioCount: { label:"Variations", icon:"layers", items:[["1","1",""],["2","2",""],["3","3",""],["4","4",""]] },
+    agentSteps: { label:"Steps", icon:"check-list", items:[["3","Up to 3","Quick"],["4","Up to 4",""],["6","Up to 6","Thorough"]] },
+    codeLang: { label:"Language", icon:"code", items:[["auto","Auto",""],["JavaScript","JavaScript",""],["TypeScript","TypeScript",""],["Python","Python",""],["Java","Java",""],["C#","C#",""],["C++","C++",""],["Go","Go",""],["Rust","Rust",""],["PHP","PHP",""],["Swift","Swift",""],["Kotlin","Kotlin",""],["SQL","SQL",""],["Bash","Bash",""]] },
+    codeFramework: { label:"Stack", icon:"layers", items:[["auto","Auto",""],["vanilla HTML/CSS/JS","Vanilla",""],["React","React",""],["Next.js","Next.js",""],["Vue","Vue",""],["Svelte","Svelte",""],["Tailwind CSS","Tailwind",""],["Node.js + Express","Express",""],["Python + FastAPI","FastAPI",""],["Django","Django",""],["Flask","Flask",""]] },
+    codeOutput: { label:"Output", icon:"doc", items:[["full","Whole files","Every changed file in full"],["changes","Only changes","Just the parts that change"]] }
+  };
+  function ctxValue(key){
+    var p = chatPreferences;
+    if(key === "webMode") return p.webSearch === false ? "off" : (p.webMode || "auto");
+    if(key === "studioType") return (p.studio && p.studio.type) || "auto";
+    if(key === "studioAspect") return (p.studio && p.studio.aspect) || "auto";
+    if(key === "studioStyle") return (p.studio && p.studio.style) || "auto";
+    if(key === "studioCount") return String((p.studio && p.studio.count) || 1);
+    if(key === "agentSteps") return String(p.taskMaxSteps || 6);
+    if(key === "codeLang") return p.codeLanguage || "auto";
+    if(key === "codeFramework") return p.codeFramework || "auto";
+    if(key === "codeOutput") return p.codeOutput || "full";
+    return "";
+  }
+  function setCtxValue(key, v){
+    var p = chatPreferences;
+    p.studio = p.studio && typeof p.studio === "object" ? p.studio : {};
+    if(key === "webMode"){ p.webSearch = v !== "off"; p.webMode = v === "off" ? "auto" : v; var tg = document.getElementById("webSearchToggle"); if(tg) tg.checked = p.webSearch; }
+    else if(key === "studioType") p.studio.type = v;
+    else if(key === "studioAspect") p.studio.aspect = v;
+    else if(key === "studioStyle") p.studio.style = v;
+    else if(key === "studioCount") p.studio.count = Number(v) || 1;
+    else if(key === "agentSteps") p.taskMaxSteps = Number(v) || 6;
+    else if(key === "codeLang") p.codeLanguage = v;
+    else if(key === "codeFramework") p.codeFramework = v;
+    else if(key === "codeOutput") p.codeOutput = v;
+    saveChatPreferences();
+    renderCtxBar();
+  }
+  var CTX_BY_MODE = { chat:["webMode"], code:["codeLang","codeFramework","codeOutput","toggle:codeDoubleCheck","toggle:codeTests"], studio:["studioType","studioAspect","studioStyle","studioCount"], agent:["agentSteps","webMode"] };
+  var CTX_TOGGLES = { codeDoubleCheck:{ label:"Double-check", icon:"check", def:true, tip:"elora reviews its code for bugs before you see it" }, codeTests:{ label:"Tests", icon:"flask", def:false, tip:"Add tests to non-trivial logic" } };
+  function renderCtxBar(){
+    var bar = document.getElementById("modeCtxBar");
+    if(!bar) return;
+    var mode = currentMode();
+    var keys = CTX_BY_MODE[mode] || [];
+    bar.setAttribute("data-mode", mode);
+    var html = '<span class="ec-ctx-badge" data-mode="' + mode + '">' + icon(MODES[mode].icon) + '<b>' + MODES[mode].label + '</b></span>';
+    keys.forEach(function(key){
+      if(key.indexOf("toggle:") === 0){
+        var tk = key.slice(7), t = CTX_TOGGLES[tk], on = chatPreferences[tk] == null ? t.def : chatPreferences[tk] !== false;
+        html += '<button type="button" class="ec-ctx-chip ec-ctx-toggle' + (on ? " is-on" : "") + '" data-ctx-toggle="' + tk + '" aria-pressed="' + on + '" title="' + escapeAttr(t.tip) + '">' + icon(t.icon) + '<span>' + t.label + '</span></button>';
+        return;
+      }
+      var o = CTX_OPTIONS[key], v = ctxValue(key);
+      var item = o.items.filter(function(it){ return it[0] === v; })[0] || o.items[0];
+      var showLabel = v === "auto" ? o.label : item[1];
+      html += '<button type="button" class="ec-ctx-chip' + (v !== "auto" ? " is-set" : "") + '" data-ctx="' + key + '" aria-haspopup="menu" aria-expanded="false" title="' + escapeAttr(o.label) + '">' + icon(o.icon) + '<span>' + escapeHtml(key === "studioCount" ? "×" + item[1] : key === "webMode" ? "Web: " + item[1] : showLabel) + '</span>' + icon("chevron-down") + '</button>';
+    });
+    bar.innerHTML = html;
+    bar.hidden = false;
+  }
+  function closeCtxMenu(){ var m = document.getElementById("ctxMenu"); if(m) m.remove(); document.querySelectorAll(".ec-ctx-chip[aria-expanded='true']").forEach(function(b){ b.setAttribute("aria-expanded", "false"); }); }
+  function openCtxMenu(btn){
+    var key = btn.getAttribute("data-ctx"), o = CTX_OPTIONS[key], v = ctxValue(key);
+    closeCtxMenu();
+    var menu = document.createElement("div");
+    menu.className = "ec-pop ec-ctx-menu"; menu.id = "ctxMenu"; menu.setAttribute("role", "menu");
+    menu.innerHTML = '<div class="ec-ctx-menu-head">' + escapeHtml(o.label) + '</div>' + o.items.map(function(it){
+      return '<button type="button" role="menuitemradio" aria-checked="' + (it[0] === v) + '" data-ctx-value="' + escapeAttr(it[0]) + '"><span class="ec-ctx-copy"><b>' + escapeHtml(it[1]) + '</b>' + (it[2] ? '<small>' + escapeHtml(it[2]) + '</small>' : "") + '</span>' + (it[0] === v ? icon("check") : "") + '</button>';
+    }).join("");
+    document.body.appendChild(menu);
+    var r = btn.getBoundingClientRect(), mh = menu.offsetHeight, mw = menu.offsetWidth;
+    var top = r.top - mh - 8; if(top < 8) top = Math.min(window.innerHeight - mh - 8, r.bottom + 8);
+    menu.style.top = Math.max(8, top) + "px";
+    menu.style.left = Math.max(8, Math.min(window.innerWidth - mw - 8, r.left)) + "px";
+    btn.setAttribute("aria-expanded", "true");
+    menu.addEventListener("click", function(e){
+      var b = e.target.closest("[data-ctx-value]"); if(!b) return;
+      setCtxValue(key, b.getAttribute("data-ctx-value"));
+      closeCtxMenu();
+      if(chatInput && window.innerWidth > 760) chatInput.focus();
+    });
+  }
+  document.addEventListener("click", function(e){
+    var chip = e.target.closest && e.target.closest(".ec-ctx-chip[data-ctx]");
+    if(chip){ if(chip.getAttribute("aria-expanded") === "true") closeCtxMenu(); else openCtxMenu(chip); return; }
+    var tg = e.target.closest && e.target.closest("[data-ctx-toggle]");
+    if(tg){ var k = tg.getAttribute("data-ctx-toggle"), t = CTX_TOGGLES[k], on = chatPreferences[k] == null ? t.def : chatPreferences[k] !== false; chatPreferences[k] = !on; saveChatPreferences(); renderCtxBar(); showToast(t.label + (on ? " off" : " on")); return; }
+    if(!(e.target.closest && e.target.closest("#ctxMenu"))) closeCtxMenu();
+  });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeCtxMenu(); });
+  window.addEventListener("resize", closeCtxMenu);
+
   var chatThread = document.getElementById("chatThread");
   var chatScroll = document.getElementById("chatScroll");
   var chatInput = document.getElementById("chatInput");
@@ -7241,7 +7794,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   var chatSessions = [];
   var nextConversationId = 1;
   var replyPending = false;
-  function currentMode(){ return typeof chatPreferences !== "undefined" && chatPreferences && chatPreferences.workspaceMode === "code" ? "code" : "chat"; }
+  function currentMode(){ return typeof chatPreferences !== "undefined" && chatPreferences ? modeOf(chatPreferences.workspaceMode) : "chat"; }
   function createConversation(){ return { id:nextConversationId++, title:"New conversation", started:false, history:[], threadHtml:"", updatedAt:Date.now(), mode: currentMode() }; }
   var activeConversation = createConversation();
 
@@ -7271,8 +7824,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     if(!chatHistoryList) return;
     var query = chatSearchInput ? chatSearchInput.value.trim().toLowerCase() : "";
     var mode = currentMode();
-    var recentsLabel = document.getElementById("recentsLabel"); if(recentsLabel) recentsLabel.textContent = mode === "code" ? "Code chats" : "Recents";
-    var matches = chatSessions.filter(function(session){ return (session.mode === "code" ? "code" : "chat") === mode && (!query || session.title.toLowerCase().includes(query)); })
+    var recentsLabel = document.getElementById("recentsLabel"); if(recentsLabel) recentsLabel.textContent = MODES[mode].recents;
+    var matches = chatSessions.filter(function(session){ return modeOf(session.mode) === mode && (!query || session.title.toLowerCase().includes(query)); })
       .sort(function(a, b){ return (b.updatedAt || 0) - (a.updatedAt || 0); });
     // Pinned chats first, then the rest under day labels.
     matches = matches.filter(function(s){ return s.pinned; }).concat(matches.filter(function(s){ return !s.pinned; }));
@@ -7311,7 +7864,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     });
     if(chatHistoryEmpty){
       chatHistoryEmpty.hidden = matches.length > 0;
-      if(!matches.length && !query) chatHistoryEmpty.textContent = mode === "code" ? "Your coding chats will show up here." : "Your chats will show up here.";
+      if(!matches.length && !query) chatHistoryEmpty.textContent = MODES[mode].empty;
       else if(!matches.length) chatHistoryEmpty.textContent = "No chats match that search.";
     }
   }
@@ -7319,8 +7872,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   var chatMain = document.getElementById("chatMain");
   function greetingText(){
     var name = currentUser && (currentUser.name || String(currentUser.email || "").split("@")[0]);
-    var codeMode = typeof chatPreferences !== "undefined" && chatPreferences && chatPreferences.workspaceMode === "code";
-    if(codeMode) return name ? "What are we building, " + name + "?" : "What are we building?";
+    var wm = typeof chatPreferences !== "undefined" && chatPreferences ? modeOf(chatPreferences.workspaceMode) : "chat";
+    if(MODES[wm] && MODES[wm].greet) return MODES[wm].greet + (name ? ", " + name : "") + "?";
     var hour = new Date().getHours();
     var part = hour >= 5 && hour < 12 ? "Good morning" : hour >= 12 && hour < 18 ? "Good afternoon" : "Good evening";
     return name ? part + ", " + name : part;
@@ -7329,7 +7882,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   // once a message is sent the box docks to the bottom of the screen.
   function setChatEmpty(empty){
     if(chatMain) chatMain.classList.toggle("is-empty", !!empty);
-    if(chatInput) chatInput.placeholder = currentMode() === "code" ? (empty ? "Describe what to build, paste an error, or ask about code…" : "Ask for a change, a fix or the next feature…") : (empty ? "How can I help you today?" : "Reply to elora…");
+    if(chatInput) chatInput.placeholder = MODES[currentMode()].ph[empty ? 0 : 1];
   }
   function renderChatWelcome(){
     if(!chatThread || !chatWelcomeTemplate) return;
@@ -7623,13 +8176,14 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       background: /^#[0-9a-f]{3,8}$/i.test(String(cfg.background || "")) ? cfg.background : "#000000"
     };
   }
-  function animCard(raw){
+  // still = a ```design block: drawn once, exported as PNG or JPG.
+  function animCard(raw, still){
     var sp = splitAnimSpec(raw), c = animConfig(sp.cfg);
     var cap = c.height >= c.width ? ' style="max-width:' + Math.max(240, Math.round(520 * c.width / c.height)) + 'px"' : "";
-    return '<figure class="ec-x ec-anim is-loading" data-x="anim"' + cap + '>' +
-      '<div class="ec-x-stage" style="aspect-ratio:' + c.width + '/' + c.height + '"><span class="ec-x-wait"><i></i>Preparing the animation…</span></div>' +
-      '<figcaption><span class="ec-x-cap"><strong>' + escapeHtml(c.title) + '</strong><em>' + c.duration + ' s · ' + c.width + '×' + c.height + '</em></span><span class="ec-x-acts">' +
-      xBtn("replay", "refresh", "Replay") + xBtn("mp4", "download", "MP4") + xBtn("gif", "download", "GIF") + xBtn("webm", "download", "WebM") + xBtn("code", "code", "Code") +
+    return '<figure class="ec-x ec-anim' + (still ? " is-still" : "") + ' is-loading" data-x="anim"' + (still ? ' data-still="1"' : "") + cap + '>' +
+      '<div class="ec-x-stage" style="aspect-ratio:' + c.width + '/' + c.height + '"><span class="ec-x-wait"><i></i>' + (still ? "Laying out the design…" : "Preparing the animation…") + '</span></div>' +
+      '<figcaption><span class="ec-x-cap"><strong>' + escapeHtml(c.title) + '</strong><em>' + (still ? "" : c.duration + ' s · ') + c.width + '×' + c.height + '</em></span><span class="ec-x-acts">' +
+      (still ? xBtn("png", "download", "PNG") + xBtn("jpg", "download", "JPG") : xBtn("replay", "refresh", "Replay") + xBtn("mp4", "download", "MP4") + xBtn("gif", "download", "GIF") + xBtn("webm", "download", "WebM")) + xBtn("code", "code", "Code") +
       '</span></figcaption><div class="ec-x-status" hidden></div>' +
       '<textarea class="ec-x-raw" hidden>' + escapeHtml(String(raw || "")) + '</textarea>' + xSource(sp.code, "animation") + '</figure>';
   }
@@ -7795,7 +8349,10 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         raf = requestAnimationFrame(loop);
       }
     }
-    function play(){ mode = "play"; paused = false; start = performance.now(); if(!raf) raf = requestAnimationFrame(loop); }
+    function play(){
+      if(cfg.still){ if(raf){ cancelAnimationFrame(raf); raf = 0; } mode = "idle"; frame(0); return; }
+      mode = "play"; paused = false; start = performance.now(); if(!raf) raf = requestAnimationFrame(loop);
+    }
     function pickMime(){
       var list = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm", "video/mp4;codecs=avc1", "video/mp4"];
       for(var i = 0; i < list.length; i++){ try { if(window.MediaRecorder && MediaRecorder.isTypeSupported(list[i])) return list[i]; } catch(e){} }
@@ -7831,9 +8388,9 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         mode = "export";
         frame(Number(m.t) || 0);
         // Synchronous encode: callbacks like toBlob get throttled in background tabs.
-        var url = c.toDataURL("image/jpeg", 0.92), bin = atob(url.slice(url.indexOf(",") + 1)), bytes = new Uint8Array(bin.length);
+        var url = c.toDataURL(m.format === "png" ? "image/png" : "image/jpeg", m.format ? 0.95 : 0.92), bin = atob(url.slice(url.indexOf(",") + 1)), bytes = new Uint8Array(bin.length);
         for(var bi = 0; bi < bin.length; bi++) bytes[bi] = bin.charCodeAt(bi);
-        send({ type:"frame", id:m.id, blob:new Blob([bytes], { type:"image/jpeg" }) });
+        send({ type:"frame", id:m.id, blob:new Blob([bytes], { type:m.format === "png" ? "image/png" : "image/jpeg" }) });
       }
       else if(m.cmd === "endExport"){ if(mode === "export") play(); }
     });
@@ -7858,7 +8415,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   }
   function animRunnerHtml(c, code){
     var fonts = c.fonts.length ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?' + c.fonts.map(function(f){ var p = f.split(":"); return "family=" + encodeURIComponent(p[0]).replace(/%20/g, "+") + (p[1] ? ":wght@" + p[1] : ""); }).join("&") + '&display=block">' : "";
-    var cfg = JSON.stringify({ dur:c.duration, fps:c.fps, fonts:c.fonts, bg:c.background, origin:location.origin }).replace(/</g, "\\u003c");
+    var cfg = JSON.stringify({ dur:c.duration, fps:c.fps, fonts:c.fonts, bg:c.background, origin:location.origin, still:!!c.still }).replace(/</g, "\\u003c");
     var safe = String(code || "").replace(/<\/script/gi, "<\\/script").replace(/<!-{2}/g, "<\\!--");
     var prelude = "window.__A={cfg:" + cfg + ",err:null};window.__A.send=function(m){m.__eloraAnim=1;try{parent.postMessage(m,'*');}catch(e){}};window.onerror=function(msg,src,line){if(window.__A.err)return;window.__A.err=String(msg);window.__A.send({type:'error',message:window.__A.err});};";
     return '<!doctype html><html><head><meta charset="utf-8">' + fonts +
@@ -7867,10 +8424,12 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       '<script>' + prelude + '<\/script><script>\n' + safe + '\n<\/script><script>(' + animRunnerMain.toString() + ')();<\/script></body></html>';
   }
   function animFrameOf(fig){ return fig.querySelector("iframe.ec-x-frame"); }
+  function postToFrame(fr, msg){ try { if(fr && fr.contentWindow) fr.contentWindow.postMessage(msg, "*"); } catch(e){} }
   function startAnim(fig){
     if(fig.__started) return;
     fig.__started = true;
     var sp = splitAnimSpec((fig.querySelector("textarea.ec-x-raw") || {}).value || ""), c = animConfig(sp.cfg);
+    c.still = fig.hasAttribute("data-still");
     fig.__cfg = c;
     var fr = document.createElement("iframe");
     fr.className = "ec-x-frame";
@@ -7892,11 +8451,11 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     else if(m.type === "recordError"){ if(fig.__rec) fig.__rec.reject(new Error(m.message || "Recording failed.")); }
     else if(m.type === "frame"){ var wtg = fig.__frameWait; if(wtg && wtg.id === m.id){ fig.__frameWait = null; if(m.blob instanceof Blob) wtg.resolve(m.blob); else wtg.reject(new Error("a frame couldn't be drawn")); } }
   });
-  function animFrame(fig, fr, t, id){
+  function animFrame(fig, fr, t, id, format){
     return new Promise(function(resolve, reject){
       var timer = setTimeout(function(){ if(fig.__frameWait && fig.__frameWait.id === id){ fig.__frameWait = null; reject(new Error("a frame took too long to draw")); } }, 20000);
       fig.__frameWait = { id:id, resolve:function(b){ clearTimeout(timer); resolve(b); }, reject:function(e){ clearTimeout(timer); reject(e); } };
-      fr.contentWindow.postMessage({ cmd:"frame", t:t, id:id }, "*");
+      postToFrame(fr, { cmd:"frame", t:t, id:id, format:format || "" }, "*");
     });
   }
   async function exportAnim(fig, kind){
@@ -7907,12 +8466,18 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     var base = slugify(c.title) || "elora-video", out = null, ext = "";
     var ff = null, written = [];
     try {
-      if(kind === "webm"){
+      if(kind === "png" || kind === "jpg"){
+        // A still design: one exact frame at full size.
+        showXStatus(fig, "Rendering " + c.width + "×" + c.height + "…");
+        out = await animFrame(fig, fr, 0, "still-" + Date.now(), kind === "png" ? "png" : "jpeg");
+        postToFrame(fr, { cmd:"endExport" }, "*");
+        ext = kind;
+      } else if(kind === "webm"){
         // Recorded live, in real time.
         showXStatus(fig, "Recording… 0.0 / " + c.duration.toFixed(1) + " s — keep this tab open");
         out = await new Promise(function(resolve, reject){
           fig.__rec = { resolve: resolve, reject: reject, onProgress: function(t, d){ showXStatus(fig, "Recording… " + t.toFixed(1) + " / " + d.toFixed(1) + " s — keep this tab open"); } };
-          fr.contentWindow.postMessage({ cmd:"record" }, "*");
+          postToFrame(fr, { cmd:"record" }, "*");
           setTimeout(function(){ reject(new Error("recording took too long — keep the tab visible while it records")); }, (c.duration + 40) * 1000);
         });
         ext = /mp4/.test(out.type) ? "mp4" : "webm";
@@ -7929,7 +8494,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           written.push(fname);
           if(i % 5 === 0 || i === n - 1) showXStatus(fig, "Drawing frames — " + (i + 1) + " / " + n);
         }
-        fr.contentWindow.postMessage({ cmd:"endExport" }, "*");
+        postToFrame(fr, { cmd:"endExport" }, "*");
         var outName = kind === "gif" ? "anim-out.gif" : "anim-out.mp4";
         var gw = Math.min(c.width, c.width >= c.height ? 720 : 480); gw -= gw % 2;
         var args = kind === "gif"
@@ -7953,7 +8518,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       showXStatus(fig, "Saved " + name + " · " + prettyBytes(out.size), false, true);
     } catch(err){
       showXStatus(fig, "Couldn't export: " + String(err && err.message || err), true);
-      try { fr.contentWindow.postMessage({ cmd:"endExport" }, "*"); } catch(e){}
+      try { postToFrame(fr, { cmd:"endExport" }, "*"); } catch(e){}
     } finally {
       if(ff) for(var k = 0; k < written.length; k++){ try { await ff.deleteFile(written[k]); } catch(e){} }
       fig.__busy = false; fig.__rec = null; fig.__frameWait = null; fig.classList.remove("is-busy");
@@ -7969,8 +8534,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         var fr = animFrameOf(fig);
         if(en.isIntersecting){
           if(!fig.__started) startAnim(fig);
-          else if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"resume" }, "*");
-        } else if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"pause" }, "*");
+          else if(fr && !fig.__busy) postToFrame(fr, { cmd:"resume" }, "*");
+        } else if(fr && !fig.__busy) postToFrame(fr, { cmd:"pause" }, "*");
       });
     }, { rootMargin:"240px 0px" });
     return xObs;
@@ -7990,8 +8555,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     var act = b.getAttribute("data-xact");
     if(act === "code"){ var box = fig.querySelector(".ec-x-code"); if(box){ box.hidden = !box.hidden; b.classList.toggle("is-on", !box.hidden); } return; }
     if(fig.classList.contains("ec-anim")){
-      if(act === "replay"){ var fr = animFrameOf(fig); if(fr && !fig.__busy) fr.contentWindow.postMessage({ cmd:"replay" }, "*"); }
-      else if(act === "mp4" || act === "gif" || act === "webm") exportAnim(fig, act);
+      if(act === "replay"){ var fr = animFrameOf(fig); if(fr && !fig.__busy) postToFrame(fr, { cmd:"replay" }); }
+      else if(act === "mp4" || act === "gif" || act === "webm" || act === "png" || act === "jpg") exportAnim(fig, act);
       return;
     }
     if(act === "bg"){ fig.classList.toggle("is-darkbg"); return; }
@@ -8014,6 +8579,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     text = text.replace(/```([\w+#.-]*)([^\n`]*)\n?([\s\S]*?)(?:```|$)/g, function(_, lang, info, code){
       if(/^image$/i.test(lang)){ codeBlocks.push(genImageCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       if(/^(animation|anim|motion|video)$/i.test(lang) && /draw/.test(code)){ codeBlocks.push(animCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
+      if(/^(design|graphic|poster)$/i.test(lang) && /draw/.test(code)){ codeBlocks.push(animCard(code, true)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       if(/^mermaid$/i.test(lang)){ codeBlocks.push(diagramCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       if(/^svg$/i.test(lang) && /<svg[\s>]/i.test(code)){ codeBlocks.push(svgCard(code)); return "\n\u0000CB" + (codeBlocks.length - 1) + "\u0000\n"; }
       var fname = /filename=([^\s`]+)/.exec(info || "") || /^\s*([\w.\/-]+\.[a-z0-9]{1,6})\s*$/i.exec(info || "");
@@ -8200,8 +8766,44 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     });
   }
 
+  // "**Sources**" + list → source cards; [n] in the text → links to them.
+  function siteOf(href){ try { return new URL(href).hostname.replace(/^www\./, ""); } catch(e){ return ""; } }
+  function enhanceSources(root){
+    root.querySelectorAll(".ec-msg-text p > strong:only-child").forEach(function(st){
+      if(st.textContent.trim() !== "Sources" || st.parentNode.textContent.trim() !== "Sources") return;
+      var p = st.parentNode, list = p.nextElementSibling;
+      if(!list || !/^(UL|OL)$/.test(list.tagName)) return;
+      var map = {}, cards = [];
+      list.querySelectorAll("li").forEach(function(li){
+        var a = li.querySelector("a[href]"); if(!a) return;
+        var m = /\[(\d{1,2})\]/.exec(li.textContent), n = m ? m[1] : String(cards.length + 1), href = a.getAttribute("href"), host = siteOf(href);
+        map[n] = href;
+        cards.push('<a class="ec-source" href="' + escapeAttr(href) + '" target="_blank" rel="noopener noreferrer" title="' + escapeAttr(a.textContent) + '"><span class="ec-source-n">' + escapeHtml(n) + '</span><img alt="" loading="lazy" src="https://icons.duckduckgo.com/ip3/' + encodeURIComponent(host) + '.ico" onerror="this.style.visibility=\'hidden\'"><span class="ec-source-t">' + escapeHtml(a.textContent) + '</span><span class="ec-source-h">' + escapeHtml(host) + '</span></a>');
+      });
+      if(!cards.length) return;
+      var wrap = document.createElement("div");
+      wrap.className = "ec-sources";
+      wrap.innerHTML = '<div class="ec-sources-head">' + icon("globe") + '<span>' + cards.length + (cards.length === 1 ? " source" : " sources") + '</span></div><div class="ec-sources-list">' + cards.join("") + '</div>';
+      p.parentNode.insertBefore(wrap, p); p.remove(); list.remove();
+      var textRoot = wrap.closest(".ec-msg-text") || root;
+      var walker = document.createTreeWalker(textRoot, NodeFilter.SHOW_TEXT, { acceptNode: function(node){ return node.parentNode && node.parentNode.closest && node.parentNode.closest("pre,code,a,.ec-sources") ? NodeFilter.FILTER_REJECT : /\[\d{1,2}\]/.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; } });
+      var nodes = []; while(walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        var text = node.nodeValue, frag = document.createDocumentFragment(), last = 0, re = /\[(\d{1,2})\]/g, mm;
+        while((mm = re.exec(text))){
+          frag.appendChild(document.createTextNode(text.slice(last, mm.index)));
+          if(map[mm[1]]){ var c = document.createElement("a"); c.className = "ec-cite"; c.href = map[mm[1]]; c.target = "_blank"; c.rel = "noopener noreferrer"; c.textContent = mm[1]; c.title = siteOf(map[mm[1]]); frag.appendChild(c); }
+          else frag.appendChild(document.createTextNode(mm[0]));
+          last = mm.index + mm[0].length;
+        }
+        frag.appendChild(document.createTextNode(text.slice(last)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    });
+  }
   function addResponseTools(msg, sourceText){
     enhanceCodeBlocks(msg);
+    enhanceSources(msg);
     var liveReply = !!replyPending;
     if(typeof refreshWorkbench === "function") setTimeout(function(){ refreshWorkbench(liveReply); }, 30);
     var tools = document.createElement("div");
@@ -8234,10 +8836,14 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   // Quick one-tap follow-ups under the latest reply.
   function addFollowups(msg, truncated){
     if(chatPreferences.followups === false && !truncated) return;
-    var code = chatPreferences.workspaceMode === "code";
-    var options = code
-      ? [["Explain it", "Explain how that code works, step by step."], ["Add error handling", "Add proper error handling and edge-case checks to that."], ["Write tests", "Write tests for that code."]]
-      : [["Shorter", "Make that shorter and more direct."], ["More detail", "Go deeper on that, with more detail."], ["Give an example", "Give me a concrete example."]];
+    var wsMode = currentMode();
+    var options = wsMode === "code"
+      ? [["Find bugs", "Review that code for bugs and edge cases, then give the fixed version."], ["Add tests", "Write tests for that code."], ["Optimize", "Make that code faster and cleaner without changing what it does."], ["Explain it", "Explain how that code works, step by step."], ["Add comments", "Add clear comments and docstrings to that code."]]
+      : wsMode === "studio"
+        ? [["Another variation", "Make another, clearly different variation."], ["Make it bolder", "Push it further: bolder colours, stronger composition, more detail."], ["Vertical version", "Make a 9:16 vertical version of that."], ["As a video", "Turn that into a short animated video."]]
+        : wsMode === "agent"
+          ? [["Go deeper", "Research that further and add more detail and sources."], ["Make a table", "Put the key findings in a comparison table."], ["Next steps", "What should I do next? Give me a concrete action plan."]]
+          : [["Shorter", "Make that shorter and more direct."], ["More detail", "Go deeper on that, with more detail."], ["Give an example", "Give me a concrete example."], ["Find sources", "Find sources and links for that."]];
     if(truncated) options = [["Continue", "Continue exactly where you stopped."]].concat(chatPreferences.followups === false ? [] : options);
     var row = document.createElement("div");
     row.className = "ec-followups";
@@ -8395,13 +9001,15 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     return s.split("/").pop();
   }
 
+  // The thinking light: a glowing green brain with signals running through it.
+  function brainSvg(cls){ return '<span class="ec-brain' + (cls ? " " + cls : "") + '" aria-hidden="true"><svg viewBox="0 0 32 32"><use href="#i-brain" class="ec-brain-base"/><use href="#i-brain" class="ec-brain-pulse"/></svg></span>'; }
   // Live "Thinking" indicator: a small glass lens with a light orbiting it,
   // a shimmering label, a running timer and what elora is doing right now.
   function createThinkingRow(){
     var row = document.createElement("div");
     row.className = "ec-msg is-ai ec-thinking-row";
     row.innerHTML = '<div class="ec-think" role="status" aria-live="polite">' +
-      '<span class="ec-think-orb" aria-hidden="true"><span class="ec-think-dot"></span></span>' +
+      brainSvg() +
       '<span class="ec-think-label typing-label">Thinking</span><span class="ec-think-time">0.0s</span></div>' +
       '<div class="ec-think-sub"><ol class="ec-think-list"><li class="ec-think-step is-now"><i></i><span>Reading your message</span></li></ol></div>';
     var started = Date.now();
@@ -8670,8 +9278,9 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   // technical style with complete, runnable code, and swaps the starter
   // ideas and follow-ups for coding ones.
   function applyWorkspaceMode(){
-    var mode = chatPreferences.workspaceMode === "code" ? "code" : "chat";
+    var mode = currentMode();
     document.documentElement.setAttribute("data-ec-mode", mode);
+    renderCtxBar();
     document.querySelectorAll("[data-workspace-mode]").forEach(function(tab){
       var on = tab.getAttribute("data-workspace-mode") === mode;
       tab.classList.toggle("is-active", on);
@@ -8681,10 +9290,10 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     if(heading) heading.textContent = greetingText();
   }
   function setWorkspaceMode(mode){
-    mode = mode === "code" ? "code" : "chat";
-    if(mode === chatPreferences.workspaceMode) return;
-    if(mode === "code"){ chatPreferences.chatStyle = chatPreferences.style; chatPreferences.style = "technical"; }
-    else { chatPreferences.style = chatPreferences.chatStyle && chatPreferences.chatStyle !== "technical" ? chatPreferences.chatStyle : "balanced"; }
+    mode = modeOf(mode);
+    if(mode === currentMode()) return;
+    if(mode === "code"){ if(chatPreferences.style !== "technical") chatPreferences.chatStyle = chatPreferences.style; chatPreferences.style = "technical"; }
+    else if(chatPreferences.style === "technical"){ chatPreferences.style = chatPreferences.chatStyle && chatPreferences.chatStyle !== "technical" ? chatPreferences.chatStyle : "balanced"; }
     chatPreferences.workspaceMode = mode;
     saveChatPreferences();
     if(activeConversation && activeConversation.started && activeConversation.mode !== mode && !replyPending) resetConversation();
@@ -9449,11 +10058,38 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       autoTask: chatPreferences.taskMode !== false && chatPreferences.taskAuto !== "manual" && !taskArmed,
       taskMaxSteps: chatPreferences.taskMaxSteps || 6,
       showThinking: chatPreferences.showThinking !== false,
-      workspaceMode: chatPreferences.workspaceMode === "code" ? "code" : "chat",
+      workspaceMode: currentMode(),
+      webMode: chatPreferences.webMode || "auto",
+      studio: currentMode() === "studio" && chatPreferences.studio ? { type: chatPreferences.studio.type || "auto", aspect: chatPreferences.studio.aspect || "auto", style: chatPreferences.studio.style || "auto", count: chatPreferences.studio.count || 1 } : undefined,
       timeZone: chatPreferences.shareZone ? (function(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch(e){ return ""; } })() : "",
-      code: { indent: chatPreferences.codeIndent || "auto", comments: chatPreferences.codeComments || "normal", explain: chatPreferences.codeExplain || "normal", language: chatPreferences.codeLanguage || "auto", types: chatPreferences.codeTypes === true } };
+      code: { indent: chatPreferences.codeIndent || "auto", comments: chatPreferences.codeComments || "normal", explain: chatPreferences.codeExplain || "normal", language: chatPreferences.codeLanguage || "auto", types: chatPreferences.codeTypes === true, framework: chatPreferences.codeFramework || "auto", output: chatPreferences.codeOutput || "full", tests: chatPreferences.codeTests === true, doubleCheck: chatPreferences.codeDoubleCheck !== false } };
   }
-  async function getReply(text, fileEntries, signal){
+  // Reads a reply that may arrive as a live stream of steps (NDJSON) or as
+  // plain JSON. Calls onStep for each step; resolves to { status, data }.
+  async function readChatResponse(res, onStep){
+    var ct = res.headers.get("content-type") || "";
+    if(!/ndjson/i.test(ct) || !res.body || !res.body.getReader){
+      return { status: res.status, data: await res.json().catch(function(){ return {}; }), streamed: false };
+    }
+    var reader = res.body.getReader(), dec = new TextDecoder(), buf = "", final = null, sawStep = false;
+    var handle = function(line){
+      if(!line.trim()) return;
+      var obj; try { obj = JSON.parse(line); } catch(e){ return; }
+      if(obj.type === "step"){ sawStep = true; if(onStep) try { onStep(String(obj.text || "")); } catch(e){} }
+      else if(obj.type === "final") final = obj;
+    };
+    for(;;){
+      var r = await reader.read();
+      if(r.done) break;
+      buf += dec.decode(r.value, { stream:true });
+      var lines = buf.split("\n"); buf = lines.pop();
+      lines.forEach(handle);
+    }
+    if(buf) handle(buf);
+    if(!final) return { status: 502, data: { message: "The reply was cut off on the way. Try again." }, streamed: sawStep };
+    return { status: final.status || 200, data: final.body || {}, streamed: sawStep };
+  }
+  async function getReply(text, fileEntries, signal, onStep){
     var fileNames = fileEntries.map(function(e){ return e.name; });
     // Fold text-file contents into the message so the model can actually
     // read them, and collect image data URLs separately for the vision
@@ -9487,26 +10123,25 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           provider: selectedModel,
           messages: requestMessages,
           images: images,
-          preferences: chatRequestPreferences()
+          preferences: chatRequestPreferences(),
+          stream: true
         })
       });
-
-      if(!res.ok) logRequest({ kind:"Chat", status:res.status, ms:Date.now() - t0 });
-      if(res.status === 429){
-        var limitData = await res.json();
-        return { text: limitData.message || "You've hit today's limit — upgrade for more.", real: false, limit: true };
+      var got = await readChatResponse(res, onStep);
+      var okStatus = got.status >= 200 && got.status < 300;
+      if(!okStatus) logRequest({ kind:"Chat", status:got.status, ms:Date.now() - t0 });
+      if(got.status === 429){
+        return { text: got.data.message || "You've hit today's limit — upgrade for more.", real: false, limit: true };
       }
-      if(!res.ok){
-        var failure = await res.json().catch(function(){ return {}; });
-        return { text: failure.message || "elora couldn't answer just now. Try again in a moment.", real: false, serviceError: true };
+      if(!okStatus){
+        return { text: got.data.message || "elora couldn't answer just now. Try again in a moment.", real: false, serviceError: true };
       }
-
-      var data = await res.json();
-      logRequest({ kind: data.task ? "Chat → task" : "Chat", status:res.status, ms:Date.now() - t0, model:data.model || "" });
+      var data = got.data;
+      logRequest({ kind: data.task ? "Chat → task" : "Chat", status:got.status, ms:Date.now() - t0, model:data.model || "" });
       // Keep Settings → Usage current without an extra request.
       if(planInfo && data.creditsRemaining != null){ planInfo.creditsRemaining = data.creditsRemaining; renderPlanInfo(); }
       if(data.task && data.token) return { autoTask: data };
-      return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null, thinking: data.thinking || "", model: data.model || "", truncated: !!data.truncated };
+      return { text: data.reply, real: true, steps: Array.isArray(data.steps) ? data.steps : null, thinking: data.thinking || "", model: data.model || "", truncated: !!data.truncated, streamed: got.streamed };
     } catch(err){
       if(err && err.name === "AbortError") return { aborted: true };
       return { text: "elora couldn't be reached — check your connection and try again.", real: false, serviceError: true };
@@ -9709,8 +10344,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           }
         }
         if(!name || !content.trim()) return;
-        if(index[name] != null) files[index[name]].content = content;
-        else { index[name] = files.length; files.push({ name: name, content: content }); }
+        if(index[name] != null){ var fx = files[index[name]]; if(fx.content !== content){ fx.versions.push(content); fx.content = content; } }
+        else { index[name] = files.length; files.push({ name: name, content: content, versions: [content] }); }
       });
     });
     return files;
@@ -9745,15 +10380,27 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     tabs.hidden = !has; tools.hidden = !has; empty.hidden = has;
     document.getElementById("wbZip").hidden = !has;
     var canPreview = has && wbHasHtml();
+    var canDiff = !!(f && f.versions && f.versions.length > 1);
     if(!canPreview && wb.view === "preview") wb.view = "code";
+    if(!canDiff && wb.view === "changes") wb.view = "code";
     wbPanel.querySelectorAll("[data-wb-view]").forEach(function(b){
       var v = b.getAttribute("data-wb-view");
       b.classList.toggle("is-active", v === wb.view);
       b.setAttribute("aria-selected", String(v === wb.view));
       if(v === "preview") b.disabled = !canPreview;
+      if(v === "changes"){ b.disabled = !canDiff; b.hidden = !canDiff; }
     });
-    codeBox.hidden = !has || wb.view !== "code";
+    var ver = document.getElementById("wbVer");
+    if(ver) ver.textContent = f && f.versions && f.versions.length > 1 ? "v" + f.versions.length : "";
+    var openTab = document.getElementById("wbOpenTab");
+    if(openTab) openTab.hidden = !canPreview;
+    codeBox.hidden = !has || (wb.view !== "code" && wb.view !== "changes");
+    codeBox.classList.toggle("is-diff", wb.view === "changes");
     frame.hidden = !has || wb.view !== "preview";
+    if(has && wb.view === "changes" && f && canDiff){
+      var prev = f.versions[f.versions.length - 2], diff = lineDiff(prev, f.content);
+      codeBox.firstChild.innerHTML = diff ? renderDiff(diff) : '<span class="ec-ln ec-diff-note">This file is too big to compare line by line.</span>';
+    }
     if(has && wb.view === "code" && f){
       var lines;
       try { lines = f.content.length < 300000 ? hlLines(f.content.replace(/\n$/, ""), f.name) : null; } catch(e){ lines = null; }
@@ -9772,12 +10419,44 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     var dl = document.getElementById("wbDownload");
     if(dl){ dl.title = f ? "Download " + f.name : "Download"; dl.setAttribute("aria-label", dl.title); }
   }
+  // Line diff (longest common subsequence) between two versions of a file.
+  function lineDiff(a, b){
+    var A = String(a || "").replace(/\n$/, "").split("\n"), B = String(b || "").replace(/\n$/, "").split("\n");
+    var start = 0; while(start < A.length && start < B.length && A[start] === B[start]) start++;
+    var endA = A.length, endB = B.length; while(endA > start && endB > start && A[endA - 1] === B[endB - 1]){ endA--; endB--; }
+    var a2 = A.slice(start, endA), b2 = B.slice(start, endB), n = a2.length, m = b2.length;
+    if(n * m > 2500000) return null;
+    var dp = []; for(var i = 0; i <= n; i++){ dp.push(new Uint32Array(m + 1)); }
+    for(i = n - 1; i >= 0; i--) for(var j = m - 1; j >= 0; j--) dp[i][j] = a2[i] === b2[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    var out = [];
+    for(var k = 0; k < start; k++) out.push([" ", A[k], k + 1]);
+    i = 0; j = 0;
+    while(i < n || j < m){
+      if(i < n && j < m && a2[i] === b2[j]){ out.push([" ", b2[j], start + j + 1]); i++; j++; }
+      else if(j < m && (i >= n || dp[i][j + 1] >= dp[i + 1][j])){ out.push(["+", b2[j], start + j + 1]); j++; }
+      else { out.push(["-", a2[i], ""]); i++; }
+    }
+    for(k = endB; k < B.length; k++) out.push([" ", B[k], k + 1]);
+    return out;
+  }
+  function renderDiff(rows){
+    var adds = rows.filter(function(r){ return r[0] === "+"; }).length, dels = rows.filter(function(r){ return r[0] === "-"; }).length;
+    var keep = rows.map(function(r, i){ if(r[0] !== " ") return true; for(var d = -3; d <= 3; d++){ var x = rows[i + d]; if(x && x[0] !== " ") return true; } return false; });
+    var html = '<span class="ec-diff-sum"><b class="is-add">+' + adds + '</b> <b class="is-del">−' + dels + '</b> lines changed since the previous version</span>\n', skipped = 0;
+    rows.forEach(function(r, i){
+      if(!keep[i]){ skipped++; return; }
+      if(skipped){ html += '<span class="ec-diff-gap">⋯ ' + skipped + ' unchanged line' + (skipped === 1 ? "" : "s") + '</span>\n'; skipped = 0; }
+      html += '<span class="ec-diff-row is-' + (r[0] === "+" ? "add" : r[0] === "-" ? "del" : "ctx") + '"><i>' + (r[2] || "") + '</i><s>' + (r[0] === " " ? " " : r[0] === "-" ? "−" : "+") + '</s>' + escapeHtml(r[1]) + '</span>\n';
+    });
+    if(skipped) html += '<span class="ec-diff-gap">⋯ ' + skipped + ' unchanged line' + (skipped === 1 ? "" : "s") + '</span>';
+    return html;
+  }
   function refreshWorkbench(autoOpen){
     if(!wbPanel) return;
     var on = currentMode() === "code";
     var files = on ? collectThreadFiles() : [];
     var prevName = wb.files[wb.active] ? wb.files[wb.active].name : null;
-    var sig = files.map(function(x){ return x.name + ":" + x.content.length; }).join("|");
+    var sig = files.map(function(x){ return x.name + ":" + x.content.length + ":" + x.versions.length; }).join("|");
     var changed = sig !== wb.sig;
     wb.sig = sig;
     wb.files = files;
@@ -9828,6 +10507,12 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       var title = (activeConversation && activeConversation.title || "elora-code").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "elora-code";
       downloadZip(wb.files, title + ".zip");
     });
+    document.getElementById("wbOpenTab").addEventListener("click", function(){
+      var site = buildSite(wb.files); if(!site) return;
+      var url = URL.createObjectURL(new Blob([site.html], { type:"text/html" }));
+      window.open(url, "_blank", "noopener");
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+    });
     document.getElementById("wbRun").addEventListener("click", function(){
       var f = wb.files[wb.active], btn = this, lang = btn.getAttribute("data-lang");
       if(!f || !lang) return;
@@ -9876,7 +10561,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     var request = new AbortController();
     activeRequest = request;
 
-    getReply(text, lastRequest.files, request.signal).then(function(result){
+    var liveStep = function(t){ if(request.signal.aborted || !t) return; typingRow.dataset.locked = "1"; setThinkingStep(typingRow, t); };
+    getReply(text, lastRequest.files, request.signal, liveStep).then(function(result){
       if(request.signal.aborted || result.aborted) return; // Stop already tidied up
       if(result.autoTask){
         // elora decided this is a multi-step job: continue as a task.
@@ -9925,7 +10611,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           });
         }
 
-        if(chatPreferences.activity === false || !realSteps.length){ reveal(); return; }
+        if(chatPreferences.activity === false || !realSteps.length || result.streamed){ reveal(); return; }
         // Briefly replay what actually happened, then show the answer.
         var i = 0;
         (function nextStep(){
@@ -10071,17 +10757,56 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
   function createTaskView(goal){
     var msg = document.createElement("div");
     msg.className = "ec-msg is-ai ec-task";
-    msg.innerHTML = '<div class="ec-task-box"><div class="ec-task-head"><span class="ec-task-spin" aria-hidden="true"></span><strong class="ec-task-title">Planning the task…</strong><span class="ec-task-count"></span></div><div class="ec-task-bar" aria-hidden="true"><i></i></div><div class="ec-trail" role="log" aria-live="polite"></div></div>';
+    msg.innerHTML = '<div class="ec-task-box"><div class="ec-task-head">' + brainSvg("ec-task-brain") + '<strong class="ec-task-title">Planning the task…</strong><span class="ec-task-count"></span><span class="ec-task-pct">0%</span><span class="ec-task-time">0s</span></div>' +
+      '<div class="ec-task-prog" aria-hidden="true"><div class="ec-task-bar"><i></i></div><div class="ec-task-segs"></div></div>' +
+      '<div class="ec-task-now" aria-live="polite"><span class="ec-task-now-pulse"></span><span class="ec-task-now-text">Understanding the goal</span></div>' +
+      '<div class="ec-trail" role="log" aria-live="polite"></div></div>';
     chatThread.appendChild(msg);
     scrollToBottom();
     var trail = msg.querySelector(".ec-trail");
+    var started = Date.now(), total = 0, current = -1;
+    var timeEl = msg.querySelector(".ec-task-time");
+    var ticker = setInterval(function(){
+      if(!msg.isConnected || msg.classList.contains("is-done") || msg.classList.contains("is-failed")){ clearInterval(ticker); return; }
+      var secs = Math.round((Date.now() - started) / 1000);
+      timeEl.textContent = secs < 60 ? secs + "s" : Math.floor(secs / 60) + "m " + (secs % 60) + "s";
+    }, 1000);
+    var setPct = function(pct){
+      pct = Math.max(0, Math.min(100, Math.round(pct)));
+      msg.querySelector(".ec-task-pct").textContent = pct + "%";
+      msg.querySelector(".ec-task-bar i").style.width = Math.max(3, pct) + "%";
+      if(chatMain && activeTask){ chatMain.classList.add("is-task-progress"); chatMain.style.setProperty("--work-p", pct + "%"); }
+    };
     var view = {
       msg: msg,
       setTitle: function(text){ msg.querySelector(".ec-task-title").textContent = text; },
+      setSteps: function(n){
+        total = n;
+        var segs = msg.querySelector(".ec-task-segs");
+        segs.innerHTML = new Array(n + 1).join('<span class="ec-task-seg"></span>');
+        msg.querySelector(".ec-task-prog").classList.add("has-segs");
+        setPct(4);
+      },
+      setStep: function(i){
+        current = i;
+        msg.querySelectorAll(".ec-task-seg").forEach(function(seg, k){ seg.className = "ec-task-seg" + (k < i ? " is-done" : k === i ? " is-now" : ""); });
+        if(total) setPct((i + 0.35) / total * 100);
+      },
+      stepDone: function(i){
+        var seg = msg.querySelectorAll(".ec-task-seg")[i];
+        if(seg) seg.className = "ec-task-seg is-done";
+        if(total) setPct((i + 1) / total * 100 - (i + 1 === total ? 4 : 0));
+      },
+      live: function(text){
+        if(!text) return;
+        var el = msg.querySelector(".ec-task-now-text");
+        if(el.textContent === text) return;
+        el.classList.remove("is-in"); void el.offsetWidth;
+        el.textContent = text; el.classList.add("is-in");
+        if(current >= 0 && total) setPct(Math.min((current + 0.85) / total * 100, (current + 0.35) / total * 100 + 12 * Math.random() + 6));
+      },
       setCount: function(text){
         msg.querySelector(".ec-task-count").textContent = text;
-        var m = /Step (\d+) of (\d+)/.exec(text || ""), bar = msg.querySelector(".ec-task-bar i");
-        if(m && bar) bar.style.width = Math.max(6, Math.round((Number(m[1]) - 0.5) / Number(m[2]) * 100)) + "%";
       },
       // A trail row: verb + object, optionally expandable to show details.
       row: function(verb, object, detail){
@@ -10106,8 +10831,8 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         if(isNearBottom()) scrollToBottom();
         return row;
       },
-      done: function(text){ msg.classList.add("is-done"); view.setTitle(text); },
-      fail: function(text){ msg.classList.add("is-failed"); view.setTitle(text); }
+      done: function(text){ msg.classList.add("is-done"); view.setTitle(text); setPct(100); msg.querySelectorAll(".ec-task-seg").forEach(function(seg){ seg.className = "ec-task-seg is-done"; }); msg.querySelector(".ec-task-now-text").textContent = "Done"; clearInterval(ticker); },
+      fail: function(text){ msg.classList.add("is-failed"); view.setTitle(text); clearInterval(ticker); }
     };
     return view;
   }
@@ -10173,7 +10898,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
 
   async function taskCall(t, body){
     var callStart = Date.now();
-    var res = await fetch("/api/chat", {
+    var raw = await fetch("/api/chat", {
       method: "POST",
       signal: t.controller.signal,
       headers: Object.assign({ "Content-Type": "application/json" }, getAccessToken() ? { Authorization: "Bearer " + getAccessToken() } : {}),
@@ -10181,12 +10906,14 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         provider: selectedModel,
         messages: body.phase === "plan" ? t.history : [{ role: "user", content: t.goal }],
         preferences: chatRequestPreferences(),
-        task: Object.assign({ token: t.token, plan: t.plan, results: t.results }, body)
+        task: Object.assign({ token: t.token, plan: t.plan, results: t.results, sources: (t.sources || []).slice(0, 40) }, body),
+        stream: true
       })
     });
-    var data = await res.json().catch(function(){ return {}; });
-    logRequest({ kind:"Task · " + body.phase + (body.phase === "step" ? " " + (body.stepIndex + 1) : ""), status:res.status, ms:Date.now() - callStart });
-    if(!res.ok) throw new Error(data.message || "elora couldn't finish this task.");
+    var got = await readChatResponse(raw, function(text){ if(t.view) t.view.live(text); });
+    var data = got.data || {};
+    logRequest({ kind:"Task · " + body.phase + (body.phase === "step" ? " " + (body.stepIndex + 1) : ""), status:got.status, ms:Date.now() - callStart });
+    if(!(got.status >= 200 && got.status < 300)) throw new Error(data.message || "elora couldn't finish this task.");
     return data;
   }
 
@@ -10200,7 +10927,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     });
     var history = conversationHistory.slice(-19).map(function(m){ return { role:m.role, content:m.content }; });
     history[history.length - 1] = { role:"user", content: goal };
-    var t = { goal: goal, history: history, plan: null, token: null, results: [], files: [], used: { search:0, links:0, uploads: uploads, memory: !!currentUser && chatPreferences.memory !== false }, controller: new AbortController(), running: true, started: Date.now() };
+    var t = { goal: goal, history: history, plan: null, token: null, results: [], files: [], sources: [], used: { search:0, links:0, uploads: uploads, memory: !!currentUser && chatPreferences.memory !== false }, controller: new AbortController(), running: true, started: Date.now() };
     activeTask = t;
     setReplyPending(true);
     if(chatStatusDot) chatStatusDot.classList.add("is-active");
@@ -10226,17 +10953,26 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
       planList.className = "ec-trail-plan";
       t.plan.steps.forEach(function(step){ var li = document.createElement("li"); li.textContent = step.title; planList.appendChild(li); });
       view.row("Added task", t.plan.title, planList);
+      view.setSteps(t.plan.steps.length);
       renderTaskPanel(t);
       for(var i = 0; i < t.plan.steps.length; i++){
         var step = t.plan.steps[i];
         view.setCount("Step " + (i + 1) + " of " + t.plan.steps.length);
+        view.setStep(i);
+        view.live(step.kind === "research" ? "Researching: " + step.title : step.kind === "code" ? "Coding: " + step.title : step.title);
         view.row("Started", step.title);
         renderTaskPanel(t);
         var out = await taskCall(t, { phase: "step", stepIndex: i });
         (out.used || []).forEach(function(u){
           if(u.tool === "web_search"){
             t.used.search++;
-            view.row(u.ok ? "Searched the web for" : "Searched the web (no results) for", "“" + u.query + "”", requestResponse("web_search(\"" + u.query + "\")", u.ok ? u.results.join("\n") : "No results came back."));
+            var srow = view.row(u.ok ? "Searched the web for" : "Searched the web (no results) for", "“" + u.query + "”", requestResponse("web_search(\"" + u.query + "\")", u.ok ? u.results.join("\n") : "No results came back."));
+            if(u.read && u.read.length){
+              var chips = document.createElement("div");
+              chips.className = "ec-trail-sites";
+              chips.innerHTML = u.read.slice(0, 6).map(function(r){ return '<a href="' + escapeAttr(r.url) + '" target="_blank" rel="noopener noreferrer" title="' + escapeAttr(r.title || r.site) + '"><img alt="" loading="lazy" src="https://icons.duckduckgo.com/ip3/' + encodeURIComponent(r.site) + '.ico" onerror="this.style.visibility=\'hidden\'">' + escapeHtml(r.site) + '</a>'; }).join("");
+              srow.appendChild(chips);
+            }
           } else if(u.tool === "read_links"){ t.used.links++; view.row("Read", "the links you shared"); }
         });
         (out.files || []).forEach(function(file){
@@ -10245,7 +10981,9 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
           var pre = document.createElement("pre"); pre.className = "ec-trail-code"; pre.textContent = file.content.slice(0, 4000);
           view.row("Wrote", file.name, pre);
         });
+        if(Array.isArray(out.sources) && out.sources.length) t.sources = t.sources.concat(out.sources);
         t.results.push(out.result || "");
+        view.stepDone(i);
         var detail = document.createElement("div");
         detail.className = "ec-trail-md ec-msg-text";
         detail.innerHTML = mdToHtml(out.result || "");
@@ -10254,6 +10992,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
         renderTaskPanel(t);
       }
       view.setCount("");
+      view.live("Writing the final answer");
       view.row("Writing", "the final answer");
       var fin = await taskCall(t, { phase: "finish", files: t.files.map(function(f){ return f.name; }) });
       t.running = false;
@@ -11189,6 +11928,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
 
   function setReplyPending(pending){
     replyPending = !!pending;
+    if(chatMain){ chatMain.classList.toggle("is-working", replyPending); if(!replyPending){ chatMain.classList.remove("is-task-progress"); chatMain.style.removeProperty("--work-p"); } }
     sendBtn.classList.toggle("is-stop", replyPending);
     sendBtn.setAttribute("aria-label", replyPending ? "Stop reply" : "Send message");
     sendBtn.title = replyPending ? "Stop" : "Send (Enter)";
@@ -11227,10 +11967,10 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     refreshWorkbench(false);
   }
   function adoptConversationMode(target){
-    var m = target && target.mode === "code" ? "code" : "chat";
+    var m = modeOf(target && target.mode);
     if(m === currentMode()) return;
-    if(m === "code"){ chatPreferences.chatStyle = chatPreferences.style; chatPreferences.style = "technical"; }
-    else { chatPreferences.style = chatPreferences.chatStyle && chatPreferences.chatStyle !== "technical" ? chatPreferences.chatStyle : "balanced"; }
+    if(m === "code"){ if(chatPreferences.style !== "technical") chatPreferences.chatStyle = chatPreferences.style; chatPreferences.style = "technical"; }
+    else if(chatPreferences.style === "technical"){ chatPreferences.style = chatPreferences.chatStyle && chatPreferences.chatStyle !== "technical" ? chatPreferences.chatStyle : "balanced"; }
     chatPreferences.workspaceMode = m;
     saveChatPreferences();
     applyWorkspaceMode();
@@ -11869,7 +12609,7 @@ html[data-ec-theme="light"] .ec-diagram .ec-x-stage{ background:#ffffff; }
     startNewChat:function(){ resetConversation(); },
     restoreSessions:function(list){
       if(activeConversation && activeConversation.started) saveActiveConversation();
-      chatSessions=(Array.isArray(list)?list:[]).filter(function(s){return s&&s.id!=null&&Array.isArray(s.history);}).map(function(s){return {id:Number(s.id),title:String(s.title||"Conversation").slice(0,100),started:!!s.started,history:s.history.filter(function(m){return m&&(m.role==="user"||m.role==="assistant");}).slice(0,400).map(function(m){return {role:m.role,content:String(m.content||"").slice(0,30000)};}),threadHtml:String(s.threadHtml||"").slice(0,150000),updatedAt:Number(s.updatedAt)||Date.now(),projectId:typeof s.projectId==="string"?s.projectId:null,pinned:!!s.pinned,mode:s.mode==="code"?"code":"chat"};}).slice(0,30);
+      chatSessions=(Array.isArray(list)?list:[]).filter(function(s){return s&&s.id!=null&&Array.isArray(s.history);}).map(function(s){return {id:Number(s.id),title:String(s.title||"Conversation").slice(0,100),started:!!s.started,history:s.history.filter(function(m){return m&&(m.role==="user"||m.role==="assistant");}).slice(0,400).map(function(m){return {role:m.role,content:String(m.content||"").slice(0,30000)};}),threadHtml:String(s.threadHtml||"").slice(0,150000),updatedAt:Number(s.updatedAt)||Date.now(),projectId:typeof s.projectId==="string"?s.projectId:null,pinned:!!s.pinned,mode:modeOf(s.mode)};}).slice(0,30);
       nextConversationId=Math.max(1,chatSessions.reduce(function(max,s){return Math.max(max,Number(s.id)||0);},0)+1);
       activeConversation=createConversation(); conversationHistory=[]; attachedFiles=[]; renderAttachments(); chatInput.value=""; autoGrow(); chatThread.innerHTML=""; renderChatWelcome(); updateConversationTitle(); renderConversationList();
     },

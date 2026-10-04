@@ -12,6 +12,49 @@
 import { safeFetch, readablePage, frameable, searchWeb } from "./_lib/browse.js";
 import { handleImage, rewriteImageLinks } from "./_lib/images.js";
 import { CAPABILITIES, pickSkills, skillGuide, isHeavy, prefersGemini } from "./_lib/skills.js";
+import { research, readLinks, sourcesContext, appendSources, wantsResearch, hostOf } from "./_lib/research.js";
+import { normalizeMode, codeModeGuide, CODE_REVIEW_SYSTEM, studioModeGuide, AGENT_PLAN_GUIDE, AGENT_STEP_GUIDE } from "./_lib/modes.js";
+
+// Live progress: when the browser asks for it (body.stream), the reply is
+// sent as newline-delimited JSON — {"type":"step"} lines while elora works,
+// then one {"type":"final","status","body"} line with the normal response.
+function streamingResponse(res) {
+  let started = false, ended = false, beat = null;
+  const begin = () => {
+    if (started) return;
+    started = true;
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Accel-Buffering", "no");
+    try { if (res.flushHeaders) res.flushHeaders(); } catch (_e) {}
+    beat = setInterval(() => { if (!ended) { try { res.write('{"type":"ping"}\n'); } catch (_e) {} } }, 8000);
+  };
+  const write = (obj) => { if (ended) return; begin(); try { res.write(JSON.stringify(obj) + "\n"); } catch (_e) {} };
+  const finish = () => { ended = true; if (beat) clearInterval(beat); };
+  return {
+    isStream: true,
+    _code: 200,
+    setHeader(k, v) { if (!started) res.setHeader(k, v); return this; },
+    status(code) { this._code = code; return this; },
+    json(body) { write({ type: "final", status: this._code, body }); finish(); res.end(); return this; },
+    end(b) { if (!ended) { begin(); finish(); res.end(b); } return this; },
+    progress(text) { if (text) write({ type: "step", text: String(text).slice(0, 200) }); },
+  };
+}
+function prettyModel(m) {
+  m = String(m || "");
+  if (/gpt-oss-120b/.test(m)) return "GPT-OSS 120B";
+  if (/gpt-oss-20b/.test(m)) return "GPT-OSS 20B";
+  if (/qwen/i.test(m)) return "Qwen";
+  const g = /gemini-([\d.]+)-flash(-lite)?/.exec(m);
+  if (g) return `Gemini ${g[1]} Flash${g[2] ? "-Lite" : ""}`;
+  return m.split("/").pop();
+}
+function sanitizeSources(list) {
+  return (Array.isArray(list) ? list : []).filter((x) => x && typeof x.url === "string" && /^https?:\/\//i.test(x.url)).slice(0, 40)
+    .map((x) => ({ title: cleanText(x.title, 140) || hostOf(x.url), url: String(x.url).slice(0, 500), site: hostOf(x.url), read: Boolean(x.read), excerpt: "" }));
+}
 import { logEvent, verifyRequester, getSubscription, spendCredit, getUserMemory, saveUserMemory } from "./_lib/supabaseAdmin.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -47,7 +90,7 @@ Helpfulness: treat the user as a capable adult and help with any legitimate requ
 
 Quality: for anything non-trivial, think the problem through before answering and check your own work — especially code, math and facts. Say so when you're unsure instead of inventing details; never make up URLs, citations, statistics, package names or API methods. You can't browse the web yourself: when live search results or page excerpts are included in a message, use them for current facts and say they came from a search; otherwise be clear that your knowledge may be out of date. Your name is elora (always lowercase), the assistant inside elorahub. If asked what powers you, say elora runs on leading open-weight and Gemini models chosen by elorahub.
 
-About elorahub (use this when people ask how the app works; don't recite it unprompted): the chat has Chat and Code modes (tabs at the top of the sidebar) and reply modes Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.
+About elorahub (use this when people ask how the app works; don't recite it unprompted): the sidebar has four workspaces, each with its own chats: Chat (everyday questions, with live web research and cited sources), Code (complete projects, a Workbench with tabs, live preview, version changes, Run and ZIP, plus a double-check pass), Studio (pictures, posters, thumbnails, social posts, videos, GIFs and logos, with type, format, style and variation settings above the message box) and Agent (give it a goal: it plans, searches the web, reads the sources and delivers a cited result step by step). Reply modes are Balanced, Quick, Deep dive and Code. Task mode (the Task button beside +, or + → Run as a task) makes you plan a bigger job in 2–6 steps, work through them one at a time with web searches where needed, and hand back downloadable files; it shows a live trail and a Progress panel, and uses one message from the allowance. Uploads: images up to 3 MB and text or source-code files up to 200 KB (the first ~30,000 characters are read); PDFs and Word files are attached by name only for now. Hovering a reply lets people copy, rate, save to Artifacts, or get a different answer; ↑ in an empty box edits the last message; the send button becomes Stop while you reply. Settings (Ctrl+,): Account (what to call them, their work, custom instructions), General (theme, font, text size, width), Privacy (memory on/off, export or clear chats), Usage (remaining messages), Capabilities (web search, reading links, Task mode, suggestions, style and tone), Connectors (GitHub, Google). Plans: Free has a daily message limit, Private gives far more room, Premium is unlimited; paid plans can be cancelled any time and stay active until the end of the billing period. The site has a Help center and a What's new page. If you don't know something about elorahub, say so rather than guessing.
 
 ${CAPABILITIES}
 
@@ -234,6 +277,7 @@ async function runWithFallback(plan, messagesFor, systemPrompt, opts = {}) {
   const callOpts = () => ({ ...opts, timeoutMs: Math.max(6000, Math.min(opts.timeoutMs || 28000, budget - (Date.now() - started))) });
   for (const cfg of plan) {
     if (Date.now() - started > budget - 4000) break;
+    if (failures.length && typeof opts.onSwitch === "function") opts.onSwitch(cfg, failures[failures.length - 1]);
     let result = await callModel(cfg, messagesFor(cfg), systemPrompt, callOpts());
     // A momentary rate limit: wait the few seconds the provider asks for, once.
     // A call that timed out isn't retried on the same model — the next one gets the time.
@@ -587,15 +631,18 @@ function extractFiles(text) {
 }
 
 async function runTaskPhase(res, ctx) {
-  const { phase, task, goal, history, systemBase, preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary } = ctx;
+  const { phase, task, goal, history, systemBase, preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary, mode } = ctx;
+  const progress = typeof ctx.progress === "function" ? ctx.progress : () => {};
+  const isAgent = mode === "agent";
+  const prevSources = sanitizeSources(task?.sources);
   const plan = attemptPlan(false, true); // Gemini first: tasks are token-heavy
   const maxSteps = Math.max(2, Math.min(6, Number(preferences?.taskMaxSteps) || 6));
   // Gemini gets room for whole files; Groq's cap depends on its 8k/min budget.
   const opts = (maxTokens, effort) => ({ maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, Math.min(maxTokens, 7600 - estimateTokens(msgs, sys))) : Math.max(maxTokens, 8000)), temperature: 0.3, reasoningEffort: effort || "medium", totalBudgetMs: 48000 });
 
   if (phase === "plan") {
-    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable. For a website, web app, dashboard or browser game, plan 3–4 steps: (1) "think" — decide the concept: name, audience, palette, fonts, sections and the actual copy; (2) "code" — build the whole thing as ONE self-contained index.html (CSS and JS inline); (3) "code" — polish: richer visuals, animations, generated images, mobile layout, and output the complete improved index.html; optionally (4) "code" — review for bugs and output the final complete file. Don't split it into separate CSS and JS files unless the user asked. For other code jobs, plan complete files and end with a step that reviews them for bugs and outputs corrected, complete versions.\nReturn ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
-    const { result, failures } = await runWithFallback(plan, () => history, sys, opts(1400));
+    const sys = `${systemBase}\n\nYou are planning a multi-step task that you will then carry out yourself, one step at a time, in this chat. Break the user's latest request into the FEWEST concrete steps the job really needs (2–${maxSteps}). A step can use a web search — give a short query in "search" only when the step needs current or factual information you don't reliably know; otherwise leave it empty. You can't run code, click around websites, or reach the user's accounts or files beyond what they attached. Make the last step produce the deliverable. For a website, web app, dashboard or browser game, plan 3–4 steps: (1) "think" — decide the concept: name, audience, palette, fonts, sections and the actual copy; (2) "code" — build the whole thing as ONE self-contained index.html (CSS and JS inline); (3) "code" — polish: richer visuals, animations, generated images, mobile layout, and output the complete improved index.html; optionally (4) "code" — review for bugs and output the final complete file. Don't split it into separate CSS and JS files unless the user asked. For other code jobs, plan complete files and end with a step that reviews them for bugs and outputs corrected, complete versions.\n${isAgent ? `\n${AGENT_PLAN_GUIDE}\n` : ""}Return ONLY a JSON object, no prose: {"title":"short task title","deliverable":"one sentence: what the user gets","steps":[{"title":"imperative step title (max 60 chars)","kind":"research|think|write|code","search":"query or empty"}]}`;
+    const { result, failures } = await runWithFallback(plan, () => history, sys, { ...opts(1400), onSwitch: (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`) });
     if (!result.ok) return taskFailure(res, failures);
     const parsed = sanitizePlan(parseJsonObject(result.reply) || {});
     parsed.steps = parsed.steps.slice(0, maxSteps);
@@ -619,16 +666,21 @@ async function runTaskPhase(res, ctx) {
     const step = p.steps[i];
     const used = [];
     let context = "";
-    if (step.search && preferences?.webSearch !== false) {
-      const found = await performWebSearch(step.search);
-      used.push({ tool: "web_search", query: step.search, ok: Boolean(found), results: found ? found.split("\n").filter(Boolean).slice(0, 5) : [] });
-      if (found) context += `\n\n[Web search results for "${step.search}"]\n${found}`;
+    let newSources = [];
+    const query = step.search || (isAgent && step.kind === "research" ? `${step.title} ${p.title}`.slice(0, 200) : "");
+    if (query && preferences?.webSearch !== false) {
+      const found = await research(query, { depth: isAgent ? "deep" : "normal", exclude: prevSources.map((x) => x.url), onProgress: progress });
+      newSources = found.sources;
+      used.push({ tool: "web_search", query: found.query, ok: newSources.length > 0, results: newSources.map((x) => `${x.title} — ${x.url}`), read: newSources.filter((x) => x.read).map((x) => ({ site: x.site, title: x.title, url: x.url })) });
+      if (newSources.length) context += `\n\n${sourcesContext(newSources, prevSources.length)}`;
     }
+    if (prevSources.length) context += `\n\n[Sources found in earlier steps — cite them by these numbers when you use them:]\n${prevSources.map((x, k) => `[${k + 1}] ${x.title} — ${x.url}`).join("\n")}`;
     if (i === 0 && preferences?.readLinks !== false) {
-      const links = await fetchLinkContext(goal);
-      if (links) { used.push({ tool: "read_links", ok: true }); context += `\n\n${links}`; }
+      const links = await readLinks(goal, { onProgress: progress });
+      if (links.context) { used.push({ tool: "read_links", ok: true, pages: links.pages }); context += `\n\n${links.context}`; }
     }
-    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.${stepSkills.length && step.kind !== "research" ? `\n\n${skillGuide(stepSkills)}` : ""}`;
+    progress(step.kind === "code" ? `Writing the code for “${step.title}”` : step.kind === "research" ? `Working through what I found` : `Working on “${step.title}”`);
+    const sys = `${systemBase}\n\nYou are carrying out a task step by step.\nTask: ${p.title}\nThe user's request: """${goal.slice(0, 4000)}"""\nPlan:\n${planList}\n\nNow do ONLY step ${i + 1}: "${step.title}". Build on the earlier results, be concrete and complete, and don't repeat what earlier steps already produced. When this step creates something the user should keep (code, a document, a CSV…), put each file in its own fenced block whose info string is the language followed by filename=NAME — for example \`\`\`python filename=scraper.py. Always write complete files, never fragments, "..." or "rest stays the same"; if you improve a file from an earlier step, output the whole new version under the same filename. Websites should look polished and work on phones.${isAgent ? `\n\n${AGENT_STEP_GUIDE}` : ""}${stepSkills.length && step.kind !== "research" ? `\n\n${skillGuide(stepSkills)}` : ""}`;
     const msg = `${prior ? `Results so far:\n\n${prior}\n\n` : ""}${context ? `${context.trim()}\n\n` : ""}Do step ${i + 1} now: ${step.title}`;
     const stepOpts = opts(step.kind === "code" || step.kind === "write" ? 5000 : 2800, step.kind === "code" ? "high" : "medium");
     if (isBuild && step.kind === "code") {
@@ -638,23 +690,26 @@ async function runTaskPhase(res, ctx) {
       stepOpts.totalBudgetMs = 200000;
       stepOpts.reasoningEffort = "low";
     }
+    stepOpts.onSwitch = (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`);
     const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, stepOpts);
     if (!result.ok) return taskFailure(res, failures);
     const stepReply = normalizeFences(result.reply);
-    return res.status(200).json({ result: stepReply, files: extractFiles(stepReply), used, provider: result.label, fallbacks: failures.length ? describeFailures(failures) : undefined });
+    return res.status(200).json({ result: stepReply, files: extractFiles(stepReply), used, provider: result.label, sources: newSources.map((x) => ({ title: x.title, url: x.url, site: x.site, read: x.read })), fallbacks: failures.length ? describeFailures(failures) : undefined });
   }
 
   // finish
   const fileNames = (Array.isArray(task?.files) ? task.files : []).map((f) => cleanText(f, 80)).filter(Boolean).slice(0, 12);
-  const sys = `${systemBase}\n\nYou just finished a multi-step task for the user. Write your final reply: lead with the result itself, then a short note on what you did. ${fileNames.length ? `These files were produced and are attached under your reply as downloads: ${fileNames.join(", ")} — refer to them by name instead of pasting their full contents again.` : ""} Keep it tight and useful.`;
-  const msg = `The user's request: """${goal.slice(0, 4000)}"""\n\nTask: ${p.title}\n\nWhat each step produced:\n\n${prior || "(no step output)"}`;
-  const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, opts(2400));
+  const sys = `${systemBase}\n\nYou just finished a multi-step task for the user. Write your final reply: lead with the result itself — complete and well structured, keeping the concrete facts, numbers and names the steps found — then a short note on what you did.${prevSources.length ? " Cite the numbered web sources as [n] after the facts that come from them; elorahub adds the links, so don't list them yourself." : ""}${isAgent ? ` ${AGENT_STEP_GUIDE}` : ""} ${fileNames.length ? `These files were produced and are attached under your reply as downloads: ${fileNames.join(", ")} — refer to them by name instead of pasting their full contents again.` : ""} Keep it tight and useful.`;
+  const msg = `The user's request: """${goal.slice(0, 4000)}"""\n\nTask: ${p.title}\n\nWhat each step produced:\n\n${prior || "(no step output)"}${prevSources.length ? `\n\nNumbered sources used:\n${prevSources.map((x, k) => `[${k + 1}] ${x.title} — ${x.url}`).join("\n")}` : ""}`;
+  progress("Writing the final answer");
+  const { result, failures } = await runWithFallback(plan, () => [{ role: "user", content: msg }], sys, { ...opts(isAgent ? 4000 : 2400), onSwitch: (cfg) => progress(`Switching to ${prettyModel(cfg.model)}`) });
   if (!result.ok) return taskFailure(res, failures);
   if (email && memoryOn) {
     const updated = await updateUserMemory(memorySummary, goal, result.reply);
     if (updated && updated.trim() && updated !== memorySummary) await saveUserMemory(email, updated);
   }
-  return res.status(200).json({ reply: result.reply, provider: result.label });
+  const finalTaskReply = prevSources.length ? appendSources(normalizeFences(result.reply), prevSources) : normalizeFences(result.reply);
+  return res.status(200).json({ reply: finalTaskReply, provider: result.label, sources: prevSources.length ? prevSources.map((x, k) => ({ n: k + 1, title: x.title, url: x.url, site: x.site })) : undefined });
 }
 
 async function taskFailure(res, failures) {
@@ -740,6 +795,17 @@ async function handleBrowse(req, res, browse) {
 }
 
 export default async function handler(req, res) {
+  const out = req.method === "POST" && req.body && req.body.stream === true ? streamingResponse(res) : res;
+  try {
+    return await chatHandler(req, out);
+  } catch (err) {
+    console.error("chat handler failed:", err);
+    try { await logEvent("error", "chat", `Unexpected error: ${String(err && err.message || err).slice(0, 300)}`); } catch (_e) {}
+    if (out.isStream || !res.headersSent) return out.status(500).json({ error: "server_error", message: "Something went wrong on elora's side. Try again in a moment." });
+  }
+}
+
+async function chatHandler(req, res) {
   // GET = read-only plan summary for the account menu and Settings
   // (Billing / Usage). Sends no message and spends nothing. Lives here
   // rather than in its own file because Vercel Hobby caps the project at
@@ -777,7 +843,11 @@ export default async function handler(req, res) {
     return handleMediaPlan(req, res, req.body.mediaPlan);
   }
 
+  const progress = (t) => { if (res.isStream) res.progress(t); };
+  const onSwitch = (cfg, failed) => progress(`${prettyModel(failed && failed.model)} is ${failed && failed.errBody === "timed out" ? "slow" : "busy"} — switching to ${prettyModel(cfg.model)}`);
+
   const { messages, provider, images, preferences } = req.body || {};
+  const mode = normalizeMode(preferences?.workspaceMode);
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages must be a non-empty array." });
@@ -882,15 +952,18 @@ export default async function handler(req, res) {
   // here corresponds to a real thing that happened above, not a
   // decorative fake step.
   const steps = [];
+  const addStep = (t) => { steps.push(t); progress(t); };
   const startedAt = Date.now();
 
   // Auto task: for requests that look like a bigger job, a quick, cheap
   // routing call decides whether to plan it as a multi-step task instead
   // of a single reply. Already charged above — the task's later steps
   // ride on the signed token like a manual task.
-  const autoTask = !taskPhase && preferences?.autoTask === true && safeImages.length === 0 && looksLikeTask(lastMessage.content)
+  const agentTask = mode === "agent" && !taskPhase && safeImages.length === 0 && lastMessage.content.trim().length > 14 && !/^(hi|hey|hello|thanks|thank you|ok|okay)\b/i.test(lastMessage.content.trim());
+  if (!taskPhase) progress(agentTask ? "Planning the work" : "Reading your message");
+  const autoTask = agentTask || (!taskPhase && preferences?.autoTask === true && safeImages.length === 0 && looksLikeTask(lastMessage.content)
     ? await decideTask(lastMessage.content, messages.slice(-6))
-    : false;
+    : false);
 
   // Real, persistent memory: a short profile of stable facts elora has
   // learned about this signed-in user across past conversations (not
@@ -900,28 +973,37 @@ export default async function handler(req, res) {
   const memoryOn = preferences?.memory !== false;
   if (email && memoryOn) {
     memorySummary = await getUserMemory(email);
-    if (memorySummary) steps.push("Recalled what I know about you");
+    if (memorySummary) addStep("Recalled what I know about you");
   }
 
-  // Real web search — no API key needed, see performWebSearch(). Only
-  // triggers on messages that actually look like they need current
-  // information; everything else skips it entirely (cheaper, faster,
-  // and elora answers plenty from its own training just fine).
+  // Web research: search, read the best pages, cite numbered sources
+  // (see api/_lib/research.js). Runs when the question needs fresh facts or
+  // the user asks for links; "always" and "deep" come from Settings.
   let searchContext = "";
-  const useWebSearch = preferences?.webSearch !== false;
-  if (!taskPhase && !autoTask && useWebSearch && needsWebSearch(lastMessage.content)) {
-    const searchResults = await performWebSearch(lastMessage.content);
-    if (searchResults) {
-      searchContext = `[Live web search results for "${lastMessage.content.slice(0, 120)}" — use these to ground your answer in current information:]\n\n${searchResults}`;
-      steps.push(`Searched the web for “${lastMessage.content.slice(0, 60)}”`);
+  let sources = [];
+  const webMode = preferences?.webSearch === false ? "off" : ["always", "deep"].includes(preferences?.webMode) ? preferences.webMode : "auto";
+  const heavyIntent = isHeavy(pickSkills(lastMessage.content, "", mode));
+  if (!taskPhase && !autoTask && wantsResearch(lastMessage.content, { pref: webMode === "deep" ? "always" : webMode, heavyBuild: heavyIntent })) {
+    const found = await research(lastMessage.content, { depth: webMode === "deep" ? "deep" : "normal", onProgress: progress });
+    if (found.sources.length) {
+      sources = found.sources;
+      searchContext = sourcesContext(sources);
+      steps.push(`Searched the web for “${found.query.slice(0, 60)}”`);
+      const readSites = sources.filter((x) => x.read).map((x) => x.site);
+      if (readSites.length) steps.push(`Read ${readSites.length} source${readSites.length === 1 ? "" : "s"}: ${readSites.join(", ")}`);
+    } else {
+      steps.push("Searched the web — nothing useful came back");
     }
   }
 
-  // Fetch any plain http(s) links found in the newest message and fold in
-  // a short excerpt of each page's text, so elora can actually answer
-  // questions about a link instead of just seeing the bare URL.
-  const linkContext = taskPhase || autoTask || preferences?.readLinks === false ? "" : await fetchLinkContext(lastMessage.content);
-  if (linkContext) steps.push("Read the linked page");
+  // Links in the newest message are opened and read properly (GitHub repos
+  // and files, Reddit threads, YouTube titles, any normal page).
+  let linkContext = "";
+  if (!taskPhase && !autoTask && preferences?.readLinks !== false) {
+    const links = await readLinks(lastMessage.content, { onProgress: progress });
+    linkContext = links.context;
+    if (links.pages.length) steps.push(`Read ${links.pages.map((x) => x.site).join(", ")}`);
+  }
 
   steps.push("Thought it through");
 
@@ -974,18 +1056,24 @@ export default async function handler(req, res) {
     : "";
   // Skills: the expert playbooks this request needs (see api/_lib/skills.js).
   const userTexts = messages.filter((m) => m && m.role === "user" && typeof m.content === "string").map((m) => m.content.slice(0, 2000));
-  const skills = pickSkills(lastMessage.content, userTexts.length > 1 ? userTexts[userTexts.length - 2] : "", preferences?.workspaceMode);
+  let skills = pickSkills(lastMessage.content, userTexts.length > 1 ? userTexts[userTexts.length - 2] : "", mode);
+  if (mode === "studio") {
+    const t = preferences?.studio?.type;
+    const want = t === "video" || t === "gif" ? "animation" : ["design", "poster", "thumbnail", "social"].includes(t) ? "design" : t === "logo" || t === "icon" ? "logo" : t === "diagram" ? "diagram" : t === "image" ? "image" : "";
+    if (want && !skills.includes(want)) skills = [want, ...skills].slice(0, 3);
+    if (!skills.length) skills = ["image", "design"];
+  }
   const skillText = skills.length ? `\n\n${skillGuide(skills)}` : "";
   // A big deliverable (a site, app, game, video…) gets the long-output setup.
-  const buildGuide = isHeavy(skills) && (preferences?.workspaceMode === "code" || /\b(build|make|create|design|generate|develop|code|write|program|animate|render|produce|turn|convert|i want|i need|give me|can you|could you|let'?s)\b/i.test(lastMessage.content)) ? "heavy" : "";
+  const buildGuide = (mode === "studio" && skills.some((x) => x === "animation" || x === "design")) || isHeavy(skills) && (mode === "code" || mode === "studio" || /\b(build|make|create|design|generate|develop|code|write|program|animate|render|produce|turn|convert|i want|i need|give me|can you|could you|let'?s)\b/i.test(lastMessage.content)) ? "heavy" : "";
   const systemPrompt = (memorySummary
     ? `${SYSTEM_PROMPT}\n\nWhat you remember about this user from past conversations (use it naturally, don't recite it back verbatim unless relevant):\n${memorySummary}`
-    : SYSTEM_PROMPT) + skillText + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
+    : SYSTEM_PROMPT) + (mode === "code" ? `\n\n${codeModeGuide(preferences)}` : mode === "studio" ? `\n\n${studioModeGuide(preferences)}` : "") + skillText + (preferenceGuide ? `\n\nUser's current response preferences: ${preferenceGuide}` : "") + personalBlock + todayLine;
 
   if (taskPhase || autoTask) {
     return runTaskPhase(res, {
       phase: autoTask ? "plan" : taskPhase, task: task || {}, goal: lastMessage.content, history: trimmedHistory, systemBase: systemPrompt,
-      preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary, auto: autoTask,
+      preferences, subject, creditsRemaining, unlimited, email, memoryOn, memorySummary, auto: autoTask, mode, progress,
     });
   }
 
@@ -1001,6 +1089,7 @@ export default async function handler(req, res) {
     finalMessages.push({ role: "user", content: lastText });
   }
 
+  progress(buildGuide ? (mode === "studio" ? "Designing it — this can take a minute" : "Building it — big builds take a minute or two") : sources.length ? "Writing the answer from the sources" : mode === "code" ? "Writing the code" : "Writing the answer");
   // Walk the attempt plan (see attemptPlan) until a model answers. Big
   // prompts go to Gemini first; Groq attempts get a trimmed history that
   // fits its per-minute token limit.
@@ -1008,7 +1097,7 @@ export default async function handler(req, res) {
   const replyTokens = preferences?.style === "concise" ? 1600 : preferences?.style === "deep" || preferences?.style === "technical" ? 4000 : 3000;
   const promptTokens = estimateTokens(finalMessages, systemPrompt);
   const isBuildReply = Boolean(buildGuide);
-  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500 || isBuildReply || prefersGemini(skills);
+  const preferGemini = safeProvider === "gemini" || promptTokens + replyTokens > 6500 || isBuildReply || prefersGemini(skills) || mode === "studio";
   const plan = attemptPlan(hasImages, preferGemini);
   const messagesFor = (cfg) => (isGroqEndpoint(cfg) ? fitToBudget(finalMessages, systemPrompt, Math.max(1200, 6800 - replyTokens)) : finalMessages);
   const { result, failures } = await runWithFallback(plan, messagesFor, systemPrompt, {
@@ -1022,6 +1111,7 @@ export default async function handler(req, res) {
     reasoningEffort: isBuildReply || preferences?.style === "concise" ? "low" : preferences?.style === "deep" || preferences?.style === "technical" ? "high" : "medium",
     wantReasoning: preferences?.showThinking !== false,
     totalBudgetMs: isBuildReply ? 210000 : 40000,
+    onSwitch,
   });
 
   if (!result.ok) {
@@ -1053,7 +1143,7 @@ export default async function handler(req, res) {
     const more = await continueLongReply(result, textOnly, systemPrompt, isBuildReply ? { budgetMs: Math.max(30000, 255000 - elapsed), timeoutMs: 90000 } : { budgetMs: Math.max(8000, 52000 - elapsed) });
     finalReply = more.reply;
     truncated = more.truncated;
-    if (more.rounds) steps.push(more.rounds === 1 ? "Kept writing past the length limit" : `Kept writing past the length limit (${more.rounds} more parts)`);
+    if (more.rounds) addStep(more.rounds === 1 ? "Kept writing past the length limit" : `Kept writing past the length limit (${more.rounds} more parts)`);
   }
 
   if (failures.length) {
@@ -1076,9 +1166,26 @@ export default async function handler(req, res) {
     }
   }
 
+  // Code mode: a second, independent look at the code before the user sees it.
+  if (mode === "code" && preferences?.code?.doubleCheck !== false && /```/.test(finalReply) && finalReply.length < 16000 && !isBuildReply && Date.now() - startedAt < 150000) {
+    progress("Double-checking the code");
+    const reviewMsg = `The user's request:\n"""${lastMessage.content.slice(0, 6000)}"""\n\nDraft answer:\n"""${finalReply}"""`;
+    const { result: rv } = await runWithFallback(attemptPlan(false, true), () => [{ role: "user", content: reviewMsg }], CODE_REVIEW_SYSTEM, {
+      maxTokens: (cfg, msgs, sys) => (isGroqEndpoint(cfg) ? Math.max(1200, 7600 - estimateTokens(msgs, sys)) : 9000),
+      temperature: 0.1, reasoningEffort: "medium", timeoutMs: 70000, totalBudgetMs: 80000,
+    });
+    if (rv.ok) {
+      const checked = cleanReply(rv.reply);
+      if (/^ok\.?$/i.test(checked.trim())) steps.push("Double-checked the code — no problems found");
+      else if (/```/.test(checked) && checked.length > finalReply.length * 0.5 && rv.finish !== "length") { finalReply = checked; steps.push("Double-checked the code and fixed what it found"); }
+    }
+  }
+
   finalReply = normalizeFences(finalReply);
+  if (sources.length) finalReply = appendSources(finalReply, sources);
   return res.status(200).json({
     reply: finalReply,
+    sources: sources.length ? sources.map((x, i) => ({ n: i + 1, title: x.title, url: x.url, site: x.site })) : undefined,
     fallbacks: failures.length ? describeFailures(failures) : undefined,
     usage: result.usage,
     creditsRemaining,

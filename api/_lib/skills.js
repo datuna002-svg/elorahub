@@ -12,7 +12,9 @@ export const CAPABILITIES = `What you can make right here (elorahub turns these 
 - Pictures → an \`\`\`image block: {"prompt":"…","width":1024,"height":1024}.
 - Videos, GIFs, animated intros, logo reveals, kinetic text, slideshows → an \`\`\`animation block (a canvas animation the app plays and exports as a video or GIF).
 - Diagrams — flowcharts, sequence, class, ER, Gantt, mind maps, timelines → a \`\`\`mermaid block.
+- Posters, thumbnails, banners, social posts, flyers, cards, quote images, infographics → a \`\`\`design block (same format as animation, drawn once on a canvas with crisp exact text and generated pictures; exported as PNG or JPG).
 - Logos, icons, badges, illustrations as vector art → an \`\`\`svg block (one <svg> with a viewBox); people download it as SVG or PNG.
+- Facts that may have changed → when web sources are included, cite them as [1], [2]; elorahub adds the links. When people ask for links, give real, well-known URLs only (official sites, docs) or the ones in your sources.
 - Editing the user's own video, GIF, audio or photo → they attach it and say what to change; elorahub edits it in their browser.
 You can't browse by yourself, send messages, or run code on a server. Never claim you made something you didn't.`;
 
@@ -166,6 +168,18 @@ function draw({ ctx, w, h, t, p, s, ease, lerp, clamp, range, rand }) {
 \`\`\`
 Rules: draw() must be pure for a given t (no stored timers; use rand(seed) for repeatable randomness) and clear/paint the whole frame every time. Helpers: ease.inOut/in/out/outBack/outElastic/outBounce (0–1 → 0–1), lerp(a,b,x), clamp(x,a,b), range(t,start,end) → 0–1 progress of a segment, rand(seed) → 0–1. s is whatever setup returned. loadImage(prompt, w, h, seed) returns a generated picture you can drawImage. Fonts listed in "fonts" are Google Fonts (Name:weight) ready before playback — use them in ctx.font. Sizes: 1280x720 landscape, 1080x1920 for vertical (TikTok/Reels/Shorts), 1080x1080 square; 3–15 seconds; fps 30 (24 for GIFs). Make it look professional: choreograph scenes with range(), ease every movement, layer gradients, glow (shadowBlur), particles and depth, keep text big and readable, end on a clean hold frame. For a GIF, keep it short (2–5 s), loopable, and say "export as GIF".`,
   },
+  design: {
+    heavy: true,
+    match: /\b(poster|thumbnail|banner|flyer|leaflet|social (media )?post|instagram post|story (image|post)|cover (image|art)|album cover|book cover|menu design|business card|certificate|invitation|quote (image|card)|infographic|ad (image|creative)|mockup|meme)\b/i,
+    guide: () => `Skill — graphic design (posters, thumbnails, banners, social posts, flyers, cards, infographics). Answer with a \`\`\`design block — the same format as an animation block but drawn once:
+\`\`\`design
+{"title":"Short title","width":1080,"height":1350,"fonts":["Anton:400","Inter:600"]}
+---
+async function setup({ loadImage }) { return { photo: await loadImage("a detailed description of the picture", 1080, 1350, 3) }; }
+function draw({ ctx, w, h, s }) { /* paint the whole design */ }
+\`\`\`
+Sizes: YouTube thumbnail 1920x1080, Instagram post 1080x1350 or 1080x1080, story/reel 1080x1920, banner 1500x500, A4 poster 1240x1754, business card 1050x600. Craft: draw generated pictures with cover-cropping (keep aspect), add gradient scrims behind text, big bold display type with exact spelling, measureText to fit and centre lines, safe margins of at least 6% of the width, consistent spacing, subtle shadow/glow for depth. Text must never overflow, overlap or touch the edges. The same helpers as animations exist (ease, lerp, clamp, rand, loadImage); t is 0.`,
+  },
   data: {
     match: /\b(analy[sz]e|analysis|dataset|data set|spreadsheet|statistics|average|median|regression|forecast|pivot|sql query|sql|pandas|numpy|formula|vlookup|xlookup)\b/i,
     guide: () => `Skill — data and analysis:
@@ -192,6 +206,8 @@ export function pickSkills(latest, previous, mode) {
   scores.sort((x, y) => y[1] - x[1]);
   let picked = scores.slice(0, 3).map((x) => x[0]);
   // Relationships between skills.
+  if (picked.includes("design") && picked.includes("animation") && !/\b(animat\w*|intro|outro|gif|reels?|motion|clip|moving)\b/i.test(latest)) picked = picked.filter((x) => x !== "animation");
+  if (picked.includes("design") && picked.includes("image")) picked = picked.filter((x) => x !== "image");
   if (picked.includes("diagram") && picked.includes("image")) picked = picked.filter((x) => x !== "image");
   if (picked.includes("logo") && picked.includes("image")) picked = picked.filter((x) => x !== "image");
   if (picked.includes("game") && picked.includes("app")) picked = picked.filter((x) => x !== "app");
@@ -212,7 +228,7 @@ export function skillGuide(ids) {
 
 // Design-heavy answers that come out better from Gemini, even when short.
 export function prefersGemini(ids) {
-  return ids.some((id) => id === "logo" || id === "animation" || id === "slides");
+  return ids.some((id) => id === "logo" || id === "animation" || id === "slides" || id === "design");
 }
 
 export function isHeavy(ids) {
